@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ExternalLink, Zap } from "lucide-react";
+import { Menu, X, ExternalLink, Zap, LogIn, LogOut, User, Shield } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const navItems = [
     { name: "Home", path: "/" },
@@ -20,7 +21,9 @@ export function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [visible, setVisible] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
     const location = useLocation();
+    const { user, isAuthenticated, openAuthModal, logout } = useAuth();
 
     useEffect(() => {
         setTimeout(() => setVisible(true), 100);
@@ -32,7 +35,7 @@ export function Navbar() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    useEffect(() => { setIsOpen(false); }, [location]);
+    useEffect(() => { setIsOpen(false); setUserMenuOpen(false); }, [location]);
 
     return (
         <>
@@ -43,7 +46,7 @@ export function Navbar() {
                 className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-4"
             >
                 <div
-                    className="w-full max-w-7xl flex items-center justify-between px-4 py-2.5 rounded-2xl transition-all duration-300"
+                    className="w-full max-w-7xl flex items-center justify-between px-4 py-2.5 rounded-2xl transition-all duration-300 relative"
                     style={{
                         background: scrolled
                             ? 'rgba(5, 5, 8, 0.92)'
@@ -77,9 +80,9 @@ export function Navbar() {
                             <div
                                 className="absolute bottom-0 right-0 w-3 h-3 rounded-full"
                                 style={{
-                                    background: '#10B981', // Emerald green
+                                    background: isAuthenticated ? '#10B981' : '#6B7280',
                                     border: '2px solid rgba(5,5,8,0.92)',
-                                    boxShadow: '0 0 8px rgba(16,185,129,0.5)'
+                                    boxShadow: isAuthenticated ? '0 0 8px rgba(16,185,129,0.5)' : 'none'
                                 }}
                             />
                         </div>
@@ -118,21 +121,75 @@ export function Navbar() {
                         })}
                     </nav>
 
-                    {/* Right side — status + external links + mobile toggle */}
-                    <div className="flex items-center gap-2">
-                        {/* Login Button (Disabled) */}
-                        <button
-                            disabled
-                            className="hidden lg:flex items-center px-4 py-1.5 rounded-lg text-[10px] font-bold tracking-widest opacity-40 cursor-not-allowed"
-                            style={{
-                                fontFamily: 'Space Mono',
-                                background: 'rgba(255,255,255,0.03)',
-                                color: 'rgba(255,255,255,0.6)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                            }}
-                        >
-                            LOGIN
-                        </button>
+                    {/* Right side — Auth status + external links + mobile toggle */}
+                    <div className="flex items-center gap-3">
+                        {/* Auth / Profile Area */}
+                        {isAuthenticated ? (
+                            <div className="relative">
+                                <button
+                                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-purple-500/30 bg-purple-950/40 hover:bg-purple-900/50 transition-all cursor-pointer"
+                                >
+                                    <img
+                                        src={user.avatar}
+                                        alt={user.name}
+                                        className="w-6 h-6 rounded-full object-cover border border-purple-400/40"
+                                    />
+                                    <span className="hidden sm:inline text-xs font-semibold text-purple-200" style={{ fontFamily: 'Space Grotesk' }}>
+                                        {user.name.split(' ')[0]}
+                                    </span>
+                                    <span className="text-[10px] font-mono text-purple-400 bg-purple-900/60 px-1.5 py-0.5 rounded border border-purple-500/20">
+                                        LVL {user.level}
+                                    </span>
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                <AnimatePresence>
+                                    {userMenuOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            className="absolute right-0 mt-2 w-56 p-3 rounded-2xl shadow-2xl z-50 border border-purple-500/30"
+                                            style={{ background: 'rgba(10, 8, 20, 0.96)', backdropFilter: 'blur(20px)' }}
+                                        >
+                                            <div className="pb-3 mb-2 border-b border-purple-900/40 px-1">
+                                                <p className="text-xs font-bold text-white" style={{ fontFamily: 'Space Grotesk' }}>{user.name}</p>
+                                                <p className="text-[10px] font-mono text-purple-300/60">{user.email}</p>
+                                                <div className="mt-2 flex items-center justify-between text-[10px] font-mono bg-purple-950/60 p-2 rounded-lg border border-purple-500/20 text-purple-300">
+                                                    <span>ROLE: {user.role}</span>
+                                                    <span className="text-amber-400 font-bold">{user.xp} XP</span>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => { logout(); setUserMenuOpen(false); }}
+                                                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-mono text-red-400 hover:bg-red-950/40 rounded-xl transition-colors cursor-pointer"
+                                            >
+                                                <LogOut className="w-3.5 h-3.5" />
+                                                Disconnect System
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={openAuthModal}
+                                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider transition-all duration-300 cursor-pointer"
+                                style={{
+                                    fontFamily: 'Space Mono',
+                                    background: 'rgba(124, 58, 237, 0.15)',
+                                    color: '#C4B5FD',
+                                    border: '1px solid rgba(124, 58, 237, 0.35)',
+                                    boxShadow: '0 0 15px rgba(124, 58, 237, 0.2)',
+                                }}
+                            >
+                                <LogIn className="w-3.5 h-3.5 text-purple-400" />
+                                SIGN IN
+                            </button>
+                        )}
+
 
                         {/* External links — cyber slanted style (desktop) */}
                         <div className="hidden md:flex items-center gap-2">

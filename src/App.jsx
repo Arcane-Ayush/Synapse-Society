@@ -7,6 +7,8 @@ import { Projects } from './pages/Projects';
 import { Nexus } from './pages/Nexus';
 import { About } from './pages/About';
 import { PageTransition } from './components/PageTransition';
+import { AuthProvider } from './context/AuthContext';
+import { AuthModal } from './components/AuthModal';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -26,12 +28,16 @@ function AnimatedRoutes() {
 
 function App() {
   return (
-    <Router>
-      <Layout>
-        <AnimatedRoutes />
-      </Layout>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Layout>
+          <AnimatedRoutes />
+        </Layout>
+        <AuthModal />
+      </Router>
+    </AuthProvider>
   );
 }
 
 export default App;
+

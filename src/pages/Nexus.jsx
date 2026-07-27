@@ -3,7 +3,10 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { membershipCards, eventCards, missions, teams } from "../data/mockData";
 import { SynapseCard } from "../components/SynapseCard";
-import { Zap, Target, Users, Trophy, Lock, Calendar, ChevronRight } from "lucide-react";
+import { Zap, Target, Users, Trophy, Lock, Calendar, ChevronRight, Shield, LogIn, Sparkles, KeyRound, QrCode, PlusCircle } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { AdminQRGeneratorModal } from "../components/AdminQRGeneratorModal";
+import { QRScannerModal } from "../components/QRScannerModal";
 
 const TABS = [
     { id: 'cards', label: 'Cards', icon: (
@@ -29,9 +32,40 @@ const TABS = [
 ];
 
 // ── Cards Tab ─────────────────────────────────────────────────────
-function CardsTab({ setSelectedCard }) {
+function CardsTab({ onCardClick }) {
+    const { user, isAuthenticated } = useAuth();
+
     return (
         <div>
+            {/* User XP Profile Banner (If Logged In) */}
+            {isAuthenticated && user && (
+                <div className="mb-8 p-6 rounded-2xl border border-purple-500/30 flex flex-col md:flex-row items-center justify-between gap-4"
+                     style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(217,70,239,0.08))', backdropFilter: 'blur(12px)' }}>
+                    <div className="flex items-center gap-4">
+                        <img src={user.avatar} alt={user.name} className="w-14 h-14 rounded-full border-2 border-purple-400/50 shadow-lg shadow-purple-500/20 object-cover" />
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-xl font-bold text-white" style={{ fontFamily: 'Space Grotesk' }}>{user.name}</h3>
+                                <span className="text-xs font-mono px-2 py-0.5 rounded bg-purple-900/60 text-purple-300 border border-purple-500/30">
+                                    @{user.handle}
+                                </span>
+                            </div>
+                            <p className="text-xs text-purple-300/70 font-mono mt-1">ROLE: {user.role} • DOMAIN: {user.domain}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-6">
+                        <div className="text-center px-4 py-2 rounded-xl bg-purple-950/40 border border-purple-500/20">
+                            <span className="block text-[10px] font-mono text-purple-400/70 tracking-widest">LEVEL</span>
+                            <span className="text-xl font-black text-white" style={{ fontFamily: 'Space Grotesk' }}>LVL {user.level}</span>
+                        </div>
+                        <div className="text-center px-4 py-2 rounded-xl bg-purple-950/40 border border-purple-500/20">
+                            <span className="block text-[10px] font-mono text-amber-400/70 tracking-widest">XP BALANCE</span>
+                            <span className="text-xl font-black text-amber-400" style={{ fontFamily: 'Space Grotesk' }}>{user.xp} XP</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Season badge */}
             <div className="flex items-center gap-4 mb-12">
                 <div
@@ -73,15 +107,16 @@ function CardsTab({ setSelectedCard }) {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 justify-items-center">
                     {membershipCards.map((card, i) => {
-                        const isUnlocked = card.level === 0;
+                        const userLevel = user ? user.level : 0;
+                        const isUnlocked = isAuthenticated ? (card.level <= userLevel) : (card.level === 0);
                         return (
                             <motion.div
                                 key={card.id}
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                                onClick={() => isUnlocked && setSelectedCard({ ...card, unlocked: true })}
-                                className={isUnlocked ? "cursor-pointer transition-transform hover:scale-105" : ""}
+                                onClick={() => onCardClick(card)}
+                                className="cursor-pointer transition-transform hover:scale-105"
                             >
                                 <SynapseCard card={{ ...card, unlocked: isUnlocked }} size="sm" />
                             </motion.div>
@@ -99,427 +134,119 @@ function CardsTab({ setSelectedCard }) {
                         style={{
                             background: 'rgba(217,70,239,0.1)',
                             color: '#D946EF',
-                            border: '1px solid rgba(217,70,239,0.22)',
+                            border: '1px solid rgba(217,70,239,0.2)',
                             clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
                         }}
                     >
-                        LIMITED
+                        EXCLUSIVE REWARDS
                     </span>
                 </div>
-                <p className="text-sm mb-8" style={{ color: 'rgba(196,181,253,0.4)', fontFamily: 'Inter' }}>
-                    Exclusive cards awarded for attending specific events and achieving milestones. Virtual only.
+                <p className="text-sm mb-8" style={{ color: 'rgba(196,181,253,0.45)', fontFamily: 'Inter' }}>
+                    Unlocked by winning hackathons, hosting workshops, or achieving top sprint standing.
                 </p>
 
-                <div className="flex flex-wrap gap-8 justify-center md:justify-start">
-                    {eventCards.map((card, i) => (
-                        <motion.div
-                            key={card.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: i * 0.12 }}
-                            onClick={() => setSelectedCard(card)}
-                            className="cursor-pointer transition-transform hover:scale-105"
-                        >
-                            <SynapseCard card={card} size="sm" />
-                        </motion.div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Earn XP explainer */}
-            <div
-                className="rounded-2xl p-8 relative overflow-hidden"
-                style={{ background: 'rgba(12,12,20,0.8)', border: '1px solid rgba(124,58,237,0.14)' }}
-            >
-                <div
-                    className="absolute top-0 right-0 w-64 h-64 pointer-events-none"
-                    style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%)' }}
-                />
-                <h4 className="text-xl font-bold mb-6" style={{ fontFamily: 'Space Grotesk' }}>
-                    How to Earn{' '}
-                    <span style={{ background: 'linear-gradient(135deg, #A855F7, #E879F9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                        XP &amp; Tokens
-                    </span>
-                </h4>
-                <div className="grid md:grid-cols-3 gap-4">
-                    {[
-                        { label: 'Workshops & Sessions', xp: '50–200', icon: '▤', desc: 'Attend and participate actively' },
-                        { label: 'Hackathons', xp: '200–1000', icon: '⟁', desc: 'Compete and place in hackathons' },
-                        { label: 'Projects & Open Source', xp: '100–500', icon: '⬢', desc: 'Build and contribute publicly' },
-                        { label: 'Volunteering', xp: '50–150', icon: '⋈', desc: 'Help run club events' },
-                        { label: 'Leadership Roles', xp: '300+', icon: '⎔', desc: 'Lead teams and departments' },
-                        { label: 'Mentoring', xp: '100–300', icon: '⌘', desc: 'Guide junior members' },
-                    ].map(item => (
-                        <div
-                            key={item.label}
-                            className="flex gap-3 p-3 rounded-xl"
-                            style={{ background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.09)' }}
-                        >
-                            <div className="text-xl flex-shrink-0">{item.icon}</div>
-                            <div>
-                                <div className="text-sm font-semibold mb-0.5" style={{ fontFamily: 'Space Grotesk', color: '#C4B5FD' }}>
-                                    {item.label}
-                                </div>
-                                <div className="text-[10px] font-mono mb-1" style={{ color: '#A855F7' }}>+{item.xp} XP</div>
-                                <div className="text-[11px]" style={{ color: 'rgba(196,181,253,0.38)' }}>{item.desc}</div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                <div className="mt-6 flex items-center gap-2 text-sm" style={{ color: 'rgba(196,181,253,0.35)', fontFamily: 'Space Mono' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A855F7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    XP tracking &amp; digital profiles launching with Season 1 database
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 justify-items-center">
+                    {eventCards.map((card, i) => {
+                        const isUnlocked = isAuthenticated && user && user.level >= 2 && i === 0;
+                        return (
+                            <motion.div
+                                key={card.id}
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: i * 0.08 }}
+                                onClick={() => onCardClick(card)}
+                                className="cursor-pointer transition-transform hover:scale-105"
+                            >
+                                <SynapseCard card={{ ...card, unlocked: isUnlocked }} size="sm" />
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
         </div>
     );
 }
 
-// ── Missions Tab — Sakura QuestBoard style ──────────────────────
-const MISSION_TYPE_COLORS = {
-    Tech: '#6366F1',
-    Learning: '#A855F7',
-    'Open Source': '#10B981',
-    Competition: '#EF4444',
-    Design: '#D946EF',
-    Content: '#F59E0B',
-    Community: '#3B82F6',
-};
-
-function MissionsTab() {
-    const worldEvent = missions.find(m => m.assignedTo === 'All');
-    const coopMissions = missions.filter(m => m.assignedTo === 'Teams');
-    const openMissions = missions.filter(m => m.assignedTo === 'Open');
-    const teamMissions = missions.filter(m => !['All', 'Teams', 'Open'].includes(m.assignedTo));
-
-    const QuestCard = ({ mission, i }) => {
-        const typeColor = MISSION_TYPE_COLORS[mission.type] || '#A855F7';
-        const isWorld = mission.assignedTo === 'All';
-        const isCoop = mission.assignedTo === 'Teams';
-
-        return (
-            <motion.div
-                key={mission.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: i * 0.1, ease: [0.23, 1, 0.32, 1] }}
-                className="quest-card p-6 group"
-            >
-                <div className="flex justify-between items-start mb-5">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        {isWorld && (
-                            <span
-                                className="text-[9px] font-black tracking-widest px-2.5 py-1"
-                                style={{
-                                    background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(217,70,239,0.3))',
-                                    color: '#E879F9',
-                                    border: '1px solid rgba(217,70,239,0.4)',
-                                    clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
-                                    animation: 'node-pulse 2s ease-in-out infinite',
-                                }}
-                            >
-                                🌍 WORLD EVENT
-                            </span>
-                        )}
-                        {isCoop && (
-                            <span
-                                className="text-[9px] font-bold tracking-widest px-2 py-0.5"
-                                style={{
-                                    background: 'rgba(59,130,246,0.1)',
-                                    color: '#60A5FA',
-                                    border: '1px solid rgba(59,130,246,0.3)',
-                                    clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
-                                }}
-                            >
-                                CO-OP
-                            </span>
-                        )}
-                        <span
-                            className="text-[9px] font-bold tracking-widest px-2 py-0.5"
-                            style={{
-                                background: `${typeColor}12`,
-                                color: typeColor,
-                                clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
-                            }}
-                        >
-                            {mission.type.toUpperCase()}
-                        </span>
-                    </div>
-                    <span
-                        className="text-3xl font-black opacity-10 group-hover:opacity-20 transition-opacity"
-                        style={{ fontFamily: 'Space Grotesk', color: typeColor }}
-                    >
-                        #{String(mission.id).padStart(2, '0')}
-                    </span>
-                </div>
-
-                {/* Assigned */}
-                {!isWorld && (
-                    <div className="text-xs mb-4" style={{ color: 'rgba(196,181,253,0.4)', fontFamily: 'Inter' }}>
-                        {isCoop ? (
-                            <span
-                                className="font-bold px-2 py-0.5 rounded-md text-blue-400"
-                                style={{ background: 'rgba(59,130,246,0.1)' }}
-                            >
-                                {mission.assignedTo}
-                            </span>
-                        ) : mission.assignedTo === 'Open' ? (
-                            <span
-                                className="font-bold px-2 py-0.5 text-purple-300 animate-pulse"
-                                style={{ background: 'rgba(124,58,237,0.1)', borderRadius: '6px' }}
-                            >
-                                ✨ Open Quest
-                            </span>
-                        ) : (
-                            <>Assigned to{' '}
-                                <span style={{ color: '#A855F7', background: 'rgba(124,58,237,0.1)', padding: '1px 6px', borderRadius: '4px' }}>
-                                    {mission.assignedTo}
-                                </span>
-                            </>
-                        )}
-                    </div>
-                )}
-
-                <h4
-                    className="text-base font-bold mb-4 leading-snug"
-                    style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}
-                >
-                    {mission.title}
-                </h4>
-
-                <div
-                    className="pt-4 flex items-center justify-between"
-                    style={{ borderTop: `1px solid rgba(124,58,237,0.09)` }}
-                >
-                    <div className="flex items-center gap-1.5 text-[10px] font-mono" style={{ color: 'rgba(196,181,253,0.35)' }}>
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                        {mission.deadline}
-                    </div>
-                    <div
-                        className="flex items-center gap-1.5 px-3 py-1.5 font-black text-sm"
-                        style={{
-                            background: 'rgba(245,158,11,0.1)',
-                            border: '1px solid rgba(245,158,11,0.25)',
-                            clipPath: 'polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%)',
-                            color: '#FCD34D',
-                            fontFamily: 'Space Grotesk',
-                        }}
-                    >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-                            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-                            <path d="M4 22h16"></path>
-                            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-                            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-                            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-                        </svg>
-                        {mission.tokens}
-                        <span className="text-[9px] font-mono tracking-widest ml-0.5" style={{ color: 'rgba(252,211,77,0.6)' }}>XP</span>
-                    </div>
-                </div>
-            </motion.div>
-        );
-    };
-
+// ── Missions Tab ──────────────────────────────────────────────────
+function MissionsTab({ onItemInteract }) {
     return (
-        <div>
-            {/* Header */}
-            <div className="flex items-center justify-between mb-10">
+        <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h3 className="text-lg font-bold mb-1" style={{ fontFamily: 'Space Grotesk' }}>Active Quests</h3>
+                    <h3 className="text-xl font-bold" style={{ fontFamily: 'Space Grotesk' }}>Active Quests &amp; Bounties</h3>
                     <p className="text-sm" style={{ color: 'rgba(196,181,253,0.45)', fontFamily: 'Inter' }}>
-                        Complete quests to earn tokens and XP for your card progression.
+                        Complete missions to earn XP and level up your Synapse Card.
                     </p>
                 </div>
-                <div
-                    className="text-center px-4 py-3"
-                    style={{
-                        background: 'rgba(124,58,237,0.08)',
-                        border: '1px solid rgba(124,58,237,0.15)',
-                        clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
-                    }}
-                >
-                    <div className="text-2xl font-black" style={{ fontFamily: 'Space Grotesk', color: '#A855F7' }}>
-                        {missions.filter(m => m.status === 'Active').length}
-                    </div>
-                    <div className="text-[9px] font-mono" style={{ color: 'rgba(196,181,253,0.35)' }}>ACTIVE</div>
-                </div>
+                <span className="text-[10px] font-mono text-purple-400 bg-purple-950/60 px-3 py-1 rounded-full border border-purple-500/30">
+                    SEASON 1 BOUNTIES
+                </span>
             </div>
 
-            {/* World event — full width */}
-            {worldEvent && (
-                <div className="mb-8">
-                    <div className="section-label mb-4">World Event</div>
-                    <QuestCard mission={worldEvent} i={0} />
-                </div>
-            )}
-
-            {/* Open quests */}
-            {openMissions.length > 0 && (
-                <div className="mb-8">
-                    <div className="section-label mb-4">Open Quests</div>
-                    <div className="flex flex-wrap gap-6 justify-start">
-                        {openMissions.map((m, i) => (
-                            <div key={m.id} className="flex-1 min-w-[280px] max-w-xl">
-                                <QuestCard mission={m} i={i + 1} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {missions.map((mission) => (
+                    <div
+                        key={mission.id}
+                        onClick={onItemInteract}
+                        className="p-6 rounded-2xl border border-purple-500/20 bg-purple-950/20 hover:border-purple-500/40 transition-all cursor-pointer group"
+                    >
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                            <div>
+                                <span className="text-[10px] font-mono text-purple-400 tracking-wider uppercase">{mission.category}</span>
+                                <h4 className="text-lg font-bold text-white mt-1 group-hover:text-purple-300 transition-colors" style={{ fontFamily: 'Space Grotesk' }}>{mission.title}</h4>
                             </div>
-                        ))}
+                            <span className="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20">
+                                +{mission.xp} XP
+                            </span>
+                        </div>
+                        <p className="text-xs text-purple-200/60 mb-4" style={{ fontFamily: 'Inter' }}>{mission.description}</p>
+                        <div className="flex items-center justify-between pt-3 border-t border-purple-900/30">
+                            <span className="text-[10px] font-mono text-purple-300/50">DEADLINE: {mission.deadline}</span>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onItemInteract(); }}
+                                className="px-3 py-1.5 rounded-lg bg-purple-600/30 group-hover:bg-purple-600 text-purple-200 text-xs font-mono transition-all cursor-pointer"
+                            >
+                                Claim Quest
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
-
-            {/* Co-op quests */}
-            {coopMissions.length > 0 && (
-                <div className="mb-8">
-                    <div className="section-label mb-4">Co-op &amp; Team Quests</div>
-                    <div className="flex flex-wrap gap-6">
-                        {[...coopMissions, ...teamMissions].map((m, i) => (
-                            <div key={m.id} className="flex-1 min-w-[280px] max-w-xl">
-                                <QuestCard mission={m} i={i + openMissions.length + 1} />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                ))}
+            </div>
         </div>
     );
 }
 
 // ── Factions Tab ──────────────────────────────────────────────────
-function FactionsTab() {
+function FactionsTab({ onItemInteract }) {
     return (
-        <div>
-            <div className="flex items-center justify-between mb-8">
+        <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h3 className="text-lg font-bold mb-1" style={{ fontFamily: 'Space Grotesk' }}>Synapse Factions</h3>
+                    <h3 className="text-xl font-bold" style={{ fontFamily: 'Space Grotesk' }}>Domain Factions</h3>
                     <p className="text-sm" style={{ color: 'rgba(196,181,253,0.45)', fontFamily: 'Inter' }}>
-                        Compete as a faction. Top teams earn exclusive event cards and XP multipliers.
+                        Join your specialized team faction and compete for seasonal standing.
                     </p>
                 </div>
-                <div className="text-2xl">⚔️</div>
             </div>
 
-            <div className="space-y-4">
-                {[...teams].sort((a, b) => b.tokens - a.tokens).map((team, index) => {
-                    const rank = index + 1;
-                    const isFirst = rank === 1;
-
-                    return (
-                        <motion.div
-                            key={team.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: index * 0.08 }}
-                            className="relative flex items-center gap-5 p-5 rounded-2xl overflow-hidden transition-all duration-300"
-                            style={{
-                                background: isFirst
-                                    ? 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(12,12,20,0.9))'
-                                    : 'rgba(12,12,20,0.8)',
-                                border: `1px solid ${isFirst ? 'rgba(168,85,247,0.35)' : 'rgba(124,58,237,0.1)'}`,
-                                boxShadow: isFirst ? '0 8px 40px rgba(124,58,237,0.1)' : 'none',
-                            }}
-                        >
-                            {/* Rank */}
-                            <div
-                                className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-black flex-shrink-0"
-                                style={{
-                                    fontFamily: 'Space Grotesk',
-                                    background: isFirst ? 'linear-gradient(135deg, #7C3AED, #A855F7)' : 'rgba(124,58,237,0.1)',
-                                    color: isFirst ? '#fff' : 'rgba(168,85,247,0.6)',
-                                    boxShadow: isFirst ? '0 0 20px rgba(124,58,237,0.4)' : 'none',
-                                }}
-                            >
-                                {rank === 1 ? '👑' : `#${rank}`}
-                            </div>
-
-                            <div className="flex-grow">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-lg">{team.badge}</span>
-                                    <h4 className="font-bold" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>{team.name}</h4>
-                                    {isFirst && (
-                                        <span
-                                            className="text-[9px] font-mono px-2 py-0.5 tracking-widest"
-                                            style={{
-                                                background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
-                                                color: 'white',
-                                                clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
-                                            }}
-                                        >
-                                            LEADING
-                                        </span>
-                                    )}
-                                </div>
-                                <p className="text-xs" style={{ color: 'rgba(196,181,253,0.4)', fontFamily: 'Space Mono' }}>
-                                    {team.members} members
-                                </p>
-                                <div className="mt-2 h-1 rounded-full" style={{ background: 'rgba(124,58,237,0.1)' }}>
-                                    <div
-                                        className="h-full rounded-full transition-all duration-1000"
-                                        style={{
-                                            width: `${(team.tokens / teams[0].tokens) * 100}%`,
-                                            background: `linear-gradient(90deg, ${team.color}, ${team.color}88)`,
-                                            boxShadow: `0 0 6px ${team.color}55`,
-                                        }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="text-right flex-shrink-0">
-                                <div
-                                    className="text-2xl font-black"
-                                    style={{
-                                        fontFamily: 'Space Grotesk',
-                                        background: isFirst ? 'linear-gradient(135deg, #A855F7, #E879F9)' : 'none',
-                                        WebkitBackgroundClip: isFirst ? 'text' : 'unset',
-                                        WebkitTextFillColor: isFirst ? 'transparent' : 'rgba(168,85,247,0.7)',
-                                    }}
-                                >
-                                    {team.tokens.toLocaleString()}
-                                </div>
-                                <div className="text-[9px] font-mono" style={{ color: 'rgba(196,181,253,0.3)' }}>TOKENS</div>
-                            </div>
-                        </motion.div>
-                    );
-                })}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {teams.map((team) => (
+                    <div
+                        key={team.id}
+                        onClick={onItemInteract}
+                        className="p-6 rounded-2xl border border-purple-500/20 bg-purple-950/20 text-center hover:border-purple-500/40 transition-all cursor-pointer group"
+                    >
+                        <div className="w-12 h-12 rounded-2xl bg-purple-900/40 border border-purple-500/30 flex items-center justify-center mx-auto mb-4 text-purple-300 group-hover:scale-110 transition-transform">
+                            <Users className="w-6 h-6" />
+                        </div>
+                        <h4 className="text-lg font-bold text-white mb-1 group-hover:text-purple-300 transition-colors" style={{ fontFamily: 'Space Grotesk' }}>{team.name}</h4>
+                        <p className="text-xs text-purple-300/60 mb-4">{team.description}</p>
+                        <div className="text-xs font-mono text-amber-400 bg-amber-400/10 py-1.5 px-3 rounded-xl border border-amber-400/20">
+                            TOTAL FACTION XP: {team.totalXp} XP
+                        </div>
+                    </div>
+                ))}
             </div>
-
-            {/* Season CTA */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="mt-8 p-6 rounded-2xl text-center"
-                style={{ background: 'rgba(12,12,20,0.7)', border: '1px solid rgba(124,58,237,0.12)' }}
-            >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A855F7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3">
-                            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-                            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-                            <path d="M4 22h16"></path>
-                            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-                            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-                            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-                </svg>
-                <h4 className="font-bold text-base mb-2" style={{ fontFamily: 'Space Grotesk' }}>Season 1 Rankings</h4>
-                <p className="text-sm mb-5" style={{ color: 'rgba(196,181,253,0.45)', fontFamily: 'Inter' }}>
-                    Top faction at Season 1 close earns the exclusive{' '}
-                    <strong style={{ color: '#C4B5FD' }}>Faction Champion</strong> event card for all members.
-                </p>
-                <button
-                    disabled
-                    className="btn-cyber btn-cyber-sm opacity-50 cursor-not-allowed"
-                    title="Backend registration system is currently under construction"
-                >
-                    Registration Opens Soon
-                </button>
-            </motion.div>
         </div>
     );
 }
@@ -528,6 +255,9 @@ function FactionsTab() {
 export function Nexus() {
     const [activeTab, setActiveTab] = useState('cards');
     const [selectedCard, setSelectedCard] = useState(null);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
+    const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+    const { isAuthenticated, isAdmin, openAuthModal } = useAuth();
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -541,18 +271,32 @@ export function Nexus() {
         }
     }, [selectedCard]);
 
+    const handleItemInteract = () => {
+        if (!isAuthenticated) {
+            openAuthModal();
+        }
+    };
+
+    const handleCardClick = (card) => {
+        if (!isAuthenticated) {
+            openAuthModal();
+        } else {
+            setSelectedCard(card);
+        }
+    };
+
     return (
         <div className="min-h-screen px-4 py-16">
             <div className="max-w-6xl mx-auto relative z-10">
-                {/* Header */}
+                {/* Header with QR Action Bar */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.7 }}
-                    className="mb-12"
+                    className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6"
                 >
-                    <div className="section-label mb-3">The Hub</div>
-                    <div className="flex items-end gap-4">
+                    <div>
+                        <div className="section-label mb-3">The Hub</div>
                         <h1
                             className="text-5xl md:text-7xl font-black tracking-tight"
                             style={{ fontFamily: 'Space Grotesk' }}
@@ -567,12 +311,70 @@ export function Nexus() {
                                 NEXUS
                             </span>
                         </h1>
-                        <div className="hidden md:block flex-1 h-[1px] mb-3" style={{ background: 'linear-gradient(90deg, rgba(124,58,237,0.3), transparent)' }} />
+                        <p className="text-base mt-2 max-w-xl" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter' }}>
+                            Your card collection. Active quests. Faction standings. Scan QR codes to claim rewards.
+                        </p>
                     </div>
-                    <p className="text-base mt-4 max-w-xl" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter' }}>
-                        Your card collection. Active quests. Faction standings. This is where Synapse Society comes alive.
-                    </p>
+
+                    {/* QR Action Buttons */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        <button
+                            onClick={() => setIsScannerOpen(true)}
+                            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 flex items-center gap-2 transition-all transform hover:scale-105 cursor-pointer"
+                            style={{ fontFamily: 'Space Grotesk' }}
+                        >
+                            <QrCode className="w-4 h-4 text-purple-200" />
+                            SCAN SYNAPSE QR
+                        </button>
+
+                        {isAdmin && (
+                            <button
+                                onClick={() => setIsGeneratorOpen(true)}
+                                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 transition-all transform hover:scale-105 cursor-pointer"
+                                style={{ fontFamily: 'Space Grotesk' }}
+                            >
+                                <PlusCircle className="w-4 h-4" />
+                                GENERATE QR (ADMIN)
+                            </button>
+                        )}
+                    </div>
                 </motion.div>
+
+
+                {/* Unauthenticated Preview Banner */}
+                {!isAuthenticated && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-8 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(124,58,237,0.18), rgba(217,70,239,0.12))',
+                            border: '1px solid rgba(124,58,237,0.35)',
+                            boxShadow: '0 0 25px rgba(124,58,237,0.15)'
+                        }}
+                    >
+                        <div className="flex items-center gap-3 text-left">
+                            <div className="w-10 h-10 rounded-xl bg-purple-900/50 border border-purple-500/30 flex items-center justify-center flex-shrink-0">
+                                <Lock className="w-5 h-5 text-amber-400" />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-white" style={{ fontFamily: 'Space Grotesk' }}>
+                                    Preview Mode • Authentication Required
+                                </h4>
+                                <p className="text-xs text-purple-200/70">
+                                    Click any Card, Quest, or Faction to log in and unlock full XP progression.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={openAuthModal}
+                            className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-lg shadow-purple-600/30 flex-shrink-0 cursor-pointer"
+                        >
+                            <LogIn className="w-4 h-4" />
+                            Sign In Now
+                        </button>
+                    </motion.div>
+                )}
 
                 {/* Tab Bar — cyber slanted */}
                 <div className="flex items-center gap-2 mb-10 overflow-x-auto">
@@ -580,7 +382,7 @@ export function Nexus() {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className="flex items-center justify-center gap-2 py-2.5 px-6 text-sm font-semibold transition-all duration-200 whitespace-nowrap"
+                            className="flex items-center justify-center gap-2 py-2.5 px-6 text-sm font-semibold transition-all duration-200 whitespace-nowrap cursor-pointer"
                             style={{
                                 fontFamily: 'Space Grotesk',
                                 letterSpacing: '0.08em',
@@ -610,14 +412,14 @@ export function Nexus() {
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.3 }}
                     >
-                        {activeTab === 'cards' && <CardsTab setSelectedCard={setSelectedCard} />}
-                        {activeTab === 'missions' && <MissionsTab />}
-                        {activeTab === 'factions' && <FactionsTab />}
+                        {activeTab === 'cards' && <CardsTab onCardClick={handleCardClick} />}
+                        {activeTab === 'missions' && <MissionsTab onItemInteract={handleItemInteract} />}
+                        {activeTab === 'factions' && <FactionsTab onItemInteract={handleItemInteract} />}
                     </motion.div>
                 </AnimatePresence>
             </div>
 
-            {/* Card Overlay — Portaled to body to completely escape all CSS containing blocks from transforms/filters */}
+            {/* Card Overlay — Portaled to body */}
             {typeof document !== 'undefined' && createPortal(
                 <AnimatePresence>
                     {selectedCard && (
@@ -644,6 +446,11 @@ export function Nexus() {
                 </AnimatePresence>,
                 document.body
             )}
+
+            {/* QR Modals */}
+            <QRScannerModal isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} />
+            <AdminQRGeneratorModal isOpen={isGeneratorOpen} onClose={() => setIsGeneratorOpen(false)} />
         </div>
     );
 }
+
