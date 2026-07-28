@@ -171,9 +171,26 @@ export function Home() {
     const { scrollYProgress } = useScroll({ target: heroRef });
     const heroY = useTransform(scrollYProgress, [0, 1], [0, -80]);
 
-    const previewCards = [membershipCards[0], membershipCards[2], membershipCards[5]];
+    const [previewCards, setPreviewCards] = useState([]);
     const [selectedCard, setSelectedCard] = useState(null);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
+
+    useEffect(() => {
+        import("../lib/auth").then(({ getAllCards }) => {
+            getAllCards().then(res => {
+                if (res.data && res.data.length > 0) {
+                    const cards = res.data;
+                    setPreviewCards([
+                        cards[0],
+                        cards[Math.floor(cards.length / 2)] || cards[0],
+                        cards[cards.length - 1] || cards[0]
+                    ]);
+                } else {
+                    setPreviewCards([]);
+                }
+            });
+        });
+    }, []);
 
     useEffect(() => {
         const handleKeyDown = (e) => {

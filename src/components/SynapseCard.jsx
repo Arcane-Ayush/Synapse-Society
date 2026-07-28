@@ -140,6 +140,8 @@ export function SynapseCard({ card, size = "md", showBack = false, className = "
         setHovered(false);
     }, []);
 
+    if (!card) return null;
+
     const isMythic = card.level === 5;
     const isLegendary = card.level === 4;
     const rarityLabel = card.type === 'event' ? 'EVENT EXCLUSIVE' : (RARITY_LABELS[card.level] || 'SPECIAL');
@@ -400,17 +402,17 @@ export function SynapseCard({ card, size = "md", showBack = false, className = "
                                 }}
                             >
                                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                    <rect x="1" y="1" width="4" height="4" rx="0.5" stroke={card.colors?.secondary || '#A855F7'} strokeWidth="0.8" opacity="0.5"/>
-                                    <rect x="9" y="1" width="4" height="4" rx="0.5" stroke={card.colors?.secondary || '#A855F7'} strokeWidth="0.8" opacity="0.5"/>
-                                    <rect x="1" y="9" width="4" height="4" rx="0.5" stroke={card.colors?.secondary || '#A855F7'} strokeWidth="0.8" opacity="0.5"/>
-                                    <rect x="2.5" y="2.5" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5"/>
-                                    <rect x="10.5" y="2.5" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5"/>
-                                    <rect x="2.5" y="10.5" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5"/>
-                                    <rect x="8" y="7" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5"/>
-                                    <rect x="10" y="7" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5"/>
-                                    <rect x="12" y="7" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5"/>
-                                    <rect x="9" y="9" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5"/>
-                                    <rect x="11" y="11" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5"/>
+                                    <rect x="1" y="1" width="4" height="4" rx="0.5" stroke={card.colors?.secondary || '#A855F7'} strokeWidth="0.8" opacity="0.5" />
+                                    <rect x="9" y="1" width="4" height="4" rx="0.5" stroke={card.colors?.secondary || '#A855F7'} strokeWidth="0.8" opacity="0.5" />
+                                    <rect x="1" y="9" width="4" height="4" rx="0.5" stroke={card.colors?.secondary || '#A855F7'} strokeWidth="0.8" opacity="0.5" />
+                                    <rect x="2.5" y="2.5" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5" />
+                                    <rect x="10.5" y="2.5" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5" />
+                                    <rect x="2.5" y="10.5" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5" />
+                                    <rect x="8" y="7" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5" />
+                                    <rect x="10" y="7" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5" />
+                                    <rect x="12" y="7" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5" />
+                                    <rect x="9" y="9" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5" />
+                                    <rect x="11" y="11" width="1" height="1" fill={card.colors?.secondary || '#A855F7'} opacity="0.5" />
                                 </svg>
                             </div>
 

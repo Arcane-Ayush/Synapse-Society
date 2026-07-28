@@ -123,6 +123,27 @@ export async function getUserCards(userId) {
         `)
         .eq('user_id', userId)
         .order('unlocked_at', { ascending: false });
+        
+    if (data) {
+        const normalized = data.map(item => ({
+            ...item,
+            cards: {
+                ...item.cards,
+                colors: {
+                    primary: item.cards.primary_color,
+                    secondary: item.cards.secondary_color,
+                    glow: item.cards.glow_color
+                },
+                foilColors: item.cards.foil_colors,
+                characterEmoji: item.cards.character_emoji,
+                xpRequired: item.cards.xp_required,
+                xpMax: item.cards.xp_max,
+                imageUrl: item.cards.image_url,
+                maxSupply: item.cards.max_supply
+            }
+        }));
+        return { data: normalized, error };
+    }
     return { data, error };
 }
 
@@ -181,14 +202,43 @@ export async function getProjects() {
 }
 
 /**
+ * Fetch all team members (About page).
+ */
+export async function getTeamMembers() {
+    const { data, error } = await supabase
+        .from('team_members')
+        .select('*')
+        .order('created_at', { ascending: true });
+    return { data, error };
+}
+
+/**
  * Fetch all card definitions (for Nexus cards tab).
  */
 export async function getAllCards() {
     const { data, error } = await supabase
         .from('cards')
-        .select('*, rarities(display_order)')
-        .eq('is_active', true)
-        .order('level_required', { ascending: true, nullsLast: true });
+        .select('*')
+        .order('level', { ascending: true, nullsLast: true });
+        
+    if (data) {
+        const normalized = data.map(card => ({
+            ...card,
+            colors: {
+                primary: card.primary_color,
+                secondary: card.secondary_color,
+                glow: card.glow_color
+            },
+            foilColors: card.foil_colors,
+            characterEmoji: card.character_emoji,
+            xpRequired: card.xp_required,
+            xpMax: card.xp_max,
+            imageUrl: card.image_url,
+            maxSupply: card.max_supply
+        }));
+        return { data: normalized, error };
+    }
+    
     return { data, error };
 }
 
@@ -203,4 +253,18 @@ export async function getXpHistory(userId, limit = 20) {
         .order('created_at', { ascending: false })
         .limit(limit);
     return { data, error };
+}
+
+/**
+ * Generate a unique access code based on a user's email.
+ * This matches the logic on the Synapse Form site to verify form submission without DB linking.
+ */
+export async function generateFormCode(email) {
+    if (!email) return null;
+    const encoder = new TextEncoder();
+    const data = encoder.encode(email.toLowerCase().trim() + "SYNAPSE_SECRET_SALT_2026");
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return "SYN-" + hashHex.slice(0, 8).toUpperCase();
 }

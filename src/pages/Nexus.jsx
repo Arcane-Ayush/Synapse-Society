@@ -566,6 +566,53 @@ function QRVaultTab({ onOpenLogin }) {
         setMessage(null);
 
         try {
+            // First check if this is their unique Form Code
+            const { generateFormCode } = await import('../lib/auth');
+            const expectedFormCode = await generateFormCode(user.email);
+            
+            if (qrCodeInput.trim().toUpperCase() === expectedFormCode) {
+                // Verify they haven't claimed it yet
+                const { data: existing } = await supabase
+                    .from('xp_history')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('reason', 'Form Signup Reward')
+                    .maybeSingle();
+
+                if (existing) {
+                    setMessage({ type: 'error', text: 'You have already claimed your form reward!' });
+                    setLoading(false);
+                    return;
+                }
+
+                // Award 10 XP
+                const { data: xpRes, error: xpErr } = await supabase.rpc('award_xp', {
+                    p_user_id: user.id,
+                    p_amount: 10,
+                    p_reason: 'Form Signup Reward',
+                    p_source: 'qr_scan',
+                    p_reference_id: 'FORM-SIGNUP-REWARD'
+                });
+
+                if (xpErr) throw xpErr;
+
+                // Award SAP-001 card
+                const { error: cardErr } = await supabase.rpc('award_card', {
+                    p_user_id: user.id,
+                    p_card_id: 'SAP-001'
+                });
+
+                if (cardErr && cardErr.code !== '23505') { // Ignore unique violation if they somehow already have it
+                    throw cardErr;
+                }
+
+                setMessage({ type: 'success', text: '🎉 Form Reward Claimed! +10 XP and Synapse Access Pass unlocked!' });
+                setQrCodeInput('');
+                setLoading(false);
+                return;
+            }
+
+            // Normal QR Code Flow
             const { data: qr, error: qrErr } = await supabase
                 .from('qr_codes')
                 .select('*')
@@ -574,11 +621,13 @@ function QRVaultTab({ onOpenLogin }) {
 
             if (qrErr || !qr) {
                 setMessage({ type: 'error', text: 'Invalid or unrecognized QR code token.' });
+                setLoading(false);
                 return;
             }
 
             if (!qr.is_active) {
                 setMessage({ type: 'error', text: 'This QR code is no longer active.' });
+                setLoading(false);
                 return;
             }
 
@@ -593,6 +642,7 @@ function QRVaultTab({ onOpenLogin }) {
 
                 if (existing) {
                     setMessage({ type: 'error', text: 'You have already redeemed this QR code!' });
+                    setLoading(false);
                     return;
                 }
             }

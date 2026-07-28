@@ -479,3 +479,11 @@
   50% { clip-path: polygon(12px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%); }
   75% { clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%); }
 }
+/* Custom Cyber Cursor */
+body {
+  cursor: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="4" fill="%23A855F7" opacity="0.8"/><circle cx="12" cy="12" r="10" stroke="%237C3AED" stroke-width="1.5" opacity="0.5"/></svg>') 12 12, auto;
+}
+
+a, button, [role="button"], input, select, textarea, .cursor-pointer {
+  cursor: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5" fill="%23D946EF"/><circle cx="12" cy="12" r="11" stroke="%23D946EF" stroke-width="2" opacity="0.9"/></svg>') 12 12, pointer !important;
+}

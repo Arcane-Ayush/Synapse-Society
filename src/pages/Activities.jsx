@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { activities } from "../data/mockData";
-import { Calendar, Clock, MapPin, Tag, ExternalLink, Zap, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Calendar, Clock, MapPin, Tag, ExternalLink, Zap, ChevronDown, Loader } from "lucide-react";
 
 const STATUS_STYLES = {
     Upcoming: {
@@ -218,8 +217,26 @@ function ActivityCard({ activity, index }) {
 }
 
 export function Activities() {
+    const [dbActivities, setDbActivities] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        import("../lib/auth").then(({ getActivities }) => {
+            getActivities().then(res => {
+                const mapped = (res.data || []).map(a => ({
+                    ...a,
+                    date: a.event_date,
+                    time: a.event_time,
+                    participants: a.max_participants ? `0/${a.max_participants}` : undefined
+                }));
+                setDbActivities(mapped);
+                setLoading(false);
+            });
+        });
+    }, []);
+
     // Auto-update status by date
-    const processedActivities = activities.map(activity => {
+    const processedActivities = dbActivities.map(activity => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const activityDate = new Date(activity.date);
@@ -276,50 +293,59 @@ export function Activities() {
                     </p>
                 </motion.div>
 
-                {/* Upcoming */}
-                {upcoming.length > 0 && (
-                    <div className="mb-12">
-                        <div
-                            className="flex items-center gap-3 mb-6"
-                            style={{ borderBottom: '1px solid rgba(124,58,237,0.1)', paddingBottom: '12px' }}
-                        >
-                            <span className="section-label">Upcoming</span>
-                            <span
-                                className="px-2 py-0.5 rounded-full text-[10px] font-mono"
-                                style={{ background: 'rgba(124,58,237,0.15)', color: '#A855F7', border: '1px solid rgba(124,58,237,0.25)' }}
-                            >
-                                {upcoming.length}
-                            </span>
-                        </div>
-                        <div className="space-y-6">
-                            {upcoming.map((activity, i) => (
-                                <ActivityCard key={activity.id} activity={activity} index={i} />
-                            ))}
-                        </div>
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-purple-400">
+                        <Loader className="animate-spin mb-4" size={32} />
+                        <p className="font-mono text-sm tracking-widest uppercase">Fetching Events...</p>
                     </div>
-                )}
+                ) : (
+                    <>
+                        {/* Upcoming */}
+                        {upcoming.length > 0 && (
+                            <div className="mb-12">
+                                <div
+                                    className="flex items-center gap-3 mb-6"
+                                    style={{ borderBottom: '1px solid rgba(124,58,237,0.1)', paddingBottom: '12px' }}
+                                >
+                                    <span className="section-label">Upcoming</span>
+                                    <span
+                                        className="px-2 py-0.5 rounded-full text-[10px] font-mono"
+                                        style={{ background: 'rgba(124,58,237,0.15)', color: '#A855F7', border: '1px solid rgba(124,58,237,0.25)' }}
+                                    >
+                                        {upcoming.length}
+                                    </span>
+                                </div>
+                                <div className="space-y-6">
+                                    {upcoming.map((activity, i) => (
+                                        <ActivityCard key={activity.id} activity={activity} index={i} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
-                {/* Completed */}
-                {completed.length > 0 && (
-                    <div>
-                        <div
-                            className="flex items-center gap-3 mb-6"
-                            style={{ borderBottom: '1px solid rgba(71,85,105,0.15)', paddingBottom: '12px' }}
-                        >
-                            <span className="section-label" style={{ color: 'rgba(100,116,139,0.6)' }}>Completed</span>
-                            <span
-                                className="px-2 py-0.5 rounded-full text-[10px] font-mono"
-                                style={{ background: 'rgba(71,85,105,0.1)', color: '#64748B', border: '1px solid rgba(71,85,105,0.2)' }}
-                            >
-                                {completed.length}
-                            </span>
-                        </div>
-                        <div className="space-y-6">
-                            {completed.map((activity, i) => (
-                                <ActivityCard key={activity.id} activity={activity} index={i} />
-                            ))}
-                        </div>
-                    </div>
+                        {/* Completed */}
+                        {completed.length > 0 && (
+                            <div>
+                                <div
+                                    className="flex items-center gap-3 mb-6"
+                                    style={{ borderBottom: '1px solid rgba(71,85,105,0.15)', paddingBottom: '12px' }}
+                                >
+                                    <span className="section-label" style={{ color: 'rgba(100,116,139,0.6)' }}>Completed</span>
+                                    <span
+                                        className="px-2 py-0.5 rounded-full text-[10px] font-mono"
+                                        style={{ background: 'rgba(71,85,105,0.1)', color: '#64748B', border: '1px solid rgba(71,85,105,0.2)' }}
+                                    >
+                                        {completed.length}
+                                    </span>
+                                </div>
+                                <div className="space-y-6">
+                                    {completed.map((activity, i) => (
+                                        <ActivityCard key={activity.id} activity={activity} index={i} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

@@ -1,13 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { projects } from "../data/mockData";
-import { ChevronLeft, ChevronRight, Github, ExternalLink } from "lucide-react";
+import { ChevronLeft, ChevronRight, Github, ExternalLink, Loader } from "lucide-react";
 
 // Reskinned ArcadeDeck in Synapse purple aesthetic
 function SynapseDeck({ projects }) {
     const [activeIndex, setActiveIndex] = useState(0);
     const [page, setPage] = useState(0);
     const PAGE_SIZE = 5;
+
+    if (!projects || projects.length === 0) {
+        return (
+            <div className="relative w-full max-w-6xl flex items-center justify-center" style={{ height: 'clamp(400px, 60vh, 520px)' }}>
+                <p className="text-purple-400 font-mono tracking-widest uppercase text-sm">No projects found.</p>
+            </div>
+        );
+    }
 
     const totalPages = Math.ceil(projects.length / PAGE_SIZE);
     const currentProjects = projects.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -155,9 +162,9 @@ function SynapseDeck({ projects }) {
 
                                     {/* Links */}
                                     <div className="flex gap-2">
-                                        {project.githubUrl && (
+                                        {(project.githubUrl || project.github_url) && (
                                             <a
-                                                href={project.githubUrl}
+                                                href={project.githubUrl || project.github_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 onClick={e => e.stopPropagation()}
@@ -169,9 +176,9 @@ function SynapseDeck({ projects }) {
                                                 <Github size={10} /> GitHub
                                             </a>
                                         )}
-                                        {project.demoUrl && (
+                                        {(project.demoUrl || project.demo_url) && (
                                             <a
-                                                href={project.demoUrl}
+                                                href={project.demoUrl || project.demo_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 onClick={e => e.stopPropagation()}
@@ -233,6 +240,18 @@ function SynapseDeck({ projects }) {
 }
 
 export function Projects() {
+    const [dbProjects, setDbProjects] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        import("../lib/auth").then(({ getProjects }) => {
+            getProjects().then(res => {
+                setDbProjects(res.data || []);
+                setLoading(false);
+            });
+        });
+    }, []);
+
     return (
         <div className="min-h-screen flex flex-col px-4 py-16">
             <motion.div
@@ -263,7 +282,14 @@ export function Projects() {
             </motion.div>
 
             <div className="flex-1 flex items-start justify-center pb-16">
-                <SynapseDeck projects={projects} />
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-purple-400">
+                        <Loader className="animate-spin mb-4" size={32} />
+                        <p className="font-mono text-sm tracking-widest uppercase">Loading Projects...</p>
+                    </div>
+                ) : (
+                    <SynapseDeck projects={dbProjects} />
+                )}
             </div>
         </div>
     );

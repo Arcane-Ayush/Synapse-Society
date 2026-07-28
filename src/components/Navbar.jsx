@@ -15,7 +15,7 @@ const navItems = [
 
 const externalLinks = [
     { name: "HUB", url: "https://the-synapse-hub.vercel.app", label: "Synapse Hub" },
-    { name: "JOIN", url: "https://synapse-form.vercel.app", label: "Join Us" },
+    { name: "JOIN", url: "https://synapse-form.vercel.app", label: "Apply Now" },
 ];
 
 export function Navbar() {
