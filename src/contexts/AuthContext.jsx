@@ -23,20 +23,50 @@ export function AuthProvider({ children }) {
     }
 
     useEffect(() => {
+        let isMounted = true;
+
+        // Safety fallback: force loading false after 2s max
+        const timer = setTimeout(() => {
+            if (isMounted) setLoading(false);
+        }, 2000);
+
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null);
-            loadProfile(session?.user ?? null).finally(() => setLoading(false));
-        });
+        supabase.auth.getSession()
+            .then(async ({ data: { session } }) => {
+                if (!isMounted) return;
+                const authUser = session?.user ?? null;
+                setUser(authUser);
+                if (authUser) {
+                    try {
+                        await loadProfile(authUser);
+                    } catch (e) {
+                        console.error('Failed to load profile:', e);
+                    }
+                }
+            })
+            .catch(err => console.error('Auth session error:', err))
+            .finally(() => {
+                if (isMounted) setLoading(false);
+                clearTimeout(timer);
+            });
 
         // Subscribe to auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (!isMounted) return;
             const nextUser = session?.user ?? null;
             setUser(nextUser);
-            loadProfile(nextUser);
+            if (nextUser) {
+                loadProfile(nextUser).catch(e => console.error('Profile reload error:', e));
+            } else {
+                setProfile(null);
+            }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            isMounted = false;
+            clearTimeout(timer);
+            subscription.unsubscribe();
+        };
     }, []);
 
     async function handleSignOut() {

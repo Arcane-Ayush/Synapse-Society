@@ -202,6 +202,18 @@ export function SynapseCard({ card, size = "md", showBack = false, className = "
                         }}
                     />
 
+                    {/* Full Card Image Overlay if display_mode === 'full_card' or card.fullImage is true */}
+                    {((card.display_mode === 'full_card' || card.fullImage || card.isFullCard) && (card.imageUrl || card.image)) && (
+                        <div className="absolute inset-0 z-0 overflow-hidden">
+                            <img
+                                src={card.imageUrl || card.image}
+                                alt={card.name || card.title}
+                                className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                        </div>
+                    )}
+
                     {/* Holographic layers */}
                     <FoilEffect card={card} active={hovered} mousePos={mousePos} />
                     <HolographicSheen active={hovered} mousePos={mousePos} />
@@ -212,73 +224,83 @@ export function SynapseCard({ card, size = "md", showBack = false, className = "
                         {/* Top bar — ID + Rarity */}
                         <div className="flex items-center justify-between mb-3">
                             <span
-                                className="font-mono text-[10px] tracking-widest"
-                                style={{ color: card.colors?.secondary || '#A855F7', opacity: 0.7 }}
+                                className="font-mono text-[10px] tracking-widest font-bold drop-shadow-md"
+                                style={{ color: card.colors?.secondary || '#A855F7' }}
                             >
                                 #{card.id}
                             </span>
                             <span
-                                className="font-mono text-[9px] tracking-widest px-2 py-0.5 rounded-full"
+                                className="font-mono text-[9px] tracking-widest px-2 py-0.5 rounded-full drop-shadow-md"
                                 style={{
                                     color: card.colors?.secondary || '#A855F7',
                                     border: `1px solid ${card.colors?.primary || '#7C3AED'}55`,
-                                    background: `${card.colors?.primary || '#7C3AED'}15`,
+                                    background: `${card.colors?.primary || '#7C3AED'}30`,
+                                    backdropFilter: 'blur(4px)',
                                 }}
                             >
                                 {rarityLabel}
                             </span>
                         </div>
 
-                        {/* Character Art Area */}
-                        <div
-                            className="relative flex-shrink-0 rounded-xl overflow-hidden flex items-center justify-center mb-3"
-                            style={{
-                                height: height * 0.38,
-                                background: `
-                                    radial-gradient(ellipse at 50% 50%, ${card.colors?.primary || '#7C3AED'}22 0%, transparent 70%),
-                                    rgba(0,0,0,0.4)
-                                `,
-                                border: `1px solid ${card.colors?.primary || '#7C3AED'}33`,
-                            }}
-                        >
-                            {/* Circuit corner accents */}
-                            {['tl', 'tr', 'bl', 'br'].map(corner => (
-                                <div key={corner} className={`absolute ${corner.includes('t') ? 'top-2' : 'bottom-2'} ${corner.includes('l') ? 'left-2' : 'right-2'}`}>
-                                    <svg width="12" height="12" viewBox="0 0 12 12">
-                                        <path
-                                            d={corner === 'tl' ? 'M0 8 L0 0 L8 0' : corner === 'tr' ? 'M4 0 L12 0 L12 8' : corner === 'bl' ? 'M0 4 L0 12 L8 12' : 'M4 12 L12 12 L12 4'}
-                                            fill="none"
-                                            stroke={card.colors?.primary || '#7C3AED'}
-                                            strokeWidth="1.5"
-                                            opacity="0.5"
-                                        />
-                                    </svg>
-                                </div>
-                            ))}
-
-                            {/* Emoji / Character */}
+                        {/* Character Art / Image Area (if not fullImage) */}
+                        {!card.fullImage && (
                             <div
-                                className="text-center"
+                                className="relative flex-shrink-0 rounded-xl overflow-hidden flex items-center justify-center mb-3 group"
                                 style={{
-                                    fontSize: size === 'sm' ? '3rem' : size === 'lg' ? '5rem' : '4rem',
-                                    filter: `drop-shadow(0 0 16px ${card.colors?.glow || 'rgba(124,58,237,0.7)'})`,
-                                    animation: isMythic ? 'float 4s ease-in-out infinite' : 'float 6s ease-in-out infinite',
+                                    height: height * 0.4,
+                                    background: `
+                                        radial-gradient(ellipse at 50% 50%, ${card.colors?.primary || '#7C3AED'}22 0%, transparent 70%),
+                                        rgba(0,0,0,0.5)
+                                    `,
+                                    border: `1px solid ${card.colors?.primary || '#7C3AED'}33`,
                                 }}
                             >
-                                {card.characterEmoji || '⚡'}
-                            </div>
+                                {/* Circuit corner accents */}
+                                {['tl', 'tr', 'bl', 'br'].map(corner => (
+                                    <div key={corner} className={`absolute z-10 ${corner.includes('t') ? 'top-2' : 'bottom-2'} ${corner.includes('l') ? 'left-2' : 'right-2'}`}>
+                                        <svg width="12" height="12" viewBox="0 0 12 12">
+                                            <path
+                                                d={corner === 'tl' ? 'M0 8 L0 0 L8 0' : corner === 'tr' ? 'M4 0 L12 0 L12 8' : corner === 'bl' ? 'M0 4 L0 12 L8 12' : 'M4 12 L12 12 L12 4'}
+                                                fill="none"
+                                                stroke={card.colors?.primary || '#7C3AED'}
+                                                strokeWidth="1.5"
+                                                opacity="0.6"
+                                            />
+                                        </svg>
+                                    </div>
+                                ))}
 
-                            {/* Scan line effect */}
-                            {hovered && (
-                                <div
-                                    className="absolute inset-0 pointer-events-none"
-                                    style={{
-                                        background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)',
-                                        opacity: 0.4,
-                                    }}
-                                />
-                            )}
-                        </div>
+                                {(card.imageUrl || card.image) ? (
+                                    <img
+                                        src={card.imageUrl || card.image}
+                                        alt={card.name || card.title}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+                                ) : (
+                                    <div
+                                        className="text-center"
+                                        style={{
+                                            fontSize: size === 'sm' ? '3rem' : size === 'lg' ? '5rem' : '4rem',
+                                            filter: `drop-shadow(0 0 16px ${card.colors?.glow || 'rgba(124,58,237,0.7)'})`,
+                                            animation: isMythic ? 'float 4s ease-in-out infinite' : 'float 6s ease-in-out infinite',
+                                        }}
+                                    >
+                                        {card.characterEmoji || '⚡'}
+                                    </div>
+                                )}
+
+                                {/* Scan line effect */}
+                                {hovered && (
+                                    <div
+                                        className="absolute inset-0 pointer-events-none"
+                                        style={{
+                                            background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)',
+                                            opacity: 0.4,
+                                        }}
+                                    />
+                                )}
+                            </div>
+                        )}
 
                         {/* Card Name */}
                         <div className="mb-2">

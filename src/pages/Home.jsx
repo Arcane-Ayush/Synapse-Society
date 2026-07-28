@@ -1,13 +1,15 @@
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState } from "react";
-import { Zap, ExternalLink, Award } from "lucide-react";
+import { Zap, ExternalLink, Award, User, Sparkles } from "lucide-react";
 import { membershipCards } from "../data/mockData";
 import { SynapseCard } from "../components/SynapseCard";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { BlackHole } from "../themes/basic/BlackHole";
+import { useAuth } from "../contexts/AuthContext";
+import { LoginModal } from "../components/LoginModal";
 
 // ── Animated counter hook ──────────────────────────────────────────
 function useCounter(target, duration = 2000) {
@@ -164,11 +166,14 @@ function EcosystemCard({ title, desc, url, icon, color, delay, isInternal = fals
 // ══════════════════════════════════════════════════════════════════
 export function Home() {
     const heroRef = useRef(null);
+    const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
     const { scrollYProgress } = useScroll({ target: heroRef });
     const heroY = useTransform(scrollYProgress, [0, 1], [0, -80]);
 
     const previewCards = [membershipCards[0], membershipCards[2], membershipCards[5]];
     const [selectedCard, setSelectedCard] = useState(null);
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -287,23 +292,40 @@ export function Home() {
                                 Build real projects. Learn together. Grow your network. Shape the future.
                             </motion.p>
 
-                            {/* CTA buttons — slanted cyber style */}
+                             {/* CTA buttons — glowing cyber style */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.7, delay: 0.6 }}
                                 className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start"
                             >
-                                <a
-                                    href="https://synapse-form.vercel.app"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="btn-cyber"
-                                >
-                                    <Zap size={14} />
-                                    Join Synapse
-                                    <span className="arrow">↗</span>
-                                </a>
+                                {isAuthenticated ? (
+                                    <Link
+                                        to="/profile"
+                                        className="btn-cyber flex items-center gap-2 group relative overflow-hidden"
+                                        style={{
+                                            boxShadow: '0 0 25px rgba(168,85,247,0.5), 0 0 50px rgba(124,58,237,0.3)',
+                                            border: '1px solid rgba(255,255,255,0.3)',
+                                        }}
+                                    >
+                                        <User size={15} className="text-purple-300" />
+                                        <span>VIEW PROFILE</span>
+                                        <span className="arrow transition-transform group-hover:translate-x-1">→</span>
+                                    </Link>
+                                ) : (
+                                    <button
+                                        onClick={() => setIsLoginOpen(true)}
+                                        className="btn-cyber flex items-center gap-2 group cursor-pointer relative overflow-hidden"
+                                        style={{
+                                            boxShadow: '0 0 30px rgba(168,85,247,0.6), 0 0 60px rgba(124,58,237,0.35)',
+                                            border: '1px solid rgba(255,255,255,0.35)',
+                                        }}
+                                    >
+                                        <Sparkles size={15} className="animate-pulse text-amber-300" />
+                                        <span>JOIN SYNAPSE</span>
+                                        <span className="arrow transition-transform group-hover:translate-x-1">↗</span>
+                                    </button>
+                                )}
                                 <Link to="/nexus" className="btn-cyber-outline">
                                     Explore Nexus
                                     <span className="arrow">→</span>
@@ -617,6 +639,14 @@ export function Home() {
                 </AnimatePresence>,
                 document.body
             )}
+            {/* Login Modal */}
+            <LoginModal
+                isOpen={isLoginOpen}
+                onClose={() => setIsLoginOpen(false)}
+                initialMode="signup"
+                titleOverride="Join Synapse Society"
+                subtitleOverride="Create an account or sign in to complete your club registration form."
+            />
         </div>
     );
 }

@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS cards (
     name            TEXT NOT NULL,
     description     TEXT,
     image_url       TEXT,
+    display_mode    TEXT NOT NULL DEFAULT 'artwork' CHECK (display_mode IN ('artwork', 'full_card')),
     type            TEXT NOT NULL CHECK (type IN ('membership', 'event', 'achievement', 'special')),
     rarity          TEXT NOT NULL REFERENCES rarities(name),
     level_required  INT,                    -- NULL = not a level card

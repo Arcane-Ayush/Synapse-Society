@@ -103,6 +103,14 @@ export async function updateProfile(userId, updates) {
 }
 
 /**
+ * Fetch dynamic XP rank of a user from get_user_rank RPC.
+ */
+export async function getUserRank(userId) {
+    const { data, error } = await supabase.rpc('get_user_rank', { p_user_id: userId });
+    return { data: data ?? 1, error };
+}
+
+/**
  * Fetch all cards owned by a user.
  */
 export async function getUserCards(userId) {

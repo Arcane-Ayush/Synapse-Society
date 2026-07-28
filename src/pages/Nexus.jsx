@@ -3,7 +3,10 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { membershipCards, eventCards, missions, teams } from "../data/mockData";
 import { SynapseCard } from "../components/SynapseCard";
-import { Zap, Target, Users, Trophy, Lock, Calendar, ChevronRight } from "lucide-react";
+import { Zap, Target, Users, Trophy, Lock, Calendar, ChevronRight, QrCode, Plus, Shield, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { supabase } from "../lib/supabase";
+import { LoginModal } from "../components/LoginModal";
 
 const TABS = [
     { id: 'cards', label: 'Cards', icon: (
@@ -26,6 +29,7 @@ const TABS = [
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
     ) },
+    { id: 'qr', label: 'QR Vault', icon: <QrCode size={14} /> },
 ];
 
 // ── Cards Tab ─────────────────────────────────────────────────────
@@ -524,26 +528,435 @@ function FactionsTab() {
     );
 }
 
+// ── QR Vault Tab ──────────────────────────────────────────────────
+function QRVaultTab({ onOpenLogin }) {
+    const { user, profile, isAuthenticated, isLead } = useAuth();
+    const [qrCodeInput, setQrCodeInput] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState(null);
+
+    // Admin QR Creator
+    const [newQr, setNewQr] = useState({
+        code: '',
+        label: '',
+        rewardXp: 150,
+        rewardCardId: '',
+        isReusable: false
+    });
+    const [createdQr, setCreatedQr] = useState(null);
+    const [adminLoading, setAdminLoading] = useState(false);
+    const [adminMessage, setAdminMessage] = useState(null);
+
+    // Redeem handler
+    async function handleRedeem(e) {
+        e.preventDefault();
+        if (!isAuthenticated) {
+            onOpenLogin();
+            return;
+        }
+        if (!qrCodeInput.trim()) return;
+
+        setLoading(true);
+        setMessage(null);
+
+        try {
+            const { data: qr, error: qrErr } = await supabase
+                .from('qr_codes')
+                .select('*')
+                .eq('code', qrCodeInput.trim().toUpperCase())
+                .single();
+
+            if (qrErr || !qr) {
+                setMessage({ type: 'error', text: 'Invalid or unrecognized QR code token.' });
+                return;
+            }
+
+            if (!qr.is_active) {
+                setMessage({ type: 'error', text: 'This QR code is no longer active.' });
+                return;
+            }
+
+            if (!qr.is_reusable) {
+                const { data: existing } = await supabase
+                    .from('qr_scan_history')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('qr_id', qr.id)
+                    .eq('success', true)
+                    .maybeSingle();
+
+                if (existing) {
+                    setMessage({ type: 'error', text: 'You have already redeemed this QR code!' });
+                    return;
+                }
+            }
+
+            const { data: xpRes, error: xpErr } = await supabase.rpc('award_xp', {
+                p_user_id: user.id,
+                p_amount: qr.reward_xp,
+                p_reason: `QR Code: ${qr.label || qr.code}`,
+                p_source: 'qr_scan',
+                p_reference_id: qr.id
+            });
+
+            if (xpErr) {
+                setMessage({ type: 'error', text: 'Failed to credit XP. Try again.' });
+                return;
+            }
+
+            if (qr.reward_card_id) {
+                await supabase.from('user_cards').insert({
+                    user_id: user.id,
+                    card_id: qr.reward_card_id,
+                    source: 'qr_scan'
+                }).onConflict('user_id, card_id').ignore();
+            }
+
+            await supabase.from('qr_scan_history').insert({
+                user_id: user.id,
+                qr_id: qr.id,
+                success: true
+            });
+
+            setMessage({
+                type: 'success',
+                text: `🎉 Redeemed! +${qr.reward_xp} XP credited to your profile!`
+            });
+            setQrCodeInput('');
+        } catch (err) {
+            setMessage({ type: 'error', text: 'An error occurred during verification.' });
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    // Admin Create QR handler
+    async function handleCreateQR(e) {
+        e.preventDefault();
+        if (!newQr.code.trim() || !newQr.label.trim()) return;
+
+        setAdminLoading(true);
+        setAdminMessage(null);
+
+        try {
+            const { data, error } = await supabase
+                .from('qr_codes')
+                .insert({
+                    code: newQr.code.trim().toUpperCase(),
+                    label: newQr.label.trim(),
+                    reward_xp: parseInt(newQr.rewardXp) || 0,
+                    reward_card_id: newQr.rewardCardId || null,
+                    is_reusable: newQr.isReusable,
+                    is_active: true,
+                    created_by: user?.id
+                })
+                .select()
+                .single();
+
+            if (error) {
+                setAdminMessage({ type: 'error', text: error.message });
+                return;
+            }
+
+            setCreatedQr(data);
+            setAdminMessage({ type: 'success', text: 'QR Code created & live on Supabase!' });
+        } catch (err) {
+            setAdminMessage({ type: 'error', text: 'Failed to create QR code.' });
+        } finally {
+            setAdminLoading(false);
+        }
+    }
+
+    return (
+        <div className="space-y-12">
+            {/* Member Redeem Panel */}
+            <div
+                className="p-8 rounded-3xl relative overflow-hidden"
+                style={{
+                    background: 'rgba(12,12,20,0.85)',
+                    border: '1px solid rgba(168,85,247,0.25)',
+                    boxShadow: '0 0 30px rgba(124,58,237,0.1)'
+                }}
+            >
+                <div className="max-w-xl mx-auto text-center mb-8">
+                    <div
+                        className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-4"
+                        style={{
+                            background: 'rgba(124,58,237,0.12)',
+                            border: '1px solid rgba(168,85,247,0.3)',
+                            color: '#A855F7'
+                        }}
+                    >
+                        <QrCode size={28} />
+                    </div>
+                    <h3 className="text-2xl font-black mb-2" style={{ fontFamily: 'Space Grotesk' }}>
+                        Redeem Event QR Code
+                    </h3>
+                    <p className="text-sm leading-relaxed" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter' }}>
+                        Enter the secret code or token from event slides, workshops, or posters to claim your XP and special card unlocks!
+                    </p>
+                </div>
+
+                <form onSubmit={handleRedeem} className="max-w-md mx-auto flex flex-col sm:flex-row gap-3">
+                    <input
+                        type="text"
+                        value={qrCodeInput}
+                        onChange={e => setQrCodeInput(e.target.value)}
+                        placeholder="e.g. SYNAPSE-LAUNCH-2026"
+                        className="flex-1 px-4 py-3 rounded-xl text-sm font-mono uppercase outline-none transition-all"
+                        style={{
+                            background: 'rgba(5,5,8,0.9)',
+                            border: '1px solid rgba(124,58,237,0.3)',
+                            color: '#F5F3FF'
+                        }}
+                    />
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-6 py-3 rounded-xl text-xs font-black tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                        style={{
+                            fontFamily: 'Space Grotesk',
+                            background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                            color: '#FFFFFF',
+                            boxShadow: '0 0 20px rgba(124,58,237,0.3)'
+                        }}
+                    >
+                        {loading ? 'Verifying...' : 'Redeem Code'}
+                    </button>
+                </form>
+
+                {message && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="max-w-md mx-auto mt-4 p-3 rounded-xl text-sm flex items-center gap-2 justify-center"
+                        style={{
+                            background: message.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                            border: `1px solid ${message.type === 'success' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                            color: message.type === 'success' ? '#6EE7B7' : '#FCA5A5'
+                        }}
+                    >
+                        {message.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                        <span>{message.text}</span>
+                    </motion.div>
+                )}
+            </div>
+
+            {/* Admin / Lead QR Generator Section */}
+            {isLead ? (
+                <div
+                    className="p-8 rounded-3xl relative"
+                    style={{
+                        background: 'rgba(8,8,14,0.95)',
+                        border: '1px solid rgba(236,72,153,0.3)',
+                        boxShadow: '0 0 40px rgba(236,72,153,0.1)'
+                    }}
+                >
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 rounded-xl" style={{ background: 'rgba(236,72,153,0.15)', color: '#EC4899' }}>
+                            <Shield size={20} />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>
+                                Admin QR Code Generator
+                            </h3>
+                            <p className="text-xs" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter' }}>
+                                Privileged tool for Leads &amp; Administrators to issue live QR codes for events &amp; workshops.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleCreateQR} className="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(196,181,253,0.6)' }}>
+                                QR Code Token (String)
+                            </label>
+                            <input
+                                type="text"
+                                value={newQr.code}
+                                onChange={e => setNewQr({ ...newQr, code: e.target.value })}
+                                placeholder="e.g. REACT-JAM-2026-XP150"
+                                className="w-full px-4 py-2.5 rounded-xl text-sm font-mono uppercase outline-none"
+                                style={{ background: 'rgba(12,12,20,0.8)', border: '1px solid rgba(124,58,237,0.2)', color: '#FFF' }}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(196,181,253,0.6)' }}>
+                                Label / Title
+                            </label>
+                            <input
+                                type="text"
+                                value={newQr.label}
+                                onChange={e => setNewQr({ ...newQr, label: e.target.value })}
+                                placeholder="e.g. React Workshop Attendance"
+                                className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
+                                style={{ background: 'rgba(12,12,20,0.8)', border: '1px solid rgba(124,58,237,0.2)', color: '#FFF' }}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(196,181,253,0.6)' }}>
+                                Reward XP
+                            </label>
+                            <input
+                                type="number"
+                                value={newQr.rewardXp}
+                                onChange={e => setNewQr({ ...newQr, rewardXp: e.target.value })}
+                                className="w-full px-4 py-2.5 rounded-xl text-sm font-mono outline-none"
+                                style={{ background: 'rgba(12,12,20,0.8)', border: '1px solid rgba(124,58,237,0.2)', color: '#FFF' }}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(196,181,253,0.6)' }}>
+                                Reward Card Unlock (Optional)
+                            </label>
+                            <select
+                                value={newQr.rewardCardId}
+                                onChange={e => setNewQr({ ...newQr, rewardCardId: e.target.value })}
+                                className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
+                                style={{ background: 'rgba(12,12,20,0.8)', border: '1px solid rgba(124,58,237,0.2)', color: '#FFF' }}
+                            >
+                                <option value="">None (XP Only)</option>
+                                <option value="SAP-001">Synapse Access Pass (Level 0)</option>
+                                <option value="SSC-L1">Synapse Spark (Level 1)</option>
+                                <option value="SSC-L2">Synapse Scholar (Level 2)</option>
+                                <option value="EVC-LAUNCH-001">Genesis Card (Event Exclusive)</option>
+                                <option value="EVC-HACK-001">Hackathon Conqueror (Event Exclusive)</option>
+                                <option value="EVC-OS-001">Open Source Pioneer (Achievement)</option>
+                            </select>
+                        </div>
+
+                        <div className="md:col-span-2 flex items-center gap-3">
+                            <label className="flex items-center gap-2 cursor-pointer text-xs" style={{ color: 'rgba(196,181,253,0.8)' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={newQr.isReusable}
+                                    onChange={e => setNewQr({ ...newQr, isReusable: e.target.checked })}
+                                    className="accent-purple-500 w-4 h-4"
+                                />
+                                Allow Multi-scans (Repeatable for everyone)
+                            </label>
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <button
+                                type="submit"
+                                disabled={adminLoading}
+                                className="w-full py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 hover:scale-[1.01] active:scale-95 cursor-pointer"
+                                style={{
+                                    fontFamily: 'Space Grotesk',
+                                    background: 'linear-gradient(135deg, #EC4899, #8B5CF6)',
+                                    color: '#FFF',
+                                    boxShadow: '0 0 20px rgba(236,72,153,0.3)'
+                                }}
+                            >
+                                {adminLoading ? 'Generating...' : 'Publish Live QR Code'}
+                            </button>
+                        </div>
+                    </form>
+
+                    {adminMessage && (
+                        <div className="mt-4 p-3 rounded-xl text-xs text-center" style={{ background: adminMessage.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: adminMessage.type === 'success' ? '#6EE7B7' : '#FCA5A5' }}>
+                            {adminMessage.text}
+                        </div>
+                    )}
+
+                    {/* Display Generated QR Image for Admin */}
+                    {createdQr && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="mt-8 p-6 rounded-2xl text-center"
+                            style={{ background: 'rgba(12,12,20,0.9)', border: '1px dashed rgba(236,72,153,0.4)' }}
+                        >
+                            <h4 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: '#F5F3FF' }}>
+                                Ready to Display / Project:
+                            </h4>
+                            <div className="inline-block p-4 rounded-2xl bg-white shadow-2xl my-3">
+                                <img
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(createdQr.code)}`}
+                                    alt={createdQr.code}
+                                    className="w-48 h-48 mx-auto"
+                                />
+                            </div>
+                            <p className="font-mono text-sm font-bold text-pink-400">{createdQr.code}</p>
+                            <p className="text-xs text-purple-300/70 mt-1">{createdQr.label} — +{createdQr.reward_xp} XP</p>
+                        </motion.div>
+                    )}
+                </div>
+            ) : (
+                <div className="text-center py-6 px-4 rounded-2xl" style={{ background: 'rgba(12,12,20,0.5)', border: '1px solid rgba(124,58,237,0.1)' }}>
+                    <p className="text-xs text-purple-300/50 font-mono">
+                        🔒 Admin QR Generator is restricted to Club Leads &amp; Administrators.
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ══════════════════════════════════════════════════════════════════
 export function Nexus() {
     const [activeTab, setActiveTab] = useState('cards');
     const [selectedCard, setSelectedCard] = useState(null);
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
+    const { isAuthenticated } = useAuth();
 
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'Escape') {
                 setSelectedCard(null);
+                setIsLoginOpen(false);
             }
         };
-        if (selectedCard) {
-            window.addEventListener('keydown', handleKeyDown);
-            return () => window.removeEventListener('keydown', handleKeyDown);
-        }
-    }, [selectedCard]);
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     return (
         <div className="min-h-screen px-4 py-16">
             <div className="max-w-6xl mx-auto relative z-10">
+
+                {/* Unauthenticated Banner Notification */}
+                {!isAuthenticated && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-8 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(236,72,153,0.15))',
+                            border: '1px solid rgba(168,85,247,0.3)',
+                            boxShadow: '0 0 20px rgba(124,58,237,0.15)',
+                        }}
+                    >
+                        <div className="flex items-center gap-3">
+                            <Sparkles className="text-amber-400 animate-pulse flex-shrink-0" size={20} />
+                            <div>
+                                <h4 className="text-sm font-bold" style={{ color: '#F5F3FF', fontFamily: 'Space Grotesk' }}>
+                                    Member Vault Preview
+                                </h4>
+                                <p className="text-xs" style={{ color: 'rgba(196,181,253,0.7)', fontFamily: 'Inter' }}>
+                                    Sign in to claim your Level 0 Access Pass, earn XP, and unlock exclusive event cards!
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setIsLoginOpen(true)}
+                            className="px-5 py-2 rounded-xl text-xs font-black tracking-wider uppercase transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
+                            style={{
+                                fontFamily: 'Space Grotesk',
+                                background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                                color: '#FFF',
+                                boxShadow: '0 0 15px rgba(124,58,237,0.3)',
+                            }}
+                        >
+                            Sign In / Join
+                        </button>
+                    </motion.div>
+                )}
+
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -574,13 +987,13 @@ export function Nexus() {
                     </p>
                 </motion.div>
 
-                {/* Tab Bar — cyber slanted */}
-                <div className="flex items-center gap-2 mb-10 overflow-x-auto">
+                {/* Tab Bar — responsive grid on mobile (no scroll), flex on desktop */}
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 mb-10">
                     {TABS.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className="flex items-center justify-center gap-2 py-2.5 px-6 text-sm font-semibold transition-all duration-200 whitespace-nowrap"
+                            className="flex items-center justify-center gap-2 py-2.5 px-3 sm:px-6 text-sm font-semibold transition-all duration-200 whitespace-nowrap cursor-pointer"
                             style={{
                                 fontFamily: 'Space Grotesk',
                                 letterSpacing: '0.08em',
@@ -613,11 +1026,12 @@ export function Nexus() {
                         {activeTab === 'cards' && <CardsTab setSelectedCard={setSelectedCard} />}
                         {activeTab === 'missions' && <MissionsTab />}
                         {activeTab === 'factions' && <FactionsTab />}
+                        {activeTab === 'qr' && <QRVaultTab onOpenLogin={() => setIsLoginOpen(true)} />}
                     </motion.div>
                 </AnimatePresence>
             </div>
 
-            {/* Card Overlay — Portaled to body to completely escape all CSS containing blocks from transforms/filters */}
+            {/* Card Overlay */}
             {typeof document !== 'undefined' && createPortal(
                 <AnimatePresence>
                     {selectedCard && (
@@ -644,6 +1058,9 @@ export function Nexus() {
                 </AnimatePresence>,
                 document.body
             )}
+
+            {/* Login Modal */}
+            <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
         </div>
     );
 }

@@ -1,8 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Zap, User, LogOut } from "lucide-react";
+import { Menu, X, Zap, User, LogOut, LogIn, Sparkles } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { LoginModal } from "./LoginModal";
 
 const navItems = [
     { name: "Home", path: "/" },
@@ -21,6 +22,7 @@ export function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [visible, setVisible] = useState(false);
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
     const { isAuthenticated, profile, signOut } = useAuth();
@@ -135,24 +137,27 @@ export function Navbar() {
                             <div className="hidden lg:flex items-center gap-2">
                                 <Link
                                     to="/profile"
-                                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all duration-200 hover:opacity-80"
+                                    className="flex items-center gap-2 px-4 py-2 text-xs font-semibold transition-all duration-200 hover:scale-105"
                                     style={{
                                         fontFamily: 'Space Grotesk',
-                                        background: 'rgba(124,58,237,0.12)',
-                                        border: '1px solid rgba(124,58,237,0.25)',
-                                        color: '#D8B4FE',
+                                        clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
+                                        background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(168,85,247,0.2))',
+                                        border: '1px solid rgba(168,85,247,0.4)',
+                                        color: '#E9D5FF',
+                                        boxShadow: '0 0 15px rgba(124,58,237,0.2)',
                                     }}
                                 >
-                                    <User size={12} />
-                                    {profile?.display_name ?? 'Profile'}
+                                    <User size={13} className="text-purple-400" />
+                                    <span>{profile?.display_name ?? 'My Profile'}</span>
                                 </Link>
                                 <button
                                     onClick={handleSignOut}
-                                    className="p-1.5 rounded-lg transition-all duration-200 hover:opacity-80"
+                                    className="p-2 transition-all duration-200 hover:opacity-80"
                                     title="Sign Out"
                                     style={{
-                                        background: 'rgba(239,68,68,0.08)',
-                                        border: '1px solid rgba(239,68,68,0.18)',
+                                        clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
+                                        background: 'rgba(239,68,68,0.12)',
+                                        border: '1px solid rgba(239,68,68,0.25)',
                                         color: '#FCA5A5',
                                     }}
                                 >
@@ -160,18 +165,22 @@ export function Navbar() {
                                 </button>
                             </div>
                         ) : (
-                            <Link
-                                to="/login"
-                                className="hidden lg:flex items-center px-4 py-1.5 rounded-lg text-[10px] font-bold tracking-widest transition-all duration-200 hover:opacity-80"
+                            <button
+                                onClick={() => setIsLoginOpen(true)}
+                                className="hidden lg:flex items-center gap-2 px-5 py-2 text-xs font-black tracking-wider transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative overflow-hidden group"
                                 style={{
-                                    fontFamily: 'Space Mono',
-                                    background: 'rgba(255,255,255,0.04)',
-                                    color: 'rgba(255,255,255,0.7)',
-                                    border: '1px solid rgba(255,255,255,0.12)',
+                                    fontFamily: 'Space Grotesk',
+                                    clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
+                                    background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 50%, #EC4899 100%)',
+                                    color: '#FFFFFF',
+                                    boxShadow: '0 0 24px rgba(168,85,247,0.4)',
+                                    border: '1px solid rgba(255,255,255,0.3)',
                                 }}
                             >
-                                LOGIN
-                            </Link>
+                                <Sparkles size={13} className="animate-pulse text-amber-300" />
+                                <span>LOGIN</span>
+                                <LogIn size={13} className="transition-transform group-hover:translate-x-0.5" />
+                            </button>
                         )}
 
                         {/* External links — cyber slanted style (desktop) */}
@@ -235,6 +244,39 @@ export function Navbar() {
                             </a>
                         </div>
 
+                        {/* Mobile Auth Button (glowing user icon on header) */}
+                        <div className="flex lg:hidden items-center">
+                            {isAuthenticated ? (
+                                <Link
+                                    to="/profile"
+                                    className="p-2 rounded-xl flex items-center justify-center transition-all duration-200"
+                                    style={{
+                                        background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(236,72,153,0.2))',
+                                        border: '1px solid rgba(168,85,247,0.4)',
+                                        boxShadow: '0 0 15px rgba(168,85,247,0.4)',
+                                        color: '#E9D5FF',
+                                    }}
+                                    title="My Profile"
+                                >
+                                    <User size={16} className="text-purple-300" />
+                                </Link>
+                            ) : (
+                                <button
+                                    onClick={() => setIsLoginOpen(true)}
+                                    className="p-2 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer"
+                                    style={{
+                                        background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+                                        border: '1px solid rgba(255,255,255,0.3)',
+                                        boxShadow: '0 0 18px rgba(168,85,247,0.5)',
+                                        color: '#FFFFFF',
+                                    }}
+                                    title="Login / Join"
+                                >
+                                    <User size={16} />
+                                </button>
+                            )}
+                        </div>
+
                         {/* Mobile toggle */}
                         <button
                             onClick={() => setIsOpen(!isOpen)}
@@ -287,6 +329,45 @@ export function Navbar() {
                                     </Link>
                                 );
                             })}
+
+                            {/* Mobile Drawer Auth Item */}
+                            {isAuthenticated ? (
+                                <Link
+                                    to="/profile"
+                                    onClick={() => setIsOpen(false)}
+                                    className="px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-between transition-all"
+                                    style={{
+                                        fontFamily: 'Space Grotesk',
+                                        background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(236,72,153,0.2))',
+                                        border: '1px solid rgba(168,85,247,0.4)',
+                                        color: '#E9D5FF',
+                                    }}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <User size={15} className="text-purple-300" />
+                                        <span>{profile?.display_name ?? 'My Profile'}</span>
+                                    </div>
+                                    <span className="text-xs font-mono text-purple-300/60">→</span>
+                                </Link>
+                            ) : (
+                                <button
+                                    onClick={() => { setIsOpen(false); setIsLoginOpen(true); }}
+                                    className="px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between transition-all cursor-pointer"
+                                    style={{
+                                        fontFamily: 'Space Grotesk',
+                                        background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                                        color: '#FFF',
+                                        boxShadow: '0 0 15px rgba(124,58,237,0.3)',
+                                    }}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Sparkles size={15} className="text-amber-300" />
+                                        <span>Sign In / Join Synapse</span>
+                                    </div>
+                                    <LogIn size={15} />
+                                </button>
+                            )}
+
                             <div className="mt-2 pt-2 flex gap-2" style={{ borderTop: '1px solid rgba(124,58,237,0.15)' }}>
                                 {externalLinks.map(link => (
                                     <a
@@ -311,6 +392,8 @@ export function Navbar() {
                     </motion.div>
                 )}
             </AnimatePresence>
+            {/* Login Modal */}
+            <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
         </>
     );
 }
