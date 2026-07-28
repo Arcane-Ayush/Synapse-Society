@@ -1,7 +1,8 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ExternalLink, Zap } from "lucide-react";
+import { Menu, X, Zap, User, LogOut } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 const navItems = [
     { name: "Home", path: "/" },
@@ -21,6 +22,13 @@ export function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [visible, setVisible] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+    const { isAuthenticated, profile, signOut } = useAuth();
+
+    async function handleSignOut() {
+        await signOut();
+        navigate('/');
+    }
 
     useEffect(() => {
         setTimeout(() => setVisible(true), 100);
@@ -120,19 +128,49 @@ export function Navbar() {
 
                     {/* Right side — status + external links + mobile toggle */}
                     <div className="flex items-center gap-2">
-                        {/* Login Button (Disabled) */}
-                        <button
-                            disabled
-                            className="hidden lg:flex items-center px-4 py-1.5 rounded-lg text-[10px] font-bold tracking-widest opacity-40 cursor-not-allowed"
-                            style={{
-                                fontFamily: 'Space Mono',
-                                background: 'rgba(255,255,255,0.03)',
-                                color: 'rgba(255,255,255,0.6)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                            }}
-                        >
-                            LOGIN
-                        </button>
+                        {/* Auth Button */}
+                        {isAuthenticated ? (
+                            <div className="hidden lg:flex items-center gap-2">
+                                <Link
+                                    to="/profile"
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all duration-200 hover:opacity-80"
+                                    style={{
+                                        fontFamily: 'Space Grotesk',
+                                        background: 'rgba(124,58,237,0.12)',
+                                        border: '1px solid rgba(124,58,237,0.25)',
+                                        color: '#D8B4FE',
+                                    }}
+                                >
+                                    <User size={12} />
+                                    {profile?.display_name ?? 'Profile'}
+                                </Link>
+                                <button
+                                    onClick={handleSignOut}
+                                    className="p-1.5 rounded-lg transition-all duration-200 hover:opacity-80"
+                                    title="Sign Out"
+                                    style={{
+                                        background: 'rgba(239,68,68,0.08)',
+                                        border: '1px solid rgba(239,68,68,0.18)',
+                                        color: '#FCA5A5',
+                                    }}
+                                >
+                                    <LogOut size={13} />
+                                </button>
+                            </div>
+                        ) : (
+                            <Link
+                                to="/login"
+                                className="hidden lg:flex items-center px-4 py-1.5 rounded-lg text-[10px] font-bold tracking-widest transition-all duration-200 hover:opacity-80"
+                                style={{
+                                    fontFamily: 'Space Mono',
+                                    background: 'rgba(255,255,255,0.04)',
+                                    color: 'rgba(255,255,255,0.7)',
+                                    border: '1px solid rgba(255,255,255,0.12)',
+                                }}
+                            >
+                                LOGIN
+                            </Link>
+                        )}
 
                         {/* External links — cyber slanted style (desktop) */}
                         <div className="hidden md:flex items-center gap-2">
