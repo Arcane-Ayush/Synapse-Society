@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 const RARITY_LABELS = {
     0: "COMMON",
@@ -140,7 +141,17 @@ export function SynapseCard({ card, size = "md", showBack = false, className = "
         setHovered(false);
     }, []);
 
+    const { profile, ownedCardIds, isAuthenticated } = useAuth();
+    
     if (!card) return null;
+
+    // Use unified unlocking rule, but allow explicitly overriding via card.unlocked
+    const isUnlocked = card.unlocked !== undefined ? card.unlocked : (
+        isAuthenticated && (
+            (card.type === 'membership' && (profile?.total_xp ?? 0) >= (card.xpRequired ?? 0)) ||
+            (ownedCardIds?.includes(card.id))
+        )
+    );
 
     const isMythic = card.level === 5;
     const isLegendary = card.level === 4;
@@ -225,8 +236,9 @@ export function SynapseCard({ card, size = "md", showBack = false, className = "
                     {/* === CARD CONTENT === */}
                     <div className="relative z-10 flex flex-col h-full p-4">
                         {/* New / Claim Indicator */}
-                        {card.unlocked && card.isNewClaim && (
-                            <div
+                        {isUnlocked && card.isNewClaim && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
                                 className="absolute -top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[9px] font-bold uppercase tracking-wider animate-bounce shadow-xl whitespace-nowrap"
                                 style={{
                                     background: 'linear-gradient(135deg, #EC4899, #A855F7)',
@@ -237,7 +249,7 @@ export function SynapseCard({ card, size = "md", showBack = false, className = "
                             >
                                 <Sparkles size={11} className="text-amber-300 animate-spin" />
                                 <span>NEW · TAP TO CLAIM</span>
-                            </div>
+                            </motion.div>
                         )}
                         {/* Top bar — ID + Rarity */}
                         <div className="flex items-center justify-between mb-3">
@@ -437,10 +449,9 @@ export function SynapseCard({ card, size = "md", showBack = false, className = "
                         </div>
                     </div>
 
-                    {/* Locked overlay */}
-                    {!card.unlocked && (
-                        <div
-                            className="absolute inset-0 rounded-[20px] flex flex-col items-center justify-center"
+                    {/* Locked State Overlay */}
+                    {!isUnlocked && (
+                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-[20px]"
                             style={{
                                 background: 'rgba(5,5,8,0.75)',
                                 backdropFilter: 'blur(3px)',

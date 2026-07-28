@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { getProfile } from '../lib/auth';
+import { getProfile, getUserCards } from '../lib/auth';
 
 const AuthContext = createContext(null);
 
@@ -11,15 +11,28 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [profile, setProfile] = useState(null);
+    const [ownedCardIds, setOwnedCardIds] = useState([]);
     const [loading, setLoading] = useState(true);
 
     async function loadProfile(authUser) {
         if (!authUser) {
             setProfile(null);
+            setOwnedCardIds([]);
             return;
         }
-        const { data } = await getProfile(authUser.id);
-        setProfile(data || null);
+        
+        const [profileRes, cardsRes] = await Promise.all([
+            getProfile(authUser.id),
+            getUserCards(authUser.id)
+        ]);
+        
+        setProfile(profileRes.data || null);
+        
+        if (cardsRes.data) {
+            setOwnedCardIds(cardsRes.data.map(item => item.cards.id));
+        } else {
+            setOwnedCardIds([]);
+        }
     }
 
     useEffect(() => {
@@ -75,15 +88,24 @@ export function AuthProvider({ children }) {
         setProfile(null);
     }
 
+    const checkUnlockStatus = (card) => {
+        if (!card) return false;
+        if (!user) return false;
+        if (card.type === 'membership') return (profile?.total_xp ?? 0) >= (card.xpRequired ?? 0);
+        return ownedCardIds?.includes(card.id) ?? false;
+    };
+
     const value = {
         user,
         profile,
+        ownedCardIds,
         loading,
         isAuthenticated: !!user,
         isAdmin: profile?.club_role === 'administrator',
         isLead: profile?.club_role === 'lead' || profile?.club_role === 'administrator',
         signOut: handleSignOut,
         refreshProfile: () => loadProfile(user),
+        checkUnlockStatus,
     };
 
     return (

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { membershipCards, eventCards, missions, teams } from "../data/mockData";
 import { SynapseCard } from "../components/SynapseCard";
 import { Zap, Target, Users, Trophy, Lock, Calendar, ChevronRight, QrCode, Plus, Shield, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
@@ -39,7 +38,9 @@ const TABS = [
 ];
 
 // ── Cards Tab ─────────────────────────────────────────────────────
-function CardsTab({ setSelectedCard }) {
+function CardsTab({ setSelectedCard, membershipCards, eventCards }) {
+    const { checkUnlockStatus } = useAuth();
+    
     return (
         <div>
             {/* Season badge */}
@@ -83,7 +84,7 @@ function CardsTab({ setSelectedCard }) {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 justify-items-center">
                     {membershipCards.map((card, i) => {
-                        const isUnlocked = card.level === 0;
+                        const isUnlocked = checkUnlockStatus(card);
                         return (
                             <motion.div
                                 key={card.id}
@@ -93,7 +94,7 @@ function CardsTab({ setSelectedCard }) {
                                 onClick={() => isUnlocked && setSelectedCard({ ...card, unlocked: true })}
                                 className={isUnlocked ? "cursor-pointer transition-transform hover:scale-105" : ""}
                             >
-                                <SynapseCard card={{ ...card, unlocked: isUnlocked }} size="sm" />
+                                <SynapseCard card={card} size="sm" />
                             </motion.div>
                         );
                     })}
@@ -121,18 +122,21 @@ function CardsTab({ setSelectedCard }) {
                 </p>
 
                 <div className="flex flex-wrap gap-8 justify-center md:justify-start">
-                    {eventCards.map((card, i) => (
-                        <motion.div
-                            key={card.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: i * 0.12 }}
-                            onClick={() => setSelectedCard(card)}
-                            className="cursor-pointer transition-transform hover:scale-105"
-                        >
-                            <SynapseCard card={card} size="sm" />
-                        </motion.div>
-                    ))}
+                    {eventCards.map((card, i) => {
+                        const isUnlocked = checkUnlockStatus(card);
+                        return (
+                            <motion.div
+                                key={card.id}
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: i * 0.12 }}
+                                onClick={() => isUnlocked && setSelectedCard({ ...card, unlocked: true })}
+                                className={isUnlocked ? "cursor-pointer transition-transform hover:scale-105" : ""}
+                            >
+                                <SynapseCard card={card} size="sm" />
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -199,11 +203,11 @@ const MISSION_TYPE_COLORS = {
     Community: '#3B82F6',
 };
 
-function MissionsTab() {
-    const worldEvent = missions.find(m => m.assignedTo === 'All');
-    const coopMissions = missions.filter(m => m.assignedTo === 'Teams');
-    const openMissions = missions.filter(m => m.assignedTo === 'Open');
-    const teamMissions = missions.filter(m => !['All', 'Teams', 'Open'].includes(m.assignedTo));
+function MissionsTab({ missions = [] }) {
+    const worldEvent = missions.find(m => m.assigned_to === 'All');
+    const coopMissions = missions.filter(m => m.assigned_to === 'Teams');
+    const openMissions = missions.filter(m => m.assigned_to === 'Open');
+    const teamMissions = missions.filter(m => !['All', 'Teams', 'Open'].includes(m.assigned_to));
 
     const QuestCard = ({ mission, i }) => {
         const typeColor = MISSION_TYPE_COLORS[mission.type] || '#A855F7';
@@ -404,7 +408,7 @@ function MissionsTab() {
 }
 
 // ── Factions Tab ──────────────────────────────────────────────────
-function FactionsTab() {
+function FactionsTab({ teams = [] }) {
     return (
         <div>
             <div className="flex items-center justify-between mb-8">
@@ -418,7 +422,7 @@ function FactionsTab() {
             </div>
 
             <div className="space-y-4">
-                {[...teams].sort((a, b) => b.tokens - a.tokens).map((team, index) => {
+                {[...teams].sort((a, b) => (b.total_tokens || 0) - (a.total_tokens || 0)).map((team, index) => {
                     const rank = index + 1;
                     const isFirst = rank === 1;
 
@@ -959,6 +963,13 @@ export function Nexus() {
     const [selectedCard, setSelectedCard] = useState(null);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const { isAuthenticated } = useAuth();
+    
+    // DB Data State
+    const [membershipCards, setMembershipCards] = useState([]);
+    const [eventCards, setEventCards] = useState([]);
+    const [missions, setMissions] = useState([]);
+    const [teams, setTeams] = useState([]);
+    const [loadingData, setLoadingData] = useState(true);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -968,8 +979,28 @@ export function Nexus() {
             }
         };
         window.addEventListener('keydown', handleKeyDown);
+        
+        if (isAuthenticated) {
+            setLoadingData(true);
+            import('../lib/auth').then(({ getAllCards, getMissions, getTeams }) => {
+                Promise.all([
+                    getAllCards(),
+                    getMissions(),
+                    getTeams()
+                ]).then(([cardsRes, missionsRes, teamsRes]) => {
+                    if (cardsRes.data) {
+                        setMembershipCards(cardsRes.data.filter(c => c.type === 'membership'));
+                        setEventCards(cardsRes.data.filter(c => c.type === 'event' || c.type === 'achievement'));
+                    }
+                    if (missionsRes.data) setMissions(missionsRes.data);
+                    if (teamsRes.data) setTeams(teamsRes.data);
+                    setLoadingData(false);
+                });
+            });
+        }
+        
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+    }, [isAuthenticated]);
 
     if (!isAuthenticated) {
         return (
@@ -1128,10 +1159,18 @@ export function Nexus() {
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.3 }}
                     >
-                        {activeTab === 'cards' && <CardsTab setSelectedCard={setSelectedCard} />}
-                        {activeTab === 'missions' && <MissionsTab />}
-                        {activeTab === 'factions' && <FactionsTab />}
-                        {activeTab === 'qr' && <QRVaultTab onOpenLogin={() => setIsLoginOpen(true)} />}
+                        {loadingData ? (
+                            <div className="flex justify-center items-center py-20">
+                                <div className="w-10 h-10 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
+                            </div>
+                        ) : (
+                            <>
+                                {activeTab === 'cards' && <CardsTab setSelectedCard={setSelectedCard} membershipCards={membershipCards} eventCards={eventCards} />}
+                                {activeTab === 'missions' && <MissionsTab missions={missions} />}
+                                {activeTab === 'factions' && <FactionsTab teams={teams} />}
+                                {activeTab === 'qr' && <QRVaultTab onOpenLogin={() => setIsLoginOpen(true)} />}
+                            </>
+                        )}
                     </motion.div>
                 </AnimatePresence>
             </div>

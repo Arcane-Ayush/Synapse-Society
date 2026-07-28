@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState } from "react";
 import { Zap, ExternalLink, Award, User, Sparkles } from "lucide-react";
-import { membershipCards } from "../data/mockData";
 import { SynapseCard } from "../components/SynapseCard";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -167,7 +166,7 @@ function EcosystemCard({ title, desc, url, icon, color, delay, isInternal = fals
 export function Home() {
     const heroRef = useRef(null);
     const navigate = useNavigate();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, checkUnlockStatus } = useAuth();
     const { scrollYProgress } = useScroll({ target: heroRef });
     const heroY = useTransform(scrollYProgress, [0, 1], [0, -80]);
 
@@ -532,18 +531,18 @@ export function Home() {
 
                     <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 mb-12">
                         {previewCards.map((card, i) => {
-                            const isUnlocked = i === 0;
+                            const isClickable = checkUnlockStatus(card);
                             return (
                                 <motion.div
-                                    key={card.id}
+                                    key={`${card.id}-${i}`}
                                     initial={{ opacity: 0, y: 40, rotate: (i - 1) * 6 }}
                                     whileInView={{ opacity: 1, y: 0, rotate: 0 }}
                                     transition={{ duration: 0.7, delay: i * 0.15, ease: [0.23, 1, 0.32, 1] }}
                                     viewport={{ once: true }}
-                                    onClick={() => isUnlocked && setSelectedCard({ ...card, unlocked: true })}
-                                    className={isUnlocked ? "cursor-pointer transition-transform hover:scale-105" : ""}
+                                    onClick={() => isClickable && setSelectedCard({ ...card, unlocked: true })}
+                                    className={isClickable ? "cursor-pointer transition-transform hover:scale-105" : ""}
                                 >
-                                    <SynapseCard card={{ ...card, unlocked: isUnlocked }} size="md" />
+                                    <SynapseCard card={{ ...card, unlocked: isClickable }} size="md" />
                                 </motion.div>
                             )
                         })}

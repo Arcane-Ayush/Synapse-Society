@@ -29,3 +29,7 @@ dist-ssr
 
 test_db.js 
 test.js
+
+src/test-import.js
+test_cards.js
+test_supabase.mjs

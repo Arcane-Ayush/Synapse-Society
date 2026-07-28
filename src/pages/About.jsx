@@ -1,6 +1,63 @@
 import { motion } from "framer-motion";
-import { teamMembers } from "../data/mockData";
 import { Github, Linkedin, Brain } from "lucide-react";
+
+const teamMembers = {
+    faculty: [
+        {
+            id: "hod",
+            name: "Dr. [Name]",
+            role: "Head of Department",
+            department: "Computer Science & Engineering",
+            image: null,
+            quote: "Innovation begins where curiosity meets discipline.",
+            type: "hod",
+        }
+    ],
+    leadership: [
+        {
+            id: "president",
+            name: "[President Name]",
+            role: "Club President",
+            image: null,
+            quote: "Building the future, one synapse at a time.",
+            social: { linkedin: "#", github: "#" },
+        },
+        {
+            id: "vc",
+            name: "[Vice President Name]",
+            role: "Vice President",
+            image: null,
+            quote: "Leadership is about lifting others as you rise.",
+            social: { linkedin: "#", github: "#" },
+        },
+        {
+            id: "gensec",
+            name: "[General Secretary]",
+            role: "General Secretary",
+            image: null,
+            quote: "Execution is the bridge between vision and reality.",
+            social: { linkedin: "#", github: "#" },
+        },
+        {
+            id: "treasurer",
+            name: "[Treasurer Name]",
+            role: "Treasurer",
+            image: null,
+            quote: "Every rupee invested in learning compounds infinitely.",
+            social: { linkedin: "#", github: "#" },
+        },
+    ],
+    coreMembers: [
+        { id: "media", name: "[Media Head]", role: "Media Head", dept: "Media & Communications", icon: "⚲", color: "#A855F7" },
+        { id: "tech", name: "[Tech Head]", role: "Tech Head", dept: "Technology & Development", icon: "⌘", color: "#6366F1" },
+        { id: "content", name: "[Content Head]", role: "Content Head", dept: "Content & Copywriting", icon: "▤", color: "#8B5CF6" },
+        { id: "design", name: "[Design Head]", role: "Design Head", dept: "Design & Creative", icon: "◧", color: "#D946EF" },
+        { id: "pr", name: "[PR Head]", role: "PR Head", dept: "Public Relations", icon: "⋈", color: "#7C3AED" },
+        { id: "events", name: "[Events Head]", role: "Event Management Head", dept: "Events & Logistics", icon: "⍋", color: "#9333EA" },
+        { id: "anchoring", name: "[Anchoring Head]", role: "Anchoring Head", dept: "Anchoring & Hosting", icon: "⍾", color: "#C026D3" },
+        { id: "learning", name: "[Learning Head]", role: "Learning Head", dept: "Learning & Development", icon: "⎈", color: "#7E22CE" },
+    ]
+};
 
 function HodCard({ member }) {
     return (

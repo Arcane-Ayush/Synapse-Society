@@ -4,10 +4,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, Zap, Shield, ChevronUp, Trophy, Award, Mail, CheckCircle2, AlertCircle, Edit3, User, Sparkles, QrCode, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { getUserCards, getXpHistory, updateProfile, getUserRank } from '../lib/auth';
+import { getUserCards, getXpHistory, updateProfile, getUserRank, getAllCards } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { SynapseCard } from '../components/SynapseCard';
-import { membershipCards, eventCards } from '../data/mockData';
 import { LoginModal } from '../components/LoginModal';
 
 const LEVEL_TITLES = {
@@ -71,7 +70,7 @@ function XPBar({ xp = 0, currentLevel = 0 }) {
 
 export function Profile() {
     const navigate = useNavigate();
-    const { user, profile, loading, isAuthenticated, signOut, refreshProfile } = useAuth();
+    const { user, profile, loading, isAuthenticated, signOut, refreshProfile, checkUnlockStatus } = useAuth();
     const [activeSubTab, setActiveSubTab] = useState('overview'); // 'overview' | 'cards' | 'titles' | 'settings'
     const [userCards, setUserCards] = useState([]);
     const [xpHistory, setXpHistory] = useState([]);
@@ -89,6 +88,8 @@ export function Profile() {
 
     const [isLoginOpen, setIsLoginOpen] = useState(false);
 
+    const [allCards, setAllCards] = useState([]);
+
     useEffect(() => {
         if (!user) return;
         if (profile) {
@@ -99,10 +100,12 @@ export function Profile() {
             getUserCards(user.id),
             getXpHistory(user.id, 15),
             getUserRank(user.id),
-        ]).then(([cardsRes, historyRes, rankRes]) => {
+            getAllCards(),
+        ]).then(([cardsRes, historyRes, rankRes, allCardsRes]) => {
             setUserCards(cardsRes?.data || []);
             setXpHistory(historyRes?.data || []);
             setUserRank(rankRes?.data || 1);
+            setAllCards(allCardsRes?.data || []);
         }).catch(err => {
             console.error("Failed to load profile data:", err);
         });
@@ -171,10 +174,9 @@ export function Profile() {
     const isEmailVerified = !!user?.email_confirmed_at;
 
     // Build complete card collection list safely
-    const ownedCardIds = new Set((userCards || []).map(uc => uc?.cards?.id || uc?.card_id));
-    const allCardsMerged = [...membershipCards, ...eventCards].map(c => ({
+    const allCardsMerged = allCards.map(c => ({
         ...c,
-        unlocked: ownedCardIds.has(c.id) || c.level === 0,
+        unlocked: checkUnlockStatus(c),
     }));
     const unlockedCardsCount = allCardsMerged.filter(c => c.unlocked).length;
 
