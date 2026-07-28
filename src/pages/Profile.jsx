@@ -7,6 +7,7 @@ import { getUserCards, getXpHistory, updateProfile, getUserRank } from '../lib/a
 import { supabase } from '../lib/supabase';
 import { SynapseCard } from '../components/SynapseCard';
 import { membershipCards, eventCards } from '../data/mockData';
+import { LoginModal } from '../components/LoginModal';
 
 const LEVEL_TITLES = {
     0: 'Synapse Initiate',
@@ -23,23 +24,25 @@ const DEFAULT_TITLES = [
     { id: 't3', name: 'Neural Spark', category: 'Level', icon: '⚡', color: '#10B981', desc: 'Reached Level 1 threshold' },
 ];
 
-function XPBar({ xp, currentLevel }) {
+function XPBar({ xp = 0, currentLevel = 0 }) {
     const levelRequirements = [0, 100, 300, 700, 1500, 3000];
-    const xpForCurrent = levelRequirements[currentLevel] || 0;
-    const xpForNext = levelRequirements[currentLevel + 1] || null;
+    const safeXp = xp ?? 0;
+    const safeLevel = currentLevel ?? 0;
+    const xpForCurrent = levelRequirements[safeLevel] || 0;
+    const xpForNext = levelRequirements[safeLevel + 1] || null;
 
     const progress = xpForNext
-        ? Math.min(100, ((xp - xpForCurrent) / (xpForNext - xpForCurrent)) * 100)
+        ? Math.min(100, Math.max(0, ((safeXp - xpForCurrent) / (xpForNext - xpForCurrent)) * 100))
         : 100;
 
     return (
         <div>
             <div className="flex justify-between items-center mb-2">
                 <span className="text-xs font-mono font-semibold" style={{ color: '#A855F7' }}>
-                    Level {currentLevel} · {LEVEL_TITLES[currentLevel] || 'Member'}
+                    Level {safeLevel} · {LEVEL_TITLES[safeLevel] || 'Member'}
                 </span>
                 <span className="text-xs font-mono" style={{ color: 'rgba(196,181,253,0.5)' }}>
-                    {xp.toLocaleString()} XP {xpForNext ? `/ ${xpForNext.toLocaleString()} XP` : '(MAX LEVEL)'}
+                    {safeXp.toLocaleString()} XP {xpForNext ? `/ ${xpForNext.toLocaleString()} XP` : '(MAX LEVEL)'}
                 </span>
             </div>
             <div className="h-2.5 rounded-full overflow-hidden p-0.5" style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.2)' }}>
@@ -57,7 +60,7 @@ function XPBar({ xp, currentLevel }) {
             {xpForNext && (
                 <div className="text-right mt-1.5">
                     <span className="text-[10px] font-mono" style={{ color: 'rgba(196,181,253,0.4)' }}>
-                        {(xpForNext - xp).toLocaleString()} XP until next level unlock
+                        {(xpForNext - safeXp).toLocaleString()} XP until next level unlock
                     </span>
                 </div>
             )}
@@ -83,11 +86,7 @@ export function Profile() {
     const [resendLoading, setResendLoading] = useState(false);
     const [resendMessage, setResendMessage] = useState(null);
 
-    useEffect(() => {
-        if (!loading && !isAuthenticated) {
-            navigate('/login');
-        }
-    }, [loading, isAuthenticated, navigate]);
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
 
     useEffect(() => {
         if (!user) return;
@@ -100,9 +99,11 @@ export function Profile() {
             getXpHistory(user.id, 15),
             getUserRank(user.id),
         ]).then(([cardsRes, historyRes, rankRes]) => {
-            setUserCards(cardsRes.data || []);
-            setXpHistory(historyRes.data || []);
-            setUserRank(rankRes.data || 1);
+            setUserCards(cardsRes?.data || []);
+            setXpHistory(historyRes?.data || []);
+            setUserRank(rankRes?.data || 1);
+        }).catch(err => {
+            console.error("Failed to load profile data:", err);
         });
     }, [user, profile]);
 
@@ -125,30 +126,51 @@ export function Profile() {
 
     if (!isAuthenticated || !effectiveProfile) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center relative z-10">
-                <div className="p-8 rounded-3xl max-w-md w-full" style={{ background: 'rgba(12,12,20,0.9)', border: '1px solid rgba(124,58,237,0.2)' }}>
+            <div className="min-h-[75vh] flex flex-col items-center justify-center p-4 text-center relative z-10">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-8 md:p-12 rounded-3xl max-w-md w-full relative overflow-hidden"
+                    style={{
+                        background: 'rgba(12,12,20,0.92)',
+                        border: '1px solid rgba(168,85,247,0.3)',
+                        boxShadow: '0 24px 60px rgba(0,0,0,0.8), 0 0 40px rgba(124,58,237,0.25)',
+                        backdropFilter: 'blur(16px)',
+                    }}
+                >
+                    <div
+                        className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center text-3xl"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(236,72,153,0.2))',
+                            border: '1px solid rgba(168,85,247,0.4)',
+                            boxShadow: '0 0 25px rgba(124,58,237,0.3)',
+                        }}
+                    >
+                        <User className="text-purple-300" size={28} />
+                    </div>
                     <h2 className="text-2xl font-black mb-2" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>
                         Member Profile Access
                     </h2>
-                    <p className="text-sm mb-6" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter' }}>
-                        Please sign in to view your member card collection, XP history, and title achievements.
+                    <p className="text-sm mb-6 leading-relaxed" style={{ color: 'rgba(196,181,253,0.6)', fontFamily: 'Inter' }}>
+                        Please sign in to view your member card collection, XP history, dynamic rank, and title achievements.
                     </p>
-                    <Link
-                        to="/login"
-                        className="inline-block px-6 py-3 rounded-xl text-xs font-black tracking-wider uppercase transition-transform hover:scale-105"
+                    <button
+                        onClick={() => setIsLoginOpen(true)}
+                        className="w-full py-3.5 rounded-xl text-xs font-black tracking-widest uppercase transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
                         style={{ background: 'linear-gradient(135deg, #7C3AED, #A855F7)', color: '#FFF', fontFamily: 'Space Grotesk' }}
                     >
-                        Sign In / Join
-                    </Link>
-                </div>
+                        Sign In / Join Synapse
+                    </button>
+                </motion.div>
+                <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
             </div>
         );
     }
 
     const isEmailVerified = !!user?.email_confirmed_at;
 
-    // Build complete card collection list
-    const ownedCardIds = new Set(userCards.map(uc => uc.cards?.id));
+    // Build complete card collection list safely
+    const ownedCardIds = new Set((userCards || []).map(uc => uc?.cards?.id || uc?.card_id));
     const allCardsMerged = [...membershipCards, ...eventCards].map(c => ({
         ...c,
         unlocked: ownedCardIds.has(c.id) || c.level === 0,
@@ -205,14 +227,56 @@ export function Profile() {
     }
 
     const SUB_TABS = [
-        { id: 'overview', label: 'Overview', icon: <User size={14} /> },
-        { id: 'cards', label: 'My Cards', icon: <CreditCard size={14} />, badge: unlockedCardsCount },
-        { id: 'titles', label: 'Achievements', icon: <Trophy size={14} /> },
+        { id: 'overview', label: 'Overview', icon: <Zap size={14} /> },
+        { id: 'cards', label: 'Vault', icon: <CreditCard size={14} /> },
+        { id: 'titles', label: 'Titles & Badges', icon: <Trophy size={14} /> },
         { id: 'settings', label: 'Account & Safety', icon: <Shield size={14} /> },
     ];
 
+    const cardInspectPortal = typeof document !== 'undefined' ? createPortal(
+        <AnimatePresence>
+            {selectedCard && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setSelectedCard(null)}
+                    className="fixed inset-0 z-[99999] flex items-center justify-center p-4 cursor-pointer"
+                    style={{ background: 'rgba(5,5,8,0.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+                >
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.8, opacity: 0, y: 20 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        onClick={e => e.stopPropagation()}
+                        className="pointer-events-auto cursor-default relative flex flex-col items-center gap-4"
+                    >
+                        <SynapseCard card={selectedCard} size="lg" />
+
+                        <div
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold tracking-widest uppercase"
+                            style={{
+                                background: 'rgba(16,185,129,0.15)',
+                                border: '1px solid rgba(16,185,129,0.35)',
+                                color: '#34D399',
+                                boxShadow: '0 0 20px rgba(16,185,129,0.2)',
+                                backdropFilter: 'blur(8px)',
+                            }}
+                        >
+                            <CheckCircle2 size={14} />
+                            <span>CLAIMED &amp; ACTIVE IN VAULT</span>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>,
+        document.body
+    ) : null;
+
     return (
         <div className="min-h-screen px-4 py-20">
+            {cardInspectPortal}
             <div className="max-w-5xl mx-auto relative z-10">
 
                 {/* Header Profile Hero */}
@@ -340,7 +404,7 @@ export function Profile() {
                             {/* Key Stats Cards */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {[
-                                    { label: 'Total XP', value: effectiveProfile.xp.toLocaleString(), icon: <Zap size={16} />, color: '#A855F7' },
+                                    { label: 'Total XP', value: (effectiveProfile.xp ?? 0).toLocaleString(), icon: <Zap size={16} />, color: '#A855F7' },
                                     { label: 'Level', value: effectiveProfile.current_level, icon: <ChevronUp size={16} />, color: '#34D399' },
                                     { label: 'Cards Unlocked', value: unlockedCardsCount, icon: <CreditCard size={16} />, color: '#EC4899' },
                                     { label: 'Society Rank', value: `#${userRank}`, icon: <Trophy size={16} />, color: '#F59E0B' },
@@ -422,7 +486,7 @@ export function Profile() {
                                                             current.push(card.id);
                                                             localStorage.setItem('synapse_claimed_cards', JSON.stringify(current));
                                                         }
-                                                    } catch (e) {}
+                                                    } catch (e) { }
                                                     setSelectedCard({ ...card, isNewClaim: false });
                                                 }
                                             }}
@@ -540,8 +604,8 @@ export function Profile() {
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between p-3.5 rounded-xl" style={{ background: 'rgba(5,5,8,0.8)', border: '1px solid rgba(124,58,237,0.1)' }}>
                                         <div>
-                                            <p className="text-xs font-mono" style={{ color: 'rgba(196,181,253,0.5)' }}>Account Email</p>
-                                            <p className="text-sm font-medium" style={{ color: '#F5F3FF' }}>{user.email}</p>
+                                            <p className="text-[10px] font-mono" style={{ color: 'rgba(196,181,253,0.5)' }}>Account Email</p>
+                                            <p className="text-sm font-medium" style={{ color: '#F5F3FF' }}>{user?.email || 'No email registered'}</p>
                                         </div>
                                         {isEmailVerified ? (
                                             <span className="flex items-center gap-1 text-[10px] font-mono px-2.5 py-1 rounded-full font-bold uppercase" style={{ background: 'rgba(16,185,129,0.15)', color: '#34D399', border: '1px solid rgba(16,185,129,0.3)' }}>
@@ -586,48 +650,6 @@ export function Profile() {
                     )}
                 </AnimatePresence>
             </div>
-
-            {/* 3D Card Inspect Modal Overlay */}
-            {typeof document !== 'undefined' && createPortal(
-                <AnimatePresence>
-                    {selectedCard && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setSelectedCard(null)}
-                            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 cursor-pointer"
-                            style={{ background: 'rgba(5,5,8,0.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                                animate={{ scale: 1, opacity: 1, y: 0 }}
-                                exit={{ scale: 0.8, opacity: 0, y: 20 }}
-                                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                                onClick={e => e.stopPropagation()}
-                                className="pointer-events-auto cursor-default relative flex flex-col items-center gap-4"
-                            >
-                                <SynapseCard card={selectedCard} size="lg" />
-
-                                <div
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold tracking-widest uppercase"
-                                    style={{
-                                        background: 'rgba(16,185,129,0.15)',
-                                        border: '1px solid rgba(16,185,129,0.35)',
-                                        color: '#34D399',
-                                        boxShadow: '0 0 20px rgba(16,185,129,0.2)',
-                                        backdropFilter: 'blur(8px)',
-                                    }}
-                                >
-                                    <CheckCircle2 size={14} />
-                                    <span>CLAIMED &amp; ACTIVE IN VAULT</span>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>,
-                document.body
-            )}
         </div>
     );
 }

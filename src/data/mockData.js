@@ -5,7 +5,7 @@ export const projects = [
         team: "Learning Department",
         description: "A voice and text driven AI assistant that runs fully offline using Ollama (llama3). Built for personal use with persistent memory, a customizable personality, and system-level controls.",
         tags: ["Python", "Ollama"],
-        image: "../public/VED-AI.png",
+        image: "/VED-AI.png",
         demoUrl: "",
         githubUrl: "https://github.com/NERDY-01/VED-AI-Assistant"
     },
@@ -15,7 +15,7 @@ export const projects = [
         team: "Nexus-hybrid",
         description: "TrustDonate is a gasless, transparent, and immutable blockchain platform built on Base Sepolia. To eliminate the trust deficit between donors and NGO",
         tags: ["JavaScript", "React", "Solidity"],
-        image: "../public/Trust-Donate.png",
+        image: "/Trust-Donate.png",
         demoUrl: "https://trust-donate.vercel.app",
         githubUrl: "https://github.com/Arcane-Ayush/Trust-Donate"
     },
@@ -43,10 +43,10 @@ export const projects = [
         id: 5,
         title: "Note-It AI",
         team: "Design Team",
-        description: "Record classroom lectures and instantly generate notes, summaries, quizzes, flashcards and personalized revision plans",
-        tags: ["React", "Firebase", "Azure Blog", "Node.js"],
-        image: "../public/NoteIt.jpeg",
-        demoUrl: "noteitai.vercel.app",
+        description: "Record classroom lectures and instantly generate notes, summaries, quizzes, flashcards and personalized revision plans.",
+        tags: ["React", "Firebase", "Azure"],
+        image: "/NoteIt.jpeg",
+        demoUrl: "https://noteitai.vercel.app",
         githubUrl: ""
     },
     {

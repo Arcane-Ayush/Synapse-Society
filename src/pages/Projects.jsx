@@ -94,15 +94,24 @@ function SynapseDeck({ projects }) {
                                     </div>
 
                                     {/* Image */}
-                                    <div className="relative w-full mb-3 rounded-lg overflow-hidden" style={{ height: '45%' }}>
-                                        <img
-                                            src={project.image}
-                                            alt={project.title}
-                                            className="w-full h-full object-cover"
-                                            style={{ filter: 'saturate(0.9) brightness(0.9)' }}
-                                        />
+                                    <div className="relative w-full mb-3 rounded-lg overflow-hidden bg-purple-950/30" style={{ height: '45%' }}>
                                         <div
-                                            className="absolute inset-0"
+                                            className="absolute inset-0 flex items-center justify-center"
+                                            style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.25), rgba(236,72,153,0.15))' }}
+                                        >
+                                            <span className="font-mono text-[10px] text-purple-300/50 uppercase tracking-widest">{project.title}</span>
+                                        </div>
+                                        {project.image || project.image_url ? (
+                                            <img
+                                                src={project.image || project.image_url}
+                                                alt={project.title}
+                                                onError={(e) => { e.currentTarget.style.opacity = '0'; }}
+                                                className="relative z-10 w-full h-full object-cover transition-opacity duration-300"
+                                                style={{ filter: 'saturate(0.9) brightness(0.9)' }}
+                                            />
+                                        ) : null}
+                                        <div
+                                            className="absolute inset-0 z-20"
                                             style={{ background: 'linear-gradient(to top, rgba(8,8,14,0.9), transparent 60%)' }}
                                         />
                                         {/* Scan lines */}
