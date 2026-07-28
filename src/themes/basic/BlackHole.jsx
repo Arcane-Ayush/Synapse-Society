@@ -45,7 +45,7 @@ function BlackHoleRing({ count, radius, color, speed, size, opacity, spread }) {
 export function BlackHole(props) {
     return (
         <group {...props}>
-            <group rotation={[0.4, 0, 0]}> {/* Tilt the whole system slightly for view */}
+            <group rotation={[0.6, 0.1, -0.2]}> {/* Tilt the whole system dynamically for a diagonal view */}
                 {/* The Void (Event Horizon) - Pure black sphere to block background */}
                 <mesh>
                     <sphereGeometry args={[1, 64, 64]} /> {/* Smooth sphere */}

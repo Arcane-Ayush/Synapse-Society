@@ -348,15 +348,15 @@ export function Home() {
 
                             {/* Floating logo */}
                             <div
-                                className="relative z-10 animate-float"
+                                className="relative z-10 animate-float translate-x-4 md:translate-x-12"
                                 style={{
                                     filter: 'drop-shadow(0 0 40px rgba(124,58,237,0.6)) drop-shadow(0 0 80px rgba(168,85,247,0.25))',
                                 }}
                             >
                                 <img
-                                    src="/dark_synapse.png"
-                                    alt="Synapse Society"
-                                    className="w-full max-w-[260px] md:max-w-[340px]"
+                                    src="/Synapse-Society-Dark.png"
+                                    alt="Synapse Society Emblem"
+                                    className="w-full max-w-[300px] md:max-w-[420px]"
                                 />
                             </div>
 

@@ -57,20 +57,22 @@ export function Navbar() {
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
                         <div className="relative">
-                            <div 
+                            <div
                                 className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105"
                                 style={{
                                     background: 'rgba(124,58,237,0.08)',
                                     border: '1px solid rgba(124,58,237,0.25)',
                                     boxShadow: '0 0 15px rgba(124,58,237,0.15)',
-                                    padding: '6px'
+                                    padding: '4px'
                                 }}
                             >
                                 <img
-                                    src="/dark_synapse.png"
+                                    src="/S_ofSynapseDark.png"
                                     alt="Synapse Society"
-                                    className="h-full w-full object-contain"
-                                    style={{ filter: 'drop-shadow(0 0 8px rgba(124,58,237,0.5))' }}
+                                    className="h-full w-full object-contain rounded-full"
+                                    style={{
+                                        filter: 'drop-shadow(0 0 8px rgba(124,58,237,0.5))'
+                                    }}
                                 />
                             </div>
                             {/* Online Indicator Dot */}
