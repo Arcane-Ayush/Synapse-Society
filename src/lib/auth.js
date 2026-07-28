@@ -114,21 +114,32 @@ export async function getUserRank(userId) {
  * Fetch all cards owned by a user.
  */
 export async function getUserCards(userId) {
-    const { data, error } = await supabase
-        .from('user_cards')
-        .select(`
-            unlocked_at,
-            source,
-            cards (*)
-        `)
-        .eq('user_id', userId)
-        .order('unlocked_at', { ascending: false });
+    const [userCardsRes, levelsRes] = await Promise.all([
+        supabase
+            .from('user_cards')
+            .select(`
+                unlocked_at,
+                source,
+                cards (*)
+            `)
+            .eq('user_id', userId)
+            .order('unlocked_at', { ascending: false }),
+        supabase.from('levels').select('*')
+    ]);
 
-    if (data) {
-        const normalized = data.map(item => ({
+    if (userCardsRes.error) return { data: null, error: userCardsRes.error };
+
+    const levels = levelsRes.data || [];
+
+    const normalized = userCardsRes.data.map(item => {
+        const cardLevel = levels.find(l => l.level === item.cards.level_required);
+        const nextLevel = cardLevel ? levels.find(l => l.level === cardLevel.level + 1) : null;
+        
+        return {
             ...item,
             cards: {
                 ...item.cards,
+                level: item.cards.level_required,
                 colors: {
                     primary: item.cards.primary_color,
                     secondary: item.cards.secondary_color,
@@ -136,15 +147,14 @@ export async function getUserCards(userId) {
                 },
                 foilColors: item.cards.foil_colors,
                 characterEmoji: item.cards.character_emoji,
-                xpRequired: item.cards.xp_required,
-                xpMax: item.cards.xp_max,
+                xpRequired: cardLevel ? cardLevel.xp_required : (item.cards.worth || 0),
+                xpMax: nextLevel ? nextLevel.xp_required : (cardLevel ? 999999 : 0),
                 imageUrl: item.cards.image_url,
                 maxSupply: item.cards.max_supply
             }
-        }));
-        return { data: normalized, error };
-    }
-    return { data, error };
+        };
+    });
+    return { data: normalized, error: null };
 }
 
 /**
@@ -216,14 +226,22 @@ export async function getTeamMembers() {
  * Fetch all card definitions (for Nexus cards tab).
  */
 export async function getAllCards() {
-    const { data, error } = await supabase
-        .from('cards')
-        .select('*')
-        .order('level', { ascending: true, nullsLast: true });
+    const [cardsRes, levelsRes] = await Promise.all([
+        supabase.from('cards').select('*').order('level_required', { ascending: true, nullsLast: true }),
+        supabase.from('levels').select('*')
+    ]);
 
-    if (data) {
-        const normalized = data.map(card => ({
+    if (cardsRes.error) return { data: null, error: cardsRes.error };
+
+    const levels = levelsRes.data || [];
+
+    const normalized = cardsRes.data.map(card => {
+        const cardLevel = levels.find(l => l.level === card.level_required);
+        const nextLevel = cardLevel ? levels.find(l => l.level === cardLevel.level + 1) : null;
+
+        return {
             ...card,
+            level: card.level_required,
             colors: {
                 primary: card.primary_color,
                 secondary: card.secondary_color,
@@ -231,15 +249,14 @@ export async function getAllCards() {
             },
             foilColors: card.foil_colors,
             characterEmoji: card.character_emoji,
-            xpRequired: card.xp_required,
-            xpMax: card.xp_max,
+            xpRequired: cardLevel ? cardLevel.xp_required : (card.worth || 0),
+            xpMax: nextLevel ? nextLevel.xp_required : (cardLevel ? 999999 : 0),
             imageUrl: card.image_url,
             maxSupply: card.max_supply
-        }));
-        return { data: normalized, error };
-    }
+        };
+    });
 
-    return { data, error };
+    return { data: normalized, error: null };
 }
 
 /**
