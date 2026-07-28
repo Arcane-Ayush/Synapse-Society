@@ -153,6 +153,7 @@ export function Profile() {
         ...c,
         unlocked: ownedCardIds.has(c.id) || c.level === 0,
     }));
+    const unlockedCardsCount = allCardsMerged.filter(c => c.unlocked).length;
 
     async function handleUpdateProfile(e) {
         e.preventDefault();
@@ -205,7 +206,7 @@ export function Profile() {
 
     const SUB_TABS = [
         { id: 'overview', label: 'Overview', icon: <User size={14} /> },
-        { id: 'cards', label: 'My Cards', icon: <CreditCard size={14} />, badge: effectiveProfile.total_cards },
+        { id: 'cards', label: 'My Cards', icon: <CreditCard size={14} />, badge: unlockedCardsCount },
         { id: 'titles', label: 'Achievements', icon: <Trophy size={14} /> },
         { id: 'settings', label: 'Account & Safety', icon: <Shield size={14} /> },
     ];
@@ -341,7 +342,7 @@ export function Profile() {
                                 {[
                                     { label: 'Total XP', value: effectiveProfile.xp.toLocaleString(), icon: <Zap size={16} />, color: '#A855F7' },
                                     { label: 'Level', value: effectiveProfile.current_level, icon: <ChevronUp size={16} />, color: '#34D399' },
-                                    { label: 'Cards Unlocked', value: effectiveProfile.total_cards, icon: <CreditCard size={16} />, color: '#EC4899' },
+                                    { label: 'Cards Unlocked', value: unlockedCardsCount, icon: <CreditCard size={16} />, color: '#EC4899' },
                                     { label: 'Society Rank', value: `#${userRank}`, icon: <Trophy size={16} />, color: '#F59E0B' },
                                 ].map(s => (
                                     <div
@@ -569,6 +570,48 @@ export function Profile() {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* 3D Card Inspect Modal Overlay */}
+            {typeof document !== 'undefined' && createPortal(
+                <AnimatePresence>
+                    {selectedCard && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedCard(null)}
+                            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 cursor-pointer"
+                            style={{ background: 'rgba(5,5,8,0.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.8, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.8, opacity: 0, y: 20 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                                onClick={e => e.stopPropagation()}
+                                className="pointer-events-auto cursor-default relative flex flex-col items-center gap-4"
+                            >
+                                <SynapseCard card={selectedCard} size="lg" />
+
+                                <div
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold tracking-widest uppercase"
+                                    style={{
+                                        background: 'rgba(16,185,129,0.15)',
+                                        border: '1px solid rgba(16,185,129,0.35)',
+                                        color: '#34D399',
+                                        boxShadow: '0 0 20px rgba(16,185,129,0.2)',
+                                        backdropFilter: 'blur(8px)',
+                                    }}
+                                >
+                                    <CheckCircle2 size={14} />
+                                    <span>CLAIMED &amp; ACTIVE IN VAULT</span>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
         </div>
     );
 }
