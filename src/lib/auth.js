@@ -123,7 +123,7 @@ export async function getUserCards(userId) {
         `)
         .eq('user_id', userId)
         .order('unlocked_at', { ascending: false });
-        
+
     if (data) {
         const normalized = data.map(item => ({
             ...item,
@@ -220,7 +220,7 @@ export async function getAllCards() {
         .from('cards')
         .select('*')
         .order('level', { ascending: true, nullsLast: true });
-        
+
     if (data) {
         const normalized = data.map(card => ({
             ...card,
@@ -238,7 +238,7 @@ export async function getAllCards() {
         }));
         return { data: normalized, error };
     }
-    
+
     return { data, error };
 }
 
