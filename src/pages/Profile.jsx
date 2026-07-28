@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, Zap, Shield, ChevronUp, Trophy, Award, Mail, CheckCircle2, AlertCircle, Edit3, User, Sparkles, QrCode, CreditCard } from 'lucide-react';
