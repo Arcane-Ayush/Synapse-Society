@@ -94,7 +94,7 @@ function SynapseDeck({ projects }) {
                                     </div>
 
                                     {/* Image */}
-                                    <div className="relative w-full mb-3 rounded-lg overflow-hidden bg-purple-950/30" style={{ height: '45%' }}>
+                                    <div className="relative w-full mb-3 rounded-lg overflow-hidden bg-purple-950/30 h-[100px] md:h-[45%] shrink-0">
                                         <div
                                             className="absolute inset-0 flex items-center justify-center"
                                             style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.25), rgba(236,72,153,0.15))' }}

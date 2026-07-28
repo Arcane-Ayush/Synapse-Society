@@ -1,5 +1,6 @@
 import { Navbar } from "../components/Navbar";
 import { CircuitBackground } from "../components/CircuitBackground";
+import { ScrollToTop } from "../components/ScrollToTop";
 
 export function Layout({ children }) {
     return (
@@ -18,6 +19,8 @@ export function Layout({ children }) {
             <main className="flex-grow pt-20 relative" style={{ zIndex: 2 }}>
                 {children}
             </main>
+
+            <ScrollToTop />
 
             {/* Footer */}
             <footer className="relative py-8 px-6" style={{ zIndex: 2, borderTop: '1px solid var(--border-subtle)' }}>

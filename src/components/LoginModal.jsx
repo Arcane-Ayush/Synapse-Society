@@ -131,12 +131,34 @@ export function LoginModal({ isOpen, onClose, initialMode = 'login', titleOverri
         try {
             if (mode === 'login') {
                 const { error: err } = await signIn(form.email, form.password);
-                if (err) { setError(err.message); return; }
+                if (err) {
+                    if (err.message.includes('Email not confirmed')) {
+                        setError('Email not confirmed -- check your mail');
+                    } else {
+                        setError(err.message);
+                    }
+                    return;
+                }
                 onClose();
             } else if (mode === 'signup') {
                 if (!form.displayName.trim()) { setError('Display name is required.'); return; }
-                const { error: err } = await signUp(form.email, form.password, form.displayName);
-                if (err) { setError(err.message); return; }
+                const { error: signUpErr } = await signUp(form.email, form.password, form.displayName);
+                if (signUpErr) {
+                    setError(signUpErr.message);
+                    return;
+                }
+
+                // Attempt auto-login
+                const { error: signInErr } = await signIn(form.email, form.password);
+                if (signInErr) {
+                    if (signInErr.message.includes('Email not confirmed')) {
+                        setSuccess('Account created! Please check your email to confirm your account.');
+                    } else {
+                        setError(signInErr.message);
+                    }
+                    return;
+                }
+
                 setSuccess('Account created! Logging you in...');
                 setTimeout(() => onClose(), 1200);
             } else if (mode === 'reset') {
@@ -150,9 +172,9 @@ export function LoginModal({ isOpen, onClose, initialMode = 'login', titleOverri
     }
 
     const titles = {
-        login:  { heading: titleOverride || 'Sign In to Synapse', sub: subtitleOverride || 'Log in to access your card deck, quests & factions.' },
+        login: { heading: titleOverride || 'Sign In to Synapse', sub: subtitleOverride || 'Log in to access your card deck, quests & factions.' },
         signup: { heading: 'Join Synapse Society', sub: 'Create your account and claim your Level 0 Access Pass!' },
-        reset:  { heading: 'Reset Password', sub: 'Enter your email to receive a recovery link.' },
+        reset: { heading: 'Reset Password', sub: 'Enter your email to receive a recovery link.' },
     };
     const { heading, sub } = titles[mode];
 
@@ -324,8 +346,8 @@ export function LoginModal({ isOpen, onClose, initialMode = 'login', titleOverri
                             ) : (
                                 <>
                                     {mode === 'login' ? <><Zap size={14} /> Sign In</> :
-                                     mode === 'signup' ? <><Zap size={14} /> Create Account</> :
-                                     <><ArrowRight size={14} /> Send Reset Link</>}
+                                        mode === 'signup' ? <><Zap size={14} /> Create Account</> :
+                                            <><ArrowRight size={14} /> Send Reset Link</>}
                                 </>
                             )}
                         </button>

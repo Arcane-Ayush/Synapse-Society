@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
+import { Sparkles } from "lucide-react";
 
 const RARITY_LABELS = {
     0: "COMMON",
