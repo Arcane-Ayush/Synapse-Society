@@ -78,16 +78,31 @@ function CardsTab({ setSelectedCard }) {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 justify-items-center">
                     {membershipCards.map((card, i) => {
                         const isUnlocked = card.level === 0;
+                        const isClaimed = typeof window !== 'undefined' && (localStorage.getItem('synapse_claimed_cards') || '').includes(card.id);
+                        const isNewClaim = isUnlocked && !isClaimed;
+
                         return (
                             <motion.div
                                 key={card.id}
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                                onClick={() => isUnlocked && setSelectedCard({ ...card, unlocked: true })}
+                                onClick={() => {
+                                    if (isUnlocked) {
+                                        // Mark as claimed in localStorage
+                                        try {
+                                            const current = JSON.parse(localStorage.getItem('synapse_claimed_cards') || '[]');
+                                            if (!current.includes(card.id)) {
+                                                current.push(card.id);
+                                                localStorage.setItem('synapse_claimed_cards', JSON.stringify(current));
+                                            }
+                                        } catch (e) {}
+                                        setSelectedCard({ ...card, unlocked: true });
+                                    }
+                                }}
                                 className={isUnlocked ? "cursor-pointer transition-transform hover:scale-105" : ""}
                             >
-                                <SynapseCard card={{ ...card, unlocked: isUnlocked }} size="sm" />
+                                <SynapseCard card={{ ...card, unlocked: isUnlocked, isNewClaim }} size="sm" />
                             </motion.div>
                         );
                     })}
@@ -902,7 +917,7 @@ export function Nexus() {
     const [activeTab, setActiveTab] = useState('cards');
     const [selectedCard, setSelectedCard] = useState(null);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, loading } = useAuth();
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -914,6 +929,55 @@ export function Nexus() {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
+
+    // Full Lock Screen for Unauthenticated Users
+    if (!loading && !isAuthenticated) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center relative z-10">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-8 md:p-12 rounded-3xl max-w-lg w-full relative overflow-hidden"
+                    style={{
+                        background: 'rgba(8,8,14,0.95)',
+                        border: '1px solid rgba(168,85,247,0.3)',
+                        boxShadow: '0 24px 60px rgba(0,0,0,0.8), 0 0 40px rgba(124,58,237,0.25)',
+                        backdropFilter: 'blur(20px)',
+                    }}
+                >
+                    <div
+                        className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center text-3xl"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(236,72,153,0.2))',
+                            border: '1px solid rgba(168,85,247,0.4)',
+                            boxShadow: '0 0 25px rgba(124,58,237,0.3)',
+                        }}
+                    >
+                        <Lock className="text-purple-300" size={28} />
+                    </div>
+                    <h2 className="text-3xl font-black mb-3 tracking-tight" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>
+                        NEXUS VAULT RESTRICTED
+                    </h2>
+                    <p className="text-sm leading-relaxed mb-8" style={{ color: 'rgba(196,181,253,0.6)', fontFamily: 'Inter' }}>
+                        Nexus is exclusive to Synapse Society members. Please sign in or join to access your digital card collection, active quests, and QR rewards vault.
+                    </p>
+                    <button
+                        onClick={() => setIsLoginOpen(true)}
+                        className="w-full py-4 rounded-xl text-xs font-black tracking-widest uppercase transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
+                        style={{
+                            background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                            color: '#FFF',
+                            fontFamily: 'Space Grotesk',
+                            boxShadow: '0 0 25px rgba(124,58,237,0.5)',
+                        }}
+                    >
+                        Sign In / Join Synapse
+                    </button>
+                </motion.div>
+                <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen px-4 py-16">

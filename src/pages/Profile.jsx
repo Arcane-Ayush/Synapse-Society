@@ -407,15 +407,31 @@ export function Profile() {
                             exit={{ opacity: 0, y: -10 }}
                         >
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
-                                {allCardsMerged.map(card => (
-                                    <div
-                                        key={card.id}
-                                        onClick={() => card.unlocked && setSelectedCard(card)}
-                                        className={card.unlocked ? "cursor-pointer transition-transform hover:scale-105" : "opacity-60"}
-                                    >
-                                        <SynapseCard card={card} size="sm" />
-                                    </div>
-                                ))}
+                                {allCardsMerged.map(card => {
+                                    const isClaimed = typeof window !== 'undefined' && (localStorage.getItem('synapse_claimed_cards') || '').includes(card.id);
+                                    const isNewClaim = card.unlocked && !isClaimed;
+
+                                    return (
+                                        <div
+                                            key={card.id}
+                                            onClick={() => {
+                                                if (card.unlocked) {
+                                                    try {
+                                                        const current = JSON.parse(localStorage.getItem('synapse_claimed_cards') || '[]');
+                                                        if (!current.includes(card.id)) {
+                                                            current.push(card.id);
+                                                            localStorage.setItem('synapse_claimed_cards', JSON.stringify(current));
+                                                        }
+                                                    } catch (e) {}
+                                                    setSelectedCard({ ...card, isNewClaim: false });
+                                                }
+                                            }}
+                                            className={card.unlocked ? "cursor-pointer transition-transform hover:scale-105" : "opacity-60"}
+                                        >
+                                            <SynapseCard card={{ ...card, isNewClaim }} size="sm" />
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </motion.div>
                     )}

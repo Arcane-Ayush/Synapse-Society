@@ -221,6 +221,21 @@ export function SynapseCard({ card, size = "md", showBack = false, className = "
 
                     {/* === CARD CONTENT === */}
                     <div className="relative z-10 flex flex-col h-full p-4">
+                        {/* New / Claim Indicator */}
+                        {card.unlocked && card.isNewClaim && (
+                            <div
+                                className="absolute -top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[9px] font-bold uppercase tracking-wider animate-bounce shadow-xl whitespace-nowrap"
+                                style={{
+                                    background: 'linear-gradient(135deg, #EC4899, #A855F7)',
+                                    color: '#FFF',
+                                    boxShadow: '0 0 20px rgba(236,72,153,0.9)',
+                                    border: '1px solid rgba(255,255,255,0.4)',
+                                }}
+                            >
+                                <Sparkles size={11} className="text-amber-300 animate-spin" />
+                                <span>NEW · TAP TO CLAIM</span>
+                            </div>
+                        )}
                         {/* Top bar — ID + Rarity */}
                         <div className="flex items-center justify-between mb-3">
                             <span

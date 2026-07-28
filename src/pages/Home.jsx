@@ -274,9 +274,9 @@ export function Home() {
                                         animation: 'gradient-x 4s linear infinite',
                                     }}
                                 >
-                                    Spark
+                                    SPARK
                                 </span>
-                                <span style={{ color: '#F5F3FF' }}> Into</span>
+                                <span style={{ color: '#F5F3FF' }}> into</span>
                                 <br />
                                 <span style={{ color: '#F5F3FF' }}>Reality.</span>
                             </motion.h1>
@@ -292,7 +292,7 @@ export function Home() {
                                 Build real projects. Learn together. Grow your network. Shape the future.
                             </motion.p>
 
-                             {/* CTA buttons — glowing cyber style */}
+                            {/* CTA buttons — glowing cyber style */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -517,18 +517,19 @@ export function Home() {
                         {previewCards.map((card, i) => {
                             const isUnlocked = i === 0;
                             return (
-                            <motion.div
-                                key={card.id}
-                                initial={{ opacity: 0, y: 40, rotate: (i - 1) * 6 }}
-                                whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-                                transition={{ duration: 0.7, delay: i * 0.15, ease: [0.23, 1, 0.32, 1] }}
-                                viewport={{ once: true }}
-                                onClick={() => isUnlocked && setSelectedCard({ ...card, unlocked: true })}
-                                className={isUnlocked ? "cursor-pointer transition-transform hover:scale-105" : ""}
-                            >
-                                <SynapseCard card={{ ...card, unlocked: isUnlocked }} size="md" />
-                            </motion.div>
-                        )})}
+                                <motion.div
+                                    key={card.id}
+                                    initial={{ opacity: 0, y: 40, rotate: (i - 1) * 6 }}
+                                    whileInView={{ opacity: 1, y: 0, rotate: 0 }}
+                                    transition={{ duration: 0.7, delay: i * 0.15, ease: [0.23, 1, 0.32, 1] }}
+                                    viewport={{ once: true }}
+                                    onClick={() => isUnlocked && setSelectedCard({ ...card, unlocked: true })}
+                                    className={isUnlocked ? "cursor-pointer transition-transform hover:scale-105" : ""}
+                                >
+                                    <SynapseCard card={{ ...card, unlocked: isUnlocked }} size="md" />
+                                </motion.div>
+                            )
+                        })}
                     </div>
 
                     <div className="flex justify-center">
