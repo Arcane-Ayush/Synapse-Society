@@ -1,0 +1,198 @@
+import { supabase } from './supabase';
+
+/**
+ * Sign up with email + password.
+ * Supabase handles hashing — never touch the password in app code.
+ *
+ * @param {string} email
+ * @param {string} password
+ * @param {string} displayName - shown in UI, stored in profile
+ * @returns {Promise<{ data, error }>}
+ */
+export async function signUp(email, password, displayName) {
+    const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+            data: { display_name: displayName },  // passed to handle_new_user() trigger
+        },
+    });
+    return { data, error };
+}
+
+/**
+ * Sign in with email + password.
+ */
+export async function signIn(email, password) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+    });
+    return { data, error };
+}
+
+/**
+ * Sign out current user.
+ */
+export async function signOut() {
+    const { error } = await supabase.auth.signOut();
+    return { error };
+}
+
+/**
+ * Send a password reset email.
+ */
+export async function resetPassword(email) {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
+    });
+    return { data, error };
+}
+
+/**
+ * Get the current active session (null if not logged in).
+ */
+export async function getSession() {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    return { session, error };
+}
+
+/**
+ * Subscribe to auth state changes (login / logout / token refresh).
+ * Returns unsubscribe function.
+ */
+export function onAuthStateChange(callback) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        callback(session);
+    });
+    return () => subscription.unsubscribe();
+}
+
+/**
+ * Fetch the current user's profile from the profiles table.
+ */
+export async function getProfile(userId) {
+    const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+            *,
+            levels (label, xp_required)
+        `)
+        .eq('id', userId)
+        .single();
+    return { data, error };
+}
+
+/**
+ * Update the current user's own profile.
+ * Only display_name and avatar_url are user-editable.
+ */
+export async function updateProfile(userId, updates) {
+    const allowed = ['display_name', 'avatar_url', 'username'];
+    const sanitized = Object.fromEntries(
+        Object.entries(updates).filter(([key]) => allowed.includes(key))
+    );
+
+    const { data, error } = await supabase
+        .from('profiles')
+        .update(sanitized)
+        .eq('id', userId)
+        .select()
+        .single();
+    return { data, error };
+}
+
+/**
+ * Fetch all cards owned by a user.
+ */
+export async function getUserCards(userId) {
+    const { data, error } = await supabase
+        .from('user_cards')
+        .select(`
+            unlocked_at,
+            source,
+            cards (*)
+        `)
+        .eq('user_id', userId)
+        .order('unlocked_at', { ascending: false });
+    return { data, error };
+}
+
+/**
+ * Fetch paginated leaderboard using the optimized RPC function.
+ */
+export async function getLeaderboard(limit = 50, offset = 0) {
+    const { data, error } = await supabase
+        .rpc('get_leaderboard', { p_limit: limit, p_offset: offset });
+    return { data, error };
+}
+
+/**
+ * Fetch all public activities.
+ */
+export async function getActivities() {
+    const { data, error } = await supabase
+        .from('activities')
+        .select('*')
+        .order('event_date', { ascending: true });
+    return { data, error };
+}
+
+/**
+ * Fetch all active/upcoming missions.
+ */
+export async function getMissions() {
+    const { data, error } = await supabase
+        .from('missions')
+        .select('*')
+        .in('status', ['Active', 'Upcoming'])
+        .order('deadline', { ascending: true });
+    return { data, error };
+}
+
+/**
+ * Fetch all teams (factions leaderboard).
+ */
+export async function getTeams() {
+    const { data, error } = await supabase
+        .from('teams')
+        .select('*')
+        .order('total_tokens', { ascending: false });
+    return { data, error };
+}
+
+/**
+ * Fetch all projects.
+ */
+export async function getProjects() {
+    const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+    return { data, error };
+}
+
+/**
+ * Fetch all card definitions (for Nexus cards tab).
+ */
+export async function getAllCards() {
+    const { data, error } = await supabase
+        .from('cards')
+        .select('*, rarities(display_order)')
+        .eq('is_active', true)
+        .order('level_required', { ascending: true, nullsLast: true });
+    return { data, error };
+}
+
+/**
+ * Fetch XP history for a user.
+ */
+export async function getXpHistory(userId, limit = 20) {
+    const { data, error } = await supabase
+        .from('xp_history')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+    return { data, error };
+}

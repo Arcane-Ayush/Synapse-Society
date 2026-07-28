@@ -6,7 +6,10 @@ import { Activities } from './pages/Activities';
 import { Projects } from './pages/Projects';
 import { Nexus } from './pages/Nexus';
 import { About } from './pages/About';
+import { Login } from './pages/Login';
+import { Profile } from './pages/Profile';
 import { PageTransition } from './components/PageTransition';
+import { AuthProvider } from './contexts/AuthContext';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -19,6 +22,8 @@ function AnimatedRoutes() {
         <Route path="/projects" element={<PageTransition><Projects /></PageTransition>} />
         <Route path="/nexus" element={<PageTransition><Nexus /></PageTransition>} />
         <Route path="/about" element={<PageTransition><About /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+        <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
       </Routes>
     </AnimatePresence>
   );
@@ -27,9 +32,11 @@ function AnimatedRoutes() {
 function App() {
   return (
     <Router>
-      <Layout>
-        <AnimatedRoutes />
-      </Layout>
+      <AuthProvider>
+        <Layout>
+          <AnimatedRoutes />
+        </Layout>
+      </AuthProvider>
     </Router>
   );
 }
