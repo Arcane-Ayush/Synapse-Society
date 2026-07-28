@@ -83,7 +83,7 @@ export function CircuitBackground() {
                     ctx.beginPath();
                     ctx.moveTo(node.x, node.y);
                     ctx.lineTo(other.x, other.y);
-                    ctx.strokeStyle = "rgba(124,58,237,0.07)";
+                    ctx.strokeStyle = "rgba(var(--synapse-violet-rgb), 0.07)";
                     ctx.lineWidth = 1;
                     ctx.stroke();
                 });

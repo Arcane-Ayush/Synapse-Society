@@ -6,26 +6,26 @@ import { signIn, signUp, resetPassword } from '../lib/auth';
 import { useAuth } from '../contexts/AuthContext';
 
 const INPUT_STYLE = {
-    background: 'rgba(12,12,20,0.8)',
-    border: '1px solid rgba(124,58,237,0.2)',
-    color: '#F5F3FF',
+    background: 'rgba(var(--bg-glass-rgb), 0.8)',
+    border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)',
+    color: 'var(--text-primary)',
     fontFamily: 'Inter',
 };
 const INPUT_STYLE_FOCUS = {
-    border: '1px solid rgba(168,85,247,0.5)',
-    boxShadow: '0 0 0 3px rgba(124,58,237,0.1)',
+    border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.5)',
+    boxShadow: '0 0 0 3px rgba(var(--synapse-violet-rgb), 0.1)',
 };
 
 function InputField({ label, type = 'text', value, onChange, icon: Icon, placeholder, showToggle, onToggle, showPassword }) {
     return (
         <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-mono tracking-widest uppercase" style={{ color: 'rgba(196,181,253,0.6)' }}>
+            <label className="text-xs font-mono tracking-widest uppercase" style={{ color: 'rgba(var(--text-secondary-rgb), 0.6)' }}>
                 {label}
             </label>
             <div className="relative">
                 {Icon && (
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <Icon size={15} style={{ color: 'rgba(168,85,247,0.6)' }} />
+                        <Icon size={15} style={{ color: 'rgba(var(--synapse-violet-light-rgb), 0.6)' }} />
                     </div>
                 )}
                 <input
@@ -33,7 +33,7 @@ function InputField({ label, type = 'text', value, onChange, icon: Icon, placeho
                     value={value}
                     onChange={onChange}
                     placeholder={placeholder}
-                    className="w-full pl-10 pr-10 py-3 rounded-xl text-sm outline-none transition-all duration-200 placeholder:text-[rgba(196,181,253,0.25)]"
+                    className="w-full pl-10 pr-10 py-3 rounded-xl text-sm outline-none transition-all duration-200 placeholder:text-[rgba(var(--text-secondary-rgb), 0.25)]"
                     style={INPUT_STYLE}
                     onFocus={e => Object.assign(e.target.style, INPUT_STYLE_FOCUS)}
                     onBlur={e => Object.assign(e.target.style, INPUT_STYLE)}
@@ -45,8 +45,8 @@ function InputField({ label, type = 'text', value, onChange, icon: Icon, placeho
                         className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-100 opacity-50"
                     >
                         {showPassword
-                            ? <EyeOff size={15} style={{ color: '#A855F7' }} />
-                            : <Eye size={15} style={{ color: '#A855F7' }} />}
+                            ? <EyeOff size={15} style={{ color: 'var(--synapse-violet-light)' }} />
+                            : <Eye size={15} style={{ color: 'var(--synapse-violet-light)' }} />}
                     </button>
                 )}
             </div>
@@ -76,9 +76,9 @@ function Alert({ type, message }) {
 }
 
 const CARD_STYLE = {
-    background: 'rgba(8,8,14,0.95)',
-    border: '1px solid rgba(124,58,237,0.2)',
-    boxShadow: '0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,0.05)',
+    background: 'rgba(var(--bg-glass-rgb), 0.95)',
+    border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)',
+    boxShadow: '0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(var(--synapse-violet-rgb), 0.05)',
     backdropFilter: 'blur(24px)',
 };
 
@@ -149,9 +149,9 @@ export function Login() {
                         <div
                             className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden"
                             style={{
-                                background: 'rgba(124,58,237,0.1)',
-                                border: '1px solid rgba(124,58,237,0.3)',
-                                boxShadow: '0 0 20px rgba(124,58,237,0.2)',
+                                background: 'rgba(var(--synapse-violet-rgb), 0.1)',
+                                border: '1px solid rgba(var(--synapse-violet-rgb), 0.3)',
+                                boxShadow: '0 0 20px rgba(var(--synapse-violet-rgb), 0.2)',
                             }}
                         >
                             <img src="/S_ofSynapseDark.png" alt="Synapse" className="w-full h-full object-contain" />
@@ -163,11 +163,11 @@ export function Login() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="text-3xl font-black tracking-tight mb-2"
-                        style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}
+                        style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}
                     >
                         {heading}
                     </motion.h1>
-                    <p className="text-sm" style={{ color: 'rgba(196,181,253,0.55)', fontFamily: 'Inter' }}>
+                    <p className="text-sm" style={{ color: 'rgba(var(--text-secondary-rgb), 0.55)', fontFamily: 'Inter' }}>
                         {sub}
                     </p>
                 </div>
@@ -178,7 +178,7 @@ export function Login() {
                     {mode !== 'reset' && (
                         <div
                             className="flex gap-1 p-1 rounded-xl mb-6"
-                            style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.12)' }}
+                            style={{ background: 'rgba(var(--synapse-violet-rgb), 0.06)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.12)' }}
                         >
                             {['login', 'signup'].map(m => (
                                 <button
@@ -187,9 +187,9 @@ export function Login() {
                                     className="flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-200"
                                     style={{
                                         fontFamily: 'Space Grotesk',
-                                        background: mode === m ? 'rgba(124,58,237,0.35)' : 'transparent',
-                                        color: mode === m ? '#fff' : 'rgba(196,181,253,0.5)',
-                                        border: mode === m ? '1px solid rgba(168,85,247,0.3)' : '1px solid transparent',
+                                        background: mode === m ? 'rgba(var(--synapse-violet-rgb), 0.35)' : 'transparent',
+                                        color: mode === m ? '#fff' : 'rgba(var(--text-secondary-rgb), 0.5)',
+                                        border: mode === m ? '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)' : '1px solid transparent',
                                     }}
                                 >
                                     {m === 'login' ? 'Sign In' : 'Sign Up'}
@@ -250,7 +250,7 @@ export function Login() {
                                 type="button"
                                 onClick={() => { setMode('reset'); setError(''); setSuccess(''); }}
                                 className="text-xs text-right transition-colors hover:opacity-80"
-                                style={{ color: 'rgba(168,85,247,0.7)', fontFamily: 'Inter' }}
+                                style={{ color: 'rgba(var(--synapse-violet-light-rgb), 0.7)', fontFamily: 'Inter' }}
                             >
                                 Forgot password?
                             </button>
@@ -263,9 +263,9 @@ export function Login() {
                             className="mt-2 flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-bold text-sm transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                             style={{
                                 fontFamily: 'Space Grotesk',
-                                background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
-                                color: '#fff',
-                                boxShadow: loading ? 'none' : '0 0 24px rgba(124,58,237,0.4)',
+                                background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
+                                color: 'var(--text-primary)',
+                                boxShadow: loading ? 'none' : '0 0 24px rgba(var(--synapse-violet-rgb), 0.4)',
                             }}
                         >
                             {loading ? (
@@ -285,7 +285,7 @@ export function Login() {
                                 type="button"
                                 onClick={() => { setMode('login'); setError(''); setSuccess(''); }}
                                 className="text-xs text-center mt-1 transition-colors hover:opacity-80"
-                                style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter' }}
+                                style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)', fontFamily: 'Inter' }}
                             >
                                 ← Back to Sign In
                             </button>
@@ -294,7 +294,7 @@ export function Login() {
                 </div>
 
                 {/* Footer */}
-                <p className="text-center text-xs mt-6" style={{ color: 'rgba(196,181,253,0.3)', fontFamily: 'Inter' }}>
+                <p className="text-center text-xs mt-6" style={{ color: 'rgba(var(--text-secondary-rgb), 0.3)', fontFamily: 'Inter' }}>
                     Synapse Society · Chandigarh University
                 </p>
             </motion.div>

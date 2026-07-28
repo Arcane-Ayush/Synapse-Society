@@ -35,12 +35,12 @@ export function ScrollToTop() {
                     onClick={scrollToTop}
                     className="fixed bottom-6 right-6 p-3 rounded-full z-50 shadow-lg cursor-pointer transition-colors"
                     style={{
-                        background: 'rgba(124,58,237,0.8)',
+                        background: 'rgba(var(--synapse-violet-rgb), 0.8)',
                         color: '#FFF',
-                        border: '1px solid rgba(168,85,247,0.5)',
+                        border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.5)',
                         backdropFilter: 'blur(8px)',
                     }}
-                    whileHover={{ scale: 1.1, background: 'rgba(168,85,247,0.9)' }}
+                    whileHover={{ scale: 1.1, background: 'rgba(var(--synapse-violet-light-rgb), 0.9)' }}
                     whileTap={{ scale: 0.9 }}
                 >
                     <ChevronUp size={24} />

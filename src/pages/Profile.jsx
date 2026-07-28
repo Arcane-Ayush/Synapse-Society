@@ -19,7 +19,7 @@ const LEVEL_TITLES = {
 };
 
 const DEFAULT_TITLES = [
-    { id: 't1', name: 'Genesis Pioneer', category: 'Season 1', icon: '✦', color: '#A855F7', desc: 'Joined during Season 1 Launch' },
+    { id: 't1', name: 'Genesis Pioneer', category: 'Season 1', icon: '✦', color: 'var(--synapse-violet-light)', desc: 'Joined during Season 1 Launch' },
     { id: 't2', name: 'Access Holder', category: 'Membership', icon: '⎈', color: '#3B82F6', desc: 'Hold a valid Synapse Access Pass' },
     { id: 't3', name: 'Neural Spark', category: 'Level', icon: '⚡', color: '#10B981', desc: 'Reached Level 1 threshold' },
 ];
@@ -38,28 +38,28 @@ function XPBar({ xp = 0, currentLevel = 0 }) {
     return (
         <div>
             <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-mono font-semibold" style={{ color: '#A855F7' }}>
+                <span className="text-xs font-mono font-semibold" style={{ color: 'var(--synapse-violet-light)' }}>
                     Level {safeLevel} · {LEVEL_TITLES[safeLevel] || 'Member'}
                 </span>
-                <span className="text-xs font-mono" style={{ color: 'rgba(196,181,253,0.5)' }}>
+                <span className="text-xs font-mono" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)' }}>
                     {safeXp.toLocaleString()} XP {xpForNext ? `/ ${xpForNext.toLocaleString()} XP` : '(MAX LEVEL)'}
                 </span>
             </div>
-            <div className="h-2.5 rounded-full overflow-hidden p-0.5" style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.2)' }}>
+            <div className="h-2.5 rounded-full overflow-hidden p-0.5" style={{ background: 'rgba(var(--synapse-violet-rgb), 0.12)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)' }}>
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
                     className="h-full rounded-full"
                     style={{
-                        background: 'linear-gradient(90deg, #7C3AED 0%, #A855F7 50%, #EC4899 100%)',
-                        boxShadow: '0 0 10px rgba(168,85,247,0.5)',
+                        background: 'linear-gradient(90deg, var(--synapse-violet) 0%, var(--synapse-violet-light) 50%, var(--synapse-pink) 100%)',
+                        boxShadow: '0 0 10px rgba(var(--synapse-violet-light-rgb), 0.5)',
                     }}
                 />
             </div>
             {xpForNext && (
                 <div className="text-right mt-1.5">
-                    <span className="text-[10px] font-mono" style={{ color: 'rgba(196,181,253,0.4)' }}>
+                    <span className="text-[10px] font-mono" style={{ color: 'rgba(var(--text-secondary-rgb), 0.4)' }}>
                         {(xpForNext - safeXp).toLocaleString()} XP until next level unlock
                     </span>
                 </div>
@@ -136,32 +136,32 @@ export function Profile() {
                     animate={{ opacity: 1, scale: 1 }}
                     className="p-8 md:p-12 rounded-3xl max-w-md w-full relative overflow-hidden"
                     style={{
-                        background: 'rgba(12,12,20,0.92)',
-                        border: '1px solid rgba(168,85,247,0.3)',
-                        boxShadow: '0 24px 60px rgba(0,0,0,0.8), 0 0 40px rgba(124,58,237,0.25)',
+                        background: 'rgba(var(--bg-glass-rgb), 0.92)',
+                        border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)',
+                        boxShadow: '0 24px 60px rgba(0,0,0,0.8), 0 0 40px rgba(var(--synapse-violet-rgb), 0.25)',
                         backdropFilter: 'blur(16px)',
                     }}
                 >
                     <div
                         className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center text-3xl"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(236,72,153,0.2))',
-                            border: '1px solid rgba(168,85,247,0.4)',
-                            boxShadow: '0 0 25px rgba(124,58,237,0.3)',
+                            background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.3), rgba(236,72,153,0.2))',
+                            border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.4)',
+                            boxShadow: '0 0 25px rgba(var(--synapse-violet-rgb), 0.3)',
                         }}
                     >
                         <User className="text-purple-300" size={28} />
                     </div>
-                    <h2 className="text-2xl font-black mb-2" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>
+                    <h2 className="text-2xl font-black mb-2" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>
                         Member Profile Access
                     </h2>
-                    <p className="text-sm mb-6 leading-relaxed" style={{ color: 'rgba(196,181,253,0.6)', fontFamily: 'Inter' }}>
+                    <p className="text-sm mb-6 leading-relaxed" style={{ color: 'rgba(var(--text-secondary-rgb), 0.6)', fontFamily: 'Inter' }}>
                         Please sign in to view your member card collection, XP history, dynamic rank, and title achievements.
                     </p>
                     <button
                         onClick={() => setIsLoginOpen(true)}
                         className="w-full py-3.5 rounded-xl text-xs font-black tracking-widest uppercase transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
-                        style={{ background: 'linear-gradient(135deg, #7C3AED, #A855F7)', color: '#FFF', fontFamily: 'Space Grotesk' }}
+                        style={{ background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))', color: 'var(--text-primary)', fontFamily: 'Space Grotesk' }}
                     >
                         Sign In / Join Synapse
                     </button>
@@ -245,7 +245,7 @@ export function Profile() {
                     exit={{ opacity: 0 }}
                     onClick={() => setSelectedCard(null)}
                     className="fixed inset-0 z-[99999] flex items-center justify-center p-4 cursor-pointer"
-                    style={{ background: 'rgba(5,5,8,0.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+                    style={{ background: 'rgba(var(--bg-glass-rgb), 0.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
                 >
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0, y: 20 }}
@@ -289,9 +289,9 @@ export function Profile() {
                     transition={{ duration: 0.6 }}
                     className="p-6 md:p-8 rounded-3xl mb-8 relative overflow-hidden"
                     style={{
-                        background: 'rgba(8,8,14,0.95)',
-                        border: '1px solid rgba(168,85,247,0.3)',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(124,58,237,0.15)',
+                        background: 'rgba(var(--bg-glass-rgb), 0.95)',
+                        border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(var(--synapse-violet-rgb), 0.15)',
                         backdropFilter: 'blur(20px)',
                     }}
                 >
@@ -301,11 +301,11 @@ export function Profile() {
                             <div
                                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-black flex-shrink-0 relative overflow-hidden"
                                 style={{
-                                    background: 'linear-gradient(135deg, rgba(124,58,237,0.4), rgba(236,72,153,0.2))',
-                                    border: '2px solid rgba(168,85,247,0.4)',
-                                    boxShadow: '0 0 25px rgba(124,58,237,0.3)',
+                                    background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.4), rgba(236,72,153,0.2))',
+                                    border: '2px solid rgba(var(--synapse-violet-light-rgb), 0.4)',
+                                    boxShadow: '0 0 25px rgba(var(--synapse-violet-rgb), 0.3)',
                                     fontFamily: 'Space Grotesk',
-                                    color: '#F5F3FF',
+                                    color: 'var(--text-primary)',
                                 }}
                             >
                                 {effectiveProfile.display_name?.[0]?.toUpperCase() ?? '?'}
@@ -317,7 +317,7 @@ export function Profile() {
                                 <div className="flex flex-wrap items-center gap-2 mb-1">
                                     <h1
                                         className="text-xl sm:text-3xl font-black tracking-tight truncate"
-                                        style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}
+                                        style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}
                                     >
                                         {effectiveProfile.display_name}
                                     </h1>
@@ -325,8 +325,8 @@ export function Profile() {
                                         <span
                                             className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-md font-bold uppercase tracking-wider whitespace-nowrap"
                                             style={{
-                                                background: 'linear-gradient(135deg, #7C3AED, #EC4899)',
-                                                color: '#FFF',
+                                                background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-pink))',
+                                                color: 'var(--text-primary)',
                                             }}
                                         >
                                             <Shield size={10} />
@@ -334,10 +334,10 @@ export function Profile() {
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2 text-xs font-mono mb-3" style={{ color: 'rgba(196,181,253,0.6)' }}>
+                                <div className="flex flex-wrap items-center gap-2 text-xs font-mono mb-3" style={{ color: 'rgba(var(--text-secondary-rgb), 0.6)' }}>
                                     <span>@{effectiveProfile.username}</span>
                                     <span>·</span>
-                                    <span style={{ color: '#A855F7', fontWeight: 600 }}>{LEVEL_TITLES[effectiveProfile.current_level]}</span>
+                                    <span style={{ color: 'var(--synapse-violet-light)', fontWeight: 600 }}>{LEVEL_TITLES[effectiveProfile.current_level]}</span>
                                 </div>
 
                                 <div className="w-full">
@@ -373,11 +373,11 @@ export function Profile() {
                             style={{
                                 fontFamily: 'Space Grotesk',
                                 background: activeSubTab === tab.id
-                                    ? 'linear-gradient(135deg, rgba(124,58,237,0.5), rgba(168,85,247,0.4))'
-                                    : 'rgba(12,12,20,0.8)',
-                                color: activeSubTab === tab.id ? '#FFF' : 'rgba(196,181,253,0.45)',
-                                border: `1px solid ${activeSubTab === tab.id ? 'rgba(168,85,247,0.4)' : 'rgba(124,58,237,0.12)'}`,
-                                boxShadow: activeSubTab === tab.id ? '0 0 16px rgba(124,58,237,0.2)' : 'none',
+                                    ? 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.5), rgba(var(--synapse-violet-light-rgb), 0.4))'
+                                    : 'rgba(var(--bg-glass-rgb), 0.8)',
+                                color: activeSubTab === tab.id ? '#FFF' : 'rgba(var(--text-secondary-rgb), 0.45)',
+                                border: `1px solid ${activeSubTab === tab.id ? 'rgba(var(--synapse-violet-light-rgb), 0.4)' : 'rgba(var(--synapse-violet-rgb), 0.12)'}`,
+                                boxShadow: activeSubTab === tab.id ? '0 0 16px rgba(var(--synapse-violet-rgb), 0.2)' : 'none',
                             }}
                         >
                             {tab.icon}
@@ -385,7 +385,7 @@ export function Profile() {
                             {tab.badge !== undefined && (
                                 <span
                                     className="px-1.5 py-0.2 rounded-full text-[9px] font-mono"
-                                    style={{ background: 'rgba(124,58,237,0.3)', color: '#A855F7' }}
+                                    style={{ background: 'rgba(var(--synapse-violet-rgb), 0.3)', color: 'var(--synapse-violet-light)' }}
                                 >
                                     {tab.badge}
                                 </span>
@@ -407,23 +407,23 @@ export function Profile() {
                             {/* Key Stats Cards */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {[
-                                    { label: 'Total XP', value: (effectiveProfile.xp ?? 0).toLocaleString(), icon: <Zap size={16} />, color: '#A855F7' },
+                                    { label: 'Total XP', value: (effectiveProfile.xp ?? 0).toLocaleString(), icon: <Zap size={16} />, color: 'var(--synapse-violet-light)' },
                                     { label: 'Level', value: effectiveProfile.current_level, icon: <ChevronUp size={16} />, color: '#34D399' },
-                                    { label: 'Cards Unlocked', value: unlockedCardsCount, icon: <CreditCard size={16} />, color: '#EC4899' },
+                                    { label: 'Cards Unlocked', value: unlockedCardsCount, icon: <CreditCard size={16} />, color: 'var(--synapse-pink)' },
                                     { label: 'Society Rank', value: `#${userRank}`, icon: <Trophy size={16} />, color: '#F59E0B' },
                                 ].map(s => (
                                     <div
                                         key={s.label}
                                         className="p-5 rounded-2xl text-center relative overflow-hidden"
-                                        style={{ background: 'rgba(12,12,20,0.85)', border: '1px solid rgba(124,58,237,0.15)' }}
+                                        style={{ background: 'rgba(var(--bg-glass-rgb), 0.85)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.15)' }}
                                     >
                                         <div className="flex items-center justify-center mb-1" style={{ color: s.color }}>
                                             {s.icon}
                                         </div>
-                                        <div className="text-2xl font-black mb-1" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>
+                                        <div className="text-2xl font-black mb-1" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>
                                             {s.value}
                                         </div>
-                                        <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'rgba(196,181,253,0.4)' }}>
+                                        <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'rgba(var(--text-secondary-rgb), 0.4)' }}>
                                             {s.label}
                                         </div>
                                     </div>
@@ -431,8 +431,8 @@ export function Profile() {
                             </div>
 
                             {/* Recent XP Audit Trail */}
-                            <div className="p-6 rounded-3xl" style={{ background: 'rgba(12,12,20,0.85)', border: '1px solid rgba(124,58,237,0.15)' }}>
-                                <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>
+                            <div className="p-6 rounded-3xl" style={{ background: 'rgba(var(--bg-glass-rgb), 0.85)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.15)' }}>
+                                <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>
                                     Recent XP Log &amp; Activity
                                 </h3>
                                 {xpHistory.length > 0 ? (
@@ -441,13 +441,13 @@ export function Profile() {
                                             <div
                                                 key={entry.id}
                                                 className="flex items-center justify-between p-3.5 rounded-xl"
-                                                style={{ background: 'rgba(5,5,8,0.7)', border: '1px solid rgba(124,58,237,0.08)' }}
+                                                style={{ background: 'rgba(var(--bg-glass-rgb), 0.7)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.08)' }}
                                             >
                                                 <div>
                                                     <p className="text-sm font-medium" style={{ color: '#E9D5FF', fontFamily: 'Inter' }}>
                                                         {entry.reason}
                                                     </p>
-                                                    <p className="text-[10px] font-mono" style={{ color: 'rgba(196,181,253,0.35)' }}>
+                                                    <p className="text-[10px] font-mono" style={{ color: 'rgba(var(--text-secondary-rgb), 0.35)' }}>
                                                         {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {entry.source}
                                                     </p>
                                                 </div>
@@ -515,7 +515,7 @@ export function Profile() {
                                 <div
                                     key={title.id}
                                     className="p-5 rounded-2xl flex items-start gap-4 relative overflow-hidden"
-                                    style={{ background: 'rgba(12,12,20,0.85)', border: `1px solid ${title.color}40` }}
+                                    style={{ background: 'rgba(var(--bg-glass-rgb), 0.85)', border: `1px solid ${title.color}40` }}
                                 >
                                     <div className="text-2xl p-2 rounded-xl" style={{ background: `${title.color}15`, color: title.color }}>
                                         {title.icon}
@@ -524,10 +524,10 @@ export function Profile() {
                                         <span className="text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ background: `${title.color}20`, color: title.color }}>
                                             {title.category}
                                         </span>
-                                        <h4 className="font-bold text-sm mt-1.5 mb-1" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>
+                                        <h4 className="font-bold text-sm mt-1.5 mb-1" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>
                                             {title.name}
                                         </h4>
-                                        <p className="text-xs leading-relaxed" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter' }}>
+                                        <p className="text-xs leading-relaxed" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)', fontFamily: 'Inter' }}>
                                             {title.desc}
                                         </p>
                                     </div>
@@ -545,14 +545,14 @@ export function Profile() {
                             className="grid md:grid-cols-2 gap-8"
                         >
                             {/* Profile Information Editor */}
-                            <div className="p-6 rounded-3xl" style={{ background: 'rgba(12,12,20,0.85)', border: '1px solid rgba(124,58,237,0.15)' }}>
-                                <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>
+                            <div className="p-6 rounded-3xl" style={{ background: 'rgba(var(--bg-glass-rgb), 0.85)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.15)' }}>
+                                <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>
                                     Edit Public Profile
                                 </h3>
 
                                 <form onSubmit={handleUpdateProfile} className="space-y-4">
                                     <div>
-                                        <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(196,181,253,0.6)' }}>
+                                        <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(var(--text-secondary-rgb), 0.6)' }}>
                                             Display Name
                                         </label>
                                         <input
@@ -560,12 +560,12 @@ export function Profile() {
                                             value={editForm.displayName}
                                             onChange={e => setEditForm({ ...editForm, displayName: e.target.value })}
                                             className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
-                                            style={{ background: 'rgba(5,5,8,0.9)', border: '1px solid rgba(124,58,237,0.2)', color: '#FFF' }}
+                                            style={{ background: 'rgba(var(--bg-glass-rgb), 0.9)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)', color: 'var(--text-primary)' }}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(196,181,253,0.6)' }}>
+                                        <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(var(--text-secondary-rgb), 0.6)' }}>
                                             Username Tag (@)
                                         </label>
                                         <input
@@ -573,7 +573,7 @@ export function Profile() {
                                             value={editForm.username}
                                             onChange={e => setEditForm({ ...editForm, username: e.target.value })}
                                             className="w-full px-4 py-2.5 rounded-xl text-sm font-mono outline-none"
-                                            style={{ background: 'rgba(5,5,8,0.9)', border: '1px solid rgba(124,58,237,0.2)', color: '#FFF' }}
+                                            style={{ background: 'rgba(var(--bg-glass-rgb), 0.9)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)', color: 'var(--text-primary)' }}
                                         />
                                     </div>
 
@@ -583,8 +583,8 @@ export function Profile() {
                                         className="w-full py-2.5 rounded-xl font-bold text-xs tracking-wider uppercase transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
                                         style={{
                                             fontFamily: 'Space Grotesk',
-                                            background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
-                                            color: '#FFF',
+                                            background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
+                                            color: 'var(--text-primary)',
                                         }}
                                     >
                                         {editLoading ? 'Saving...' : 'Save Profile Changes'}
@@ -599,55 +599,105 @@ export function Profile() {
                             </div>
 
                             {/* Optional Email Verification Status */}
-                            <div className="p-6 rounded-3xl" style={{ background: 'rgba(12,12,20,0.85)', border: '1px solid rgba(124,58,237,0.15)' }}>
-                                <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>
-                                    Email &amp; Security
-                                </h3>
+                            <div className="p-6 rounded-3xl flex flex-col gap-6" style={{ background: 'rgba(var(--bg-glass-rgb), 0.85)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.15)' }}>
+                                
+                                <div>
+                                    <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>
+                                        Email &amp; Security
+                                    </h3>
 
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between p-3.5 rounded-xl" style={{ background: 'rgba(5,5,8,0.8)', border: '1px solid rgba(124,58,237,0.1)' }}>
-                                        <div>
-                                            <p className="text-[10px] font-mono" style={{ color: 'rgba(196,181,253,0.5)' }}>Account Email</p>
-                                            <p className="text-sm font-medium" style={{ color: '#F5F3FF' }}>{user?.email || 'No email registered'}</p>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between p-3.5 rounded-xl" style={{ background: 'rgba(var(--bg-glass-rgb), 0.8)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.1)' }}>
+                                            <div>
+                                                <p className="text-[10px] font-mono" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)' }}>Account Email</p>
+                                                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{user?.email || 'No email registered'}</p>
+                                            </div>
+                                            {isEmailVerified ? (
+                                                <span className="flex items-center gap-1 text-[10px] font-mono px-2.5 py-1 rounded-full font-bold uppercase" style={{ background: 'rgba(16,185,129,0.15)', color: '#34D399', border: '1px solid rgba(16,185,129,0.3)' }}>
+                                                    <CheckCircle2 size={11} /> Verified
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-1 text-[10px] font-mono px-2.5 py-1 rounded-full font-bold uppercase" style={{ background: 'rgba(245,158,11,0.15)', color: '#FBBF24', border: '1px solid rgba(245,158,11,0.3)' }}>
+                                                    <AlertCircle size={11} /> Optional
+                                                </span>
+                                            )}
                                         </div>
-                                        {isEmailVerified ? (
-                                            <span className="flex items-center gap-1 text-[10px] font-mono px-2.5 py-1 rounded-full font-bold uppercase" style={{ background: 'rgba(16,185,129,0.15)', color: '#34D399', border: '1px solid rgba(16,185,129,0.3)' }}>
-                                                <CheckCircle2 size={11} /> Verified
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center gap-1 text-[10px] font-mono px-2.5 py-1 rounded-full font-bold uppercase" style={{ background: 'rgba(245,158,11,0.15)', color: '#FBBF24', border: '1px solid rgba(245,158,11,0.3)' }}>
-                                                <AlertCircle size={11} /> Optional
-                                            </span>
+
+                                        {!isEmailVerified && (
+                                            <div className="p-4 rounded-2xl" style={{ background: 'rgba(var(--synapse-violet-rgb), 0.06)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.15)' }}>
+                                                <p className="text-xs leading-relaxed mb-3" style={{ color: 'rgba(var(--text-secondary-rgb), 0.7)', fontFamily: 'Inter' }}>
+                                                    Email verification is optional for basic member features, but recommended for account recovery and exclusive reward notifications.
+                                                </p>
+                                                <button
+                                                    onClick={handleResendVerification}
+                                                    disabled={resendLoading}
+                                                    className="px-4 py-2 rounded-xl text-xs font-bold tracking-wider uppercase transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                                                    style={{
+                                                        fontFamily: 'Space Grotesk',
+                                                        background: 'rgba(var(--synapse-violet-light-rgb), 0.2)',
+                                                        border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.4)',
+                                                        color: '#E9D5FF',
+                                                    }}
+                                                >
+                                                    {resendLoading ? 'Sending...' : 'Send Verification Email'}
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {resendMessage && (
+                                            <div className="p-2.5 rounded-xl text-xs text-center" style={{ background: resendMessage.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: resendMessage.type === 'success' ? '#6EE7B7' : '#FCA5A5' }}>
+                                                {resendMessage.text}
+                                            </div>
                                         )}
                                     </div>
-
-                                    {!isEmailVerified && (
-                                        <div className="p-4 rounded-2xl" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)' }}>
-                                            <p className="text-xs leading-relaxed mb-3" style={{ color: 'rgba(196,181,253,0.7)', fontFamily: 'Inter' }}>
-                                                Email verification is optional for basic member features, but recommended for account recovery and exclusive reward notifications.
-                                            </p>
-                                            <button
-                                                onClick={handleResendVerification}
-                                                disabled={resendLoading}
-                                                className="px-4 py-2 rounded-xl text-xs font-bold tracking-wider uppercase transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                                                style={{
-                                                    fontFamily: 'Space Grotesk',
-                                                    background: 'rgba(168,85,247,0.2)',
-                                                    border: '1px solid rgba(168,85,247,0.4)',
-                                                    color: '#E9D5FF',
-                                                }}
-                                            >
-                                                {resendLoading ? 'Sending...' : 'Send Verification Email'}
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {resendMessage && (
-                                        <div className="p-2.5 rounded-xl text-xs text-center" style={{ background: resendMessage.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: resendMessage.type === 'success' ? '#6EE7B7' : '#FCA5A5' }}>
-                                            {resendMessage.text}
-                                        </div>
-                                    )}
                                 </div>
+
+                                <div className="pt-6 mt-auto" style={{ borderTop: '1px solid rgba(var(--synapse-violet-rgb), 0.15)' }}>
+                                    <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>
+                                        Theme Engine
+                                    </h3>
+                                    
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button 
+                                            onClick={() => {
+                                                document.documentElement.removeAttribute('data-theme');
+                                                localStorage.setItem('synapse_theme', 'dark');
+                                            }}
+                                            className="p-3 rounded-xl border transition-all text-left group hover:scale-105 active:scale-95 cursor-pointer"
+                                            style={{
+                                                background: 'rgba(var(--bg-glass-rgb), 0.9)',
+                                                borderColor: document.documentElement.getAttribute('data-theme') !== 'orange' ? 'var(--synapse-violet-light)' : 'rgba(var(--synapse-violet-rgb), 0.2)'
+                                            }}
+                                        >
+                                            <div className="flex gap-2 mb-2">
+                                                <div className="w-4 h-4 rounded-full" style={{ background: '#020202' }} />
+                                                <div className="w-4 h-4 rounded-full" style={{ background: '#7C3AED' }} />
+                                            </div>
+                                            <p className="text-xs font-bold" style={{ color: '#F5F3FF' }}>Dark Nebula</p>
+                                            <p className="text-[9px] font-mono mt-0.5" style={{ color: 'rgba(196,181,253, 0.6)' }}>Default Skin</p>
+                                        </button>
+
+                                        <button 
+                                            onClick={() => {
+                                                document.documentElement.setAttribute('data-theme', 'orange');
+                                                localStorage.setItem('synapse_theme', 'orange');
+                                            }}
+                                            className="p-3 rounded-xl border transition-all text-left group hover:scale-105 active:scale-95 cursor-pointer"
+                                            style={{
+                                                background: '#FFF7ED',
+                                                borderColor: document.documentElement.getAttribute('data-theme') === 'orange' ? '#F97316' : 'rgba(234,88,12,0.2)'
+                                            }}
+                                        >
+                                            <div className="flex gap-2 mb-2">
+                                                <div className="w-4 h-4 rounded-full" style={{ background: '#FFEDD5' }} />
+                                                <div className="w-4 h-4 rounded-full" style={{ background: '#EA580C' }} />
+                                            </div>
+                                            <p className="text-xs font-bold" style={{ color: '#431407' }}>Solar Flare</p>
+                                            <p className="text-[9px] font-mono mt-0.5" style={{ color: 'rgba(154,52,18,0.6)' }}>Orange & Beige</p>
+                                        </button>
+                                    </div>
+                                </div>
+
                             </div>
                         </motion.div>
                     )}

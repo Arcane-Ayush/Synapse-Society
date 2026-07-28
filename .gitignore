@@ -23,9 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 
+#env files
+
 .env
 *.env
 .env*
+
+#test files
 
 test_db.js 
 test.js
@@ -33,3 +37,8 @@ test.js
 src/test-import.js
 test_cards.js
 test_supabase.mjs
+
+
+# to ignore python files
+*.py
+backendPlan.md

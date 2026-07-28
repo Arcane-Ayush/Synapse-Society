@@ -11,9 +11,9 @@ export function Layout({ children }) {
 
             {/* Global ambient glow orbs */}
             <div className="fixed top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full pointer-events-none"
-                 style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)', zIndex: 0 }} />
+                 style={{ background: 'radial-gradient(circle, rgba(var(--synapse-violet-rgb), 0.08) 0%, transparent 70%)', zIndex: 0 }} />
             <div className="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full pointer-events-none"
-                 style={{ background: 'radial-gradient(circle, rgba(217,70,239,0.06) 0%, transparent 70%)', zIndex: 0 }} />
+                 style={{ background: 'radial-gradient(circle, rgba(var(--synapse-pink-rgb), 0.06) 0%, transparent 70%)', zIndex: 0 }} />
 
             <Navbar />
             <main className="flex-grow pt-20 relative" style={{ zIndex: 2 }}>

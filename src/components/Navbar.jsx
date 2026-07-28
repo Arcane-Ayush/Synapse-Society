@@ -56,12 +56,12 @@ export function Navbar() {
                     className="w-full max-w-7xl flex items-center justify-between px-4 py-2.5 rounded-2xl transition-all duration-300"
                     style={{
                         background: scrolled
-                            ? 'rgba(5, 5, 8, 0.92)'
-                            : 'rgba(5, 5, 8, 0.72)',
+                            ? 'rgba(var(--bg-glass-rgb), 0.92)'
+                            : 'rgba(var(--bg-glass-rgb), 0.72)',
                         backdropFilter: 'blur(24px)',
                         WebkitBackdropFilter: 'blur(24px)',
-                        border: `1px solid ${scrolled ? 'rgba(124,58,237,0.28)' : 'rgba(124,58,237,0.12)'}`,
-                        boxShadow: scrolled ? '0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,0.08)' : 'none',
+                        border: `1px solid ${scrolled ? 'rgba(var(--synapse-violet-rgb), 0.28)' : 'rgba(var(--synapse-violet-rgb), 0.12)'}`,
+                        boxShadow: scrolled ? '0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(var(--synapse-violet-rgb), 0.08)' : 'none',
                     }}
                 >
                     {/* Logo */}
@@ -70,9 +70,9 @@ export function Navbar() {
                             <div
                                 className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105"
                                 style={{
-                                    background: 'rgba(124,58,237,0.08)',
-                                    border: '1px solid rgba(124,58,237,0.25)',
-                                    boxShadow: '0 0 15px rgba(124,58,237,0.15)',
+                                    background: 'rgba(var(--synapse-violet-rgb), 0.08)',
+                                    border: '1px solid rgba(var(--synapse-violet-rgb), 0.25)',
+                                    boxShadow: '0 0 15px rgba(var(--synapse-violet-rgb), 0.15)',
                                     padding: '4px'
                                 }}
                             >
@@ -81,7 +81,7 @@ export function Navbar() {
                                     alt="Synapse Society"
                                     className="h-full w-full object-contain rounded-full"
                                     style={{
-                                        filter: 'drop-shadow(0 0 8px rgba(124,58,237,0.5))'
+                                        filter: 'drop-shadow(0 0 8px rgba(var(--synapse-violet-rgb), 0.5))'
                                     }}
                                 />
                             </div>
@@ -90,7 +90,7 @@ export function Navbar() {
                                 className="absolute bottom-0 right-0 w-3 h-3 rounded-full"
                                 style={{
                                     background: '#10B981', // Emerald green
-                                    border: '2px solid rgba(5,5,8,0.92)',
+                                    border: '2px solid rgba(var(--bg-glass-rgb), 0.92)',
                                     boxShadow: '0 0 8px rgba(16,185,129,0.5)'
                                 }}
                             />
@@ -109,8 +109,8 @@ export function Navbar() {
                                     className="relative px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200"
                                     style={{
                                         fontFamily: 'Space Grotesk',
-                                        color: isActive ? '#fff' : (isNexus ? '#D946EF' : 'rgba(196,181,253,0.65)'),
-                                        textShadow: isNexus && !isActive ? '0 0 10px rgba(217,70,239,0.4)' : 'none',
+                                        color: isActive ? 'var(--text-primary)' : (isNexus ? 'var(--synapse-pink)' : 'rgba(var(--text-secondary-rgb), 0.65)'),
+                                        textShadow: isNexus && !isActive ? '0 0 10px rgba(var(--synapse-pink-rgb), 0.4)' : 'none',
                                     }}
                                 >
                                     {isActive && (
@@ -118,8 +118,8 @@ export function Navbar() {
                                             layoutId="nav-pill"
                                             className="absolute inset-0 rounded-xl"
                                             style={{
-                                                background: 'linear-gradient(135deg, rgba(124,58,237,0.4) 0%, rgba(168,85,247,0.3) 100%)',
-                                                border: '1px solid rgba(168,85,247,0.3)',
+                                                background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.4) 0%, rgba(var(--synapse-violet-light-rgb), 0.3) 100%)',
+                                                border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)',
                                             }}
                                             transition={{ type: "spring", stiffness: 350, damping: 30 }}
                                         />
@@ -141,10 +141,10 @@ export function Navbar() {
                                     style={{
                                         fontFamily: 'Space Grotesk',
                                         clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
-                                        background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(168,85,247,0.2))',
-                                        border: '1px solid rgba(168,85,247,0.4)',
+                                        background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.3), rgba(var(--synapse-violet-light-rgb), 0.2))',
+                                        border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.4)',
                                         color: '#E9D5FF',
-                                        boxShadow: '0 0 15px rgba(124,58,237,0.2)',
+                                        boxShadow: '0 0 15px rgba(var(--synapse-violet-rgb), 0.2)',
                                     }}
                                 >
                                     <User size={13} className="text-purple-400" />
@@ -171,9 +171,9 @@ export function Navbar() {
                                 style={{
                                     fontFamily: 'Space Grotesk',
                                     clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
-                                    background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 50%, #EC4899 100%)',
-                                    color: '#FFFFFF',
-                                    boxShadow: '0 0 24px rgba(168,85,247,0.4)',
+                                    background: 'linear-gradient(135deg, var(--synapse-violet) 0%, var(--synapse-violet-light) 50%, var(--synapse-pink) 100%)',
+                                    color: 'var(--text-primary)',
+                                    boxShadow: '0 0 24px rgba(var(--synapse-violet-light-rgb), 0.4)',
                                     border: '1px solid rgba(255,255,255,0.3)',
                                 }}
                             >
@@ -192,20 +192,20 @@ export function Navbar() {
                                 className="group flex items-center gap-1.5 text-[10px] font-bold tracking-widest transition-all duration-300"
                                 style={{
                                     fontFamily: 'Space Mono',
-                                    color: '#fff',
-                                    background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                                    color: 'var(--text-primary)',
+                                    background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
                                     padding: '6px 16px',
                                     clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)',
                                     textDecoration: 'none',
-                                    boxShadow: '0 0 20px rgba(124,58,237,0.4)',
+                                    boxShadow: '0 0 20px rgba(var(--synapse-violet-rgb), 0.4)',
                                 }}
                                 onMouseEnter={e => {
                                     e.currentTarget.style.filter = 'brightness(1.1)';
-                                    e.currentTarget.style.boxShadow = '0 0 30px rgba(168,85,247,0.6)';
+                                    e.currentTarget.style.boxShadow = '0 0 30px rgba(var(--synapse-violet-light-rgb), 0.6)';
                                 }}
                                 onMouseLeave={e => {
                                     e.currentTarget.style.filter = 'brightness(1)';
-                                    e.currentTarget.style.boxShadow = '0 0 20px rgba(124,58,237,0.4)';
+                                    e.currentTarget.style.boxShadow = '0 0 20px rgba(var(--synapse-violet-rgb), 0.4)';
                                 }}
                             >
                                 HUB
@@ -220,20 +220,20 @@ export function Navbar() {
                                 className="group flex items-center gap-1.5 text-[10px] font-bold tracking-widest transition-all duration-300 relative overflow-hidden"
                                 style={{
                                     fontFamily: 'Space Mono',
-                                    color: '#fff',
-                                    background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                                    color: 'var(--text-primary)',
+                                    background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
                                     padding: '6px 16px',
                                     clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)',
                                     textDecoration: 'none',
-                                    boxShadow: '0 0 20px rgba(124,58,237,0.4)',
+                                    boxShadow: '0 0 20px rgba(var(--synapse-violet-rgb), 0.4)',
                                 }}
                                 onMouseEnter={e => {
                                     e.currentTarget.style.filter = 'brightness(1.1)';
-                                    e.currentTarget.style.boxShadow = '0 0 30px rgba(168,85,247,0.6)';
+                                    e.currentTarget.style.boxShadow = '0 0 30px rgba(var(--synapse-violet-light-rgb), 0.6)';
                                 }}
                                 onMouseLeave={e => {
                                     e.currentTarget.style.filter = 'brightness(1)';
-                                    e.currentTarget.style.boxShadow = '0 0 20px rgba(124,58,237,0.4)';
+                                    e.currentTarget.style.boxShadow = '0 0 20px rgba(var(--synapse-violet-rgb), 0.4)';
                                 }}
                             >
                                 <Zap size={10} />
@@ -251,9 +251,9 @@ export function Navbar() {
                                     to="/profile"
                                     className="p-2 rounded-xl flex items-center justify-center transition-all duration-200"
                                     style={{
-                                        background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(236,72,153,0.2))',
-                                        border: '1px solid rgba(168,85,247,0.4)',
-                                        boxShadow: '0 0 15px rgba(168,85,247,0.4)',
+                                        background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.3), rgba(236,72,153,0.2))',
+                                        border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.4)',
+                                        boxShadow: '0 0 15px rgba(var(--synapse-violet-light-rgb), 0.4)',
                                         color: '#E9D5FF',
                                     }}
                                     title="My Profile"
@@ -265,10 +265,10 @@ export function Navbar() {
                                     onClick={() => setIsLoginOpen(true)}
                                     className="p-2 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer"
                                     style={{
-                                        background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+                                        background: 'linear-gradient(135deg, var(--synapse-violet) 0%, var(--synapse-violet-light) 100%)',
                                         border: '1px solid rgba(255,255,255,0.3)',
-                                        boxShadow: '0 0 18px rgba(168,85,247,0.5)',
-                                        color: '#FFFFFF',
+                                        boxShadow: '0 0 18px rgba(var(--synapse-violet-light-rgb), 0.5)',
+                                        color: 'var(--text-primary)',
                                     }}
                                     title="Login / Join"
                                 >
@@ -282,9 +282,9 @@ export function Navbar() {
                             onClick={() => setIsOpen(!isOpen)}
                             className="md:hidden p-2 rounded-xl transition-all duration-200"
                             style={{
-                                background: 'rgba(124,58,237,0.1)',
-                                border: '1px solid rgba(124,58,237,0.2)',
-                                color: '#A855F7',
+                                background: 'rgba(var(--synapse-violet-rgb), 0.1)',
+                                border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)',
+                                color: 'var(--synapse-violet-light)',
                             }}
                         >
                             {isOpen ? <X size={18} /> : <Menu size={18} />}
@@ -303,9 +303,9 @@ export function Navbar() {
                         transition={{ duration: 0.2 }}
                         className="fixed top-[72px] left-4 right-4 z-50 rounded-2xl overflow-hidden"
                         style={{
-                            background: 'rgba(8, 8, 14, 0.97)',
+                            background: 'rgba(var(--bg-glass-rgb), 0.97)',
                             backdropFilter: 'blur(24px)',
-                            border: '1px solid rgba(124,58,237,0.25)',
+                            border: '1px solid rgba(var(--synapse-violet-rgb), 0.25)',
                             boxShadow: '0 24px 60px rgba(0,0,0,0.8)',
                         }}
                     >
@@ -320,9 +320,9 @@ export function Navbar() {
                                         className="px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150"
                                         style={{
                                             fontFamily: 'Space Grotesk',
-                                            background: isActive ? 'rgba(124,58,237,0.25)' : (isNexus ? 'rgba(217,70,239,0.1)' : 'transparent'),
-                                            color: isActive ? '#fff' : (isNexus ? '#D946EF' : 'rgba(196,181,253,0.7)'),
-                                            border: isActive ? '1px solid rgba(168,85,247,0.3)' : (isNexus ? '1px solid rgba(217,70,239,0.2)' : '1px solid transparent'),
+                                            background: isActive ? 'rgba(var(--synapse-violet-rgb), 0.25)' : (isNexus ? 'rgba(var(--synapse-pink-rgb), 0.1)' : 'transparent'),
+                                            color: isActive ? 'var(--text-primary)' : (isNexus ? 'var(--synapse-pink)' : 'rgba(var(--text-secondary-rgb), 0.7)'),
+                                            border: isActive ? '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)' : (isNexus ? '1px solid rgba(var(--synapse-pink-rgb), 0.2)' : '1px solid transparent'),
                                         }}
                                     >
                                         {item.name}
@@ -338,8 +338,8 @@ export function Navbar() {
                                     className="px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-between transition-all"
                                     style={{
                                         fontFamily: 'Space Grotesk',
-                                        background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(236,72,153,0.2))',
-                                        border: '1px solid rgba(168,85,247,0.4)',
+                                        background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.3), rgba(236,72,153,0.2))',
+                                        border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.4)',
                                         color: '#E9D5FF',
                                     }}
                                 >
@@ -355,9 +355,9 @@ export function Navbar() {
                                     className="px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between transition-all cursor-pointer"
                                     style={{
                                         fontFamily: 'Space Grotesk',
-                                        background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
-                                        color: '#FFF',
-                                        boxShadow: '0 0 15px rgba(124,58,237,0.3)',
+                                        background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
+                                        color: 'var(--text-primary)',
+                                        boxShadow: '0 0 15px rgba(var(--synapse-violet-rgb), 0.3)',
                                     }}
                                 >
                                     <div className="flex items-center gap-2">
@@ -368,7 +368,7 @@ export function Navbar() {
                                 </button>
                             )}
 
-                            <div className="mt-2 pt-2 flex gap-2" style={{ borderTop: '1px solid rgba(124,58,237,0.15)' }}>
+                            <div className="mt-2 pt-2 flex gap-2" style={{ borderTop: '1px solid rgba(var(--synapse-violet-rgb), 0.15)' }}>
                                 {externalLinks.map(link => (
                                     <a
                                         key={link.name}
@@ -378,9 +378,9 @@ export function Navbar() {
                                         className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-bold tracking-widest transition-all duration-150"
                                         style={{
                                             fontFamily: 'Space Mono',
-                                            color: 'rgba(168,85,247,0.85)',
-                                            background: 'rgba(124,58,237,0.08)',
-                                            border: '1px solid rgba(124,58,237,0.2)',
+                                            color: 'rgba(var(--synapse-violet-light-rgb), 0.85)',
+                                            background: 'rgba(var(--synapse-violet-rgb), 0.08)',
+                                            border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)',
                                             borderRadius: '10px',
                                         }}
                                     >

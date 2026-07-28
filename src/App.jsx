@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Layout } from './layouts/Layout';
@@ -30,6 +31,15 @@ function AnimatedRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('synapse_theme') || 'dark';
+    if (savedTheme === 'orange') {
+      document.documentElement.setAttribute('data-theme', 'orange');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  }, []);
+
   return (
     <Router>
       <AuthProvider>

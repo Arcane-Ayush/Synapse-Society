@@ -48,19 +48,19 @@ function CardsTab({ setSelectedCard, membershipCards, eventCards }) {
                 <div
                     className="inline-flex items-center gap-2 px-4 py-2"
                     style={{
-                        background: 'rgba(124,58,237,0.08)',
-                        border: '1px solid rgba(124,58,237,0.22)',
+                        background: 'rgba(var(--synapse-violet-rgb), 0.08)',
+                        border: '1px solid rgba(var(--synapse-violet-rgb), 0.22)',
                         clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)',
                     }}
                 >
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                    <span className="text-[10px] font-mono tracking-widest" style={{ color: '#A855F7' }}>
+                    <span className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--synapse-violet-light)' }}>
                         SEASON 1 — ACTIVE
                     </span>
                 </div>
-                <p className="text-sm hidden md:block" style={{ color: 'rgba(196,181,253,0.45)', fontFamily: 'Inter' }}>
+                <p className="text-sm hidden md:block" style={{ color: 'rgba(var(--text-secondary-rgb), 0.45)', fontFamily: 'Inter' }}>
                     Every member starts with an{' '}
-                    <strong style={{ color: '#C4B5FD' }}>Access Pass</strong>.
+                    <strong style={{ color: 'var(--text-secondary)' }}>Access Pass</strong>.
                     Earn XP to level up.
                 </p>
             </div>
@@ -72,9 +72,9 @@ function CardsTab({ setSelectedCard, membershipCards, eventCards }) {
                     <span
                         className="text-[9px] font-mono px-2 py-0.5 tracking-widest"
                         style={{
-                            background: 'rgba(124,58,237,0.1)',
-                            color: '#A855F7',
-                            border: '1px solid rgba(124,58,237,0.2)',
+                            background: 'rgba(var(--synapse-violet-rgb), 0.1)',
+                            color: 'var(--synapse-violet-light)',
+                            border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)',
                             clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
                         }}
                     >
@@ -108,16 +108,16 @@ function CardsTab({ setSelectedCard, membershipCards, eventCards }) {
                     <span
                         className="text-[9px] font-mono px-2 py-0.5 tracking-widest"
                         style={{
-                            background: 'rgba(217,70,239,0.1)',
-                            color: '#D946EF',
-                            border: '1px solid rgba(217,70,239,0.22)',
+                            background: 'rgba(var(--synapse-pink-rgb), 0.1)',
+                            color: 'var(--synapse-pink)',
+                            border: '1px solid rgba(var(--synapse-pink-rgb), 0.22)',
                             clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
                         }}
                     >
                         LIMITED
                     </span>
                 </div>
-                <p className="text-sm mb-8" style={{ color: 'rgba(196,181,253,0.4)', fontFamily: 'Inter' }}>
+                <p className="text-sm mb-8" style={{ color: 'rgba(var(--text-secondary-rgb), 0.4)', fontFamily: 'Inter' }}>
                     Exclusive cards awarded for attending specific events and achieving milestones. Virtual only.
                 </p>
 
@@ -143,15 +143,15 @@ function CardsTab({ setSelectedCard, membershipCards, eventCards }) {
             {/* Earn XP explainer */}
             <div
                 className="rounded-2xl p-8 relative overflow-hidden"
-                style={{ background: 'rgba(12,12,20,0.8)', border: '1px solid rgba(124,58,237,0.14)' }}
+                style={{ background: 'rgba(var(--bg-glass-rgb), 0.8)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.14)' }}
             >
                 <div
                     className="absolute top-0 right-0 w-64 h-64 pointer-events-none"
-                    style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%)' }}
+                    style={{ background: 'radial-gradient(circle, rgba(var(--synapse-violet-rgb), 0.07) 0%, transparent 70%)' }}
                 />
                 <h4 className="text-xl font-bold mb-6" style={{ fontFamily: 'Space Grotesk' }}>
                     How to Earn{' '}
-                    <span style={{ background: 'linear-gradient(135deg, #A855F7, #E879F9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    <span style={{ background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                         XP &amp; Tokens
                     </span>
                 </h4>
@@ -167,21 +167,21 @@ function CardsTab({ setSelectedCard, membershipCards, eventCards }) {
                         <div
                             key={item.label}
                             className="flex gap-3 p-3 rounded-xl"
-                            style={{ background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.09)' }}
+                            style={{ background: 'rgba(var(--synapse-violet-rgb), 0.05)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.09)' }}
                         >
                             <div className="text-xl flex-shrink-0">{item.icon}</div>
                             <div>
-                                <div className="text-sm font-semibold mb-0.5" style={{ fontFamily: 'Space Grotesk', color: '#C4B5FD' }}>
+                                <div className="text-sm font-semibold mb-0.5" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-secondary)' }}>
                                     {item.label}
                                 </div>
-                                <div className="text-[10px] font-mono mb-1" style={{ color: '#A855F7' }}>+{item.xp} XP</div>
-                                <div className="text-[11px]" style={{ color: 'rgba(196,181,253,0.38)' }}>{item.desc}</div>
+                                <div className="text-[10px] font-mono mb-1" style={{ color: 'var(--synapse-violet-light)' }}>+{item.xp} XP</div>
+                                <div className="text-[11px]" style={{ color: 'rgba(var(--text-secondary-rgb), 0.38)' }}>{item.desc}</div>
                             </div>
                         </div>
                     ))}
                 </div>
-                <div className="mt-6 flex items-center gap-2 text-sm" style={{ color: 'rgba(196,181,253,0.35)', fontFamily: 'Space Mono' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A855F7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div className="mt-6 flex items-center gap-2 text-sm" style={{ color: 'rgba(var(--text-secondary-rgb), 0.35)', fontFamily: 'Space Mono' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--synapse-violet-light)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                     </svg>
@@ -195,10 +195,10 @@ function CardsTab({ setSelectedCard, membershipCards, eventCards }) {
 // ── Missions Tab — Sakura QuestBoard style ──────────────────────
 const MISSION_TYPE_COLORS = {
     Tech: '#6366F1',
-    Learning: '#A855F7',
+    Learning: 'var(--synapse-violet-light)',
     'Open Source': '#10B981',
     Competition: '#EF4444',
-    Design: '#D946EF',
+    Design: 'var(--synapse-pink)',
     Content: '#F59E0B',
     Community: '#3B82F6',
 };
@@ -210,7 +210,7 @@ function MissionsTab({ missions = [] }) {
     const teamMissions = missions.filter(m => !['All', 'Teams', 'Open'].includes(m.assigned_to));
 
     const QuestCard = ({ mission, i }) => {
-        const typeColor = MISSION_TYPE_COLORS[mission.type] || '#A855F7';
+        const typeColor = MISSION_TYPE_COLORS[mission.type] || 'var(--synapse-violet-light)';
         const isWorld = mission.assignedTo === 'All';
         const isCoop = mission.assignedTo === 'Teams';
 
@@ -228,9 +228,9 @@ function MissionsTab({ missions = [] }) {
                             <span
                                 className="text-[9px] font-black tracking-widest px-2.5 py-1"
                                 style={{
-                                    background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(217,70,239,0.3))',
-                                    color: '#E879F9',
-                                    border: '1px solid rgba(217,70,239,0.4)',
+                                    background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.3), rgba(var(--synapse-pink-rgb), 0.3))',
+                                    color: 'var(--synapse-pink-light)',
+                                    border: '1px solid rgba(var(--synapse-pink-rgb), 0.4)',
                                     clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
                                     animation: 'node-pulse 2s ease-in-out infinite',
                                 }}
@@ -272,7 +272,7 @@ function MissionsTab({ missions = [] }) {
 
                 {/* Assigned */}
                 {!isWorld && (
-                    <div className="text-xs mb-4" style={{ color: 'rgba(196,181,253,0.4)', fontFamily: 'Inter' }}>
+                    <div className="text-xs mb-4" style={{ color: 'rgba(var(--text-secondary-rgb), 0.4)', fontFamily: 'Inter' }}>
                         {isCoop ? (
                             <span
                                 className="font-bold px-2 py-0.5 rounded-md text-blue-400"
@@ -283,13 +283,13 @@ function MissionsTab({ missions = [] }) {
                         ) : mission.assignedTo === 'Open' ? (
                             <span
                                 className="font-bold px-2 py-0.5 text-purple-300 animate-pulse"
-                                style={{ background: 'rgba(124,58,237,0.1)', borderRadius: '6px' }}
+                                style={{ background: 'rgba(var(--synapse-violet-rgb), 0.1)', borderRadius: '6px' }}
                             >
                                 ✨ Open Quest
                             </span>
                         ) : (
                             <>Assigned to{' '}
-                                <span style={{ color: '#A855F7', background: 'rgba(124,58,237,0.1)', padding: '1px 6px', borderRadius: '4px' }}>
+                                <span style={{ color: 'var(--synapse-violet-light)', background: 'rgba(var(--synapse-violet-rgb), 0.1)', padding: '1px 6px', borderRadius: '4px' }}>
                                     {mission.assignedTo}
                                 </span>
                             </>
@@ -299,16 +299,16 @@ function MissionsTab({ missions = [] }) {
 
                 <h4
                     className="text-base font-bold mb-4 leading-snug"
-                    style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}
+                    style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}
                 >
                     {mission.title}
                 </h4>
 
                 <div
                     className="pt-4 flex items-center justify-between"
-                    style={{ borderTop: `1px solid rgba(124,58,237,0.09)` }}
+                    style={{ borderTop: `1px solid rgba(var(--synapse-violet-rgb), 0.09)` }}
                 >
-                    <div className="flex items-center gap-1.5 text-[10px] font-mono" style={{ color: 'rgba(196,181,253,0.35)' }}>
+                    <div className="flex items-center gap-1.5 text-[10px] font-mono" style={{ color: 'rgba(var(--text-secondary-rgb), 0.35)' }}>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                             <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -349,22 +349,22 @@ function MissionsTab({ missions = [] }) {
             <div className="flex items-center justify-between mb-10">
                 <div>
                     <h3 className="text-lg font-bold mb-1" style={{ fontFamily: 'Space Grotesk' }}>Active Quests</h3>
-                    <p className="text-sm" style={{ color: 'rgba(196,181,253,0.45)', fontFamily: 'Inter' }}>
+                    <p className="text-sm" style={{ color: 'rgba(var(--text-secondary-rgb), 0.45)', fontFamily: 'Inter' }}>
                         Complete quests to earn tokens and XP for your card progression.
                     </p>
                 </div>
                 <div
                     className="text-center px-4 py-3"
                     style={{
-                        background: 'rgba(124,58,237,0.08)',
-                        border: '1px solid rgba(124,58,237,0.15)',
+                        background: 'rgba(var(--synapse-violet-rgb), 0.08)',
+                        border: '1px solid rgba(var(--synapse-violet-rgb), 0.15)',
                         clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
                     }}
                 >
-                    <div className="text-2xl font-black" style={{ fontFamily: 'Space Grotesk', color: '#A855F7' }}>
+                    <div className="text-2xl font-black" style={{ fontFamily: 'Space Grotesk', color: 'var(--synapse-violet-light)' }}>
                         {missions.filter(m => m.status === 'Active').length}
                     </div>
-                    <div className="text-[9px] font-mono" style={{ color: 'rgba(196,181,253,0.35)' }}>ACTIVE</div>
+                    <div className="text-[9px] font-mono" style={{ color: 'rgba(var(--text-secondary-rgb), 0.35)' }}>ACTIVE</div>
                 </div>
             </div>
 
@@ -414,7 +414,7 @@ function FactionsTab({ teams = [] }) {
             <div className="flex items-center justify-between mb-8">
                 <div>
                     <h3 className="text-lg font-bold mb-1" style={{ fontFamily: 'Space Grotesk' }}>Synapse Factions</h3>
-                    <p className="text-sm" style={{ color: 'rgba(196,181,253,0.45)', fontFamily: 'Inter' }}>
+                    <p className="text-sm" style={{ color: 'rgba(var(--text-secondary-rgb), 0.45)', fontFamily: 'Inter' }}>
                         Compete as a faction. Top teams earn exclusive event cards and XP multipliers.
                     </p>
                 </div>
@@ -435,10 +435,10 @@ function FactionsTab({ teams = [] }) {
                             className="relative flex items-center gap-5 p-5 rounded-2xl overflow-hidden transition-all duration-300"
                             style={{
                                 background: isFirst
-                                    ? 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(12,12,20,0.9))'
-                                    : 'rgba(12,12,20,0.8)',
-                                border: `1px solid ${isFirst ? 'rgba(168,85,247,0.35)' : 'rgba(124,58,237,0.1)'}`,
-                                boxShadow: isFirst ? '0 8px 40px rgba(124,58,237,0.1)' : 'none',
+                                    ? 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.15), rgba(var(--bg-glass-rgb), 0.9))'
+                                    : 'rgba(var(--bg-glass-rgb), 0.8)',
+                                border: `1px solid ${isFirst ? 'rgba(var(--synapse-violet-light-rgb), 0.35)' : 'rgba(var(--synapse-violet-rgb), 0.1)'}`,
+                                boxShadow: isFirst ? '0 8px 40px rgba(var(--synapse-violet-rgb), 0.1)' : 'none',
                             }}
                         >
                             {/* Rank */}
@@ -446,9 +446,9 @@ function FactionsTab({ teams = [] }) {
                                 className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-black flex-shrink-0"
                                 style={{
                                     fontFamily: 'Space Grotesk',
-                                    background: isFirst ? 'linear-gradient(135deg, #7C3AED, #A855F7)' : 'rgba(124,58,237,0.1)',
-                                    color: isFirst ? '#fff' : 'rgba(168,85,247,0.6)',
-                                    boxShadow: isFirst ? '0 0 20px rgba(124,58,237,0.4)' : 'none',
+                                    background: isFirst ? 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))' : 'rgba(var(--synapse-violet-rgb), 0.1)',
+                                    color: isFirst ? '#fff' : 'rgba(var(--synapse-violet-light-rgb), 0.6)',
+                                    boxShadow: isFirst ? '0 0 20px rgba(var(--synapse-violet-rgb), 0.4)' : 'none',
                                 }}
                             >
                                 {rank === 1 ? '👑' : `#${rank}`}
@@ -457,12 +457,12 @@ function FactionsTab({ teams = [] }) {
                             <div className="flex-grow">
                                 <div className="flex items-center gap-2 mb-1">
                                     <span className="text-lg">{team.badge}</span>
-                                    <h4 className="font-bold" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>{team.name}</h4>
+                                    <h4 className="font-bold" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>{team.name}</h4>
                                     {isFirst && (
                                         <span
                                             className="text-[9px] font-mono px-2 py-0.5 tracking-widest"
                                             style={{
-                                                background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                                                background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
                                                 color: 'white',
                                                 clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
                                             }}
@@ -471,10 +471,10 @@ function FactionsTab({ teams = [] }) {
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-xs" style={{ color: 'rgba(196,181,253,0.4)', fontFamily: 'Space Mono' }}>
+                                <p className="text-xs" style={{ color: 'rgba(var(--text-secondary-rgb), 0.4)', fontFamily: 'Space Mono' }}>
                                     {team.members} members
                                 </p>
-                                <div className="mt-2 h-1 rounded-full" style={{ background: 'rgba(124,58,237,0.1)' }}>
+                                <div className="mt-2 h-1 rounded-full" style={{ background: 'rgba(var(--synapse-violet-rgb), 0.1)' }}>
                                     <div
                                         className="h-full rounded-full transition-all duration-1000"
                                         style={{
@@ -491,14 +491,14 @@ function FactionsTab({ teams = [] }) {
                                     className="text-2xl font-black"
                                     style={{
                                         fontFamily: 'Space Grotesk',
-                                        background: isFirst ? 'linear-gradient(135deg, #A855F7, #E879F9)' : 'none',
+                                        background: isFirst ? 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))' : 'none',
                                         WebkitBackgroundClip: isFirst ? 'text' : 'unset',
-                                        WebkitTextFillColor: isFirst ? 'transparent' : 'rgba(168,85,247,0.7)',
+                                        WebkitTextFillColor: isFirst ? 'transparent' : 'rgba(var(--synapse-violet-light-rgb), 0.7)',
                                     }}
                                 >
                                     {team.tokens.toLocaleString()}
                                 </div>
-                                <div className="text-[9px] font-mono" style={{ color: 'rgba(196,181,253,0.3)' }}>TOKENS</div>
+                                <div className="text-[9px] font-mono" style={{ color: 'rgba(var(--text-secondary-rgb), 0.3)' }}>TOKENS</div>
                             </div>
                         </motion.div>
                     );
@@ -511,9 +511,9 @@ function FactionsTab({ teams = [] }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
                 className="mt-8 p-6 rounded-2xl text-center"
-                style={{ background: 'rgba(12,12,20,0.7)', border: '1px solid rgba(124,58,237,0.12)' }}
+                style={{ background: 'rgba(var(--bg-glass-rgb), 0.7)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.12)' }}
             >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A855F7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--synapse-violet-light)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3">
                     <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
                     <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
                     <path d="M4 22h16"></path>
@@ -522,9 +522,9 @@ function FactionsTab({ teams = [] }) {
                     <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
                 </svg>
                 <h4 className="font-bold text-base mb-2" style={{ fontFamily: 'Space Grotesk' }}>Season 1 Rankings</h4>
-                <p className="text-sm mb-5" style={{ color: 'rgba(196,181,253,0.45)', fontFamily: 'Inter' }}>
+                <p className="text-sm mb-5" style={{ color: 'rgba(var(--text-secondary-rgb), 0.45)', fontFamily: 'Inter' }}>
                     Top faction at Season 1 close earns the exclusive{' '}
-                    <strong style={{ color: '#C4B5FD' }}>Faction Champion</strong> event card for all members.
+                    <strong style={{ color: 'var(--text-secondary)' }}>Faction Champion</strong> event card for all members.
                 </p>
                 <button
                     disabled
@@ -733,18 +733,18 @@ function QRVaultTab({ onOpenLogin }) {
             <div
                 className="p-8 rounded-3xl relative overflow-hidden"
                 style={{
-                    background: 'rgba(12,12,20,0.85)',
-                    border: '1px solid rgba(168,85,247,0.25)',
-                    boxShadow: '0 0 30px rgba(124,58,237,0.1)'
+                    background: 'rgba(var(--bg-glass-rgb), 0.85)',
+                    border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.25)',
+                    boxShadow: '0 0 30px rgba(var(--synapse-violet-rgb), 0.1)'
                 }}
             >
                 <div className="max-w-xl mx-auto text-center mb-8">
                     <div
                         className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-4"
                         style={{
-                            background: 'rgba(124,58,237,0.12)',
-                            border: '1px solid rgba(168,85,247,0.3)',
-                            color: '#A855F7'
+                            background: 'rgba(var(--synapse-violet-rgb), 0.12)',
+                            border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)',
+                            color: 'var(--synapse-violet-light)'
                         }}
                     >
                         <QrCode size={28} />
@@ -752,7 +752,7 @@ function QRVaultTab({ onOpenLogin }) {
                     <h3 className="text-2xl font-black mb-2" style={{ fontFamily: 'Space Grotesk' }}>
                         Redeem Event QR Code
                     </h3>
-                    <p className="text-sm leading-relaxed" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter' }}>
+                    <p className="text-sm leading-relaxed" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)', fontFamily: 'Inter' }}>
                         Enter the secret code or token from event slides, workshops, or posters to claim your XP and special card unlocks!
                     </p>
                 </div>
@@ -765,9 +765,9 @@ function QRVaultTab({ onOpenLogin }) {
                         placeholder="e.g. SYNAPSE-LAUNCH-2026"
                         className="flex-1 px-4 py-3 rounded-xl text-sm font-mono uppercase outline-none transition-all"
                         style={{
-                            background: 'rgba(5,5,8,0.9)',
-                            border: '1px solid rgba(124,58,237,0.3)',
-                            color: '#F5F3FF'
+                            background: 'rgba(var(--bg-glass-rgb), 0.9)',
+                            border: '1px solid rgba(var(--synapse-violet-rgb), 0.3)',
+                            color: 'var(--text-primary)'
                         }}
                     />
                     <button
@@ -776,9 +776,9 @@ function QRVaultTab({ onOpenLogin }) {
                         className="px-6 py-3 rounded-xl text-xs font-black tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer whitespace-nowrap"
                         style={{
                             fontFamily: 'Space Grotesk',
-                            background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
-                            color: '#FFFFFF',
-                            boxShadow: '0 0 20px rgba(124,58,237,0.3)'
+                            background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
+                            color: 'var(--text-primary)',
+                            boxShadow: '0 0 20px rgba(var(--synapse-violet-rgb), 0.3)'
                         }}
                     >
                         {loading ? 'Verifying...' : 'Redeem Code'}
@@ -807,20 +807,20 @@ function QRVaultTab({ onOpenLogin }) {
                 <div
                     className="p-8 rounded-3xl relative"
                     style={{
-                        background: 'rgba(8,8,14,0.95)',
+                        background: 'rgba(var(--bg-glass-rgb), 0.95)',
                         border: '1px solid rgba(236,72,153,0.3)',
                         boxShadow: '0 0 40px rgba(236,72,153,0.1)'
                     }}
                 >
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 rounded-xl" style={{ background: 'rgba(236,72,153,0.15)', color: '#EC4899' }}>
+                        <div className="p-2 rounded-xl" style={{ background: 'rgba(236,72,153,0.15)', color: 'var(--synapse-pink)' }}>
                             <Shield size={20} />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>
+                            <h3 className="text-xl font-bold" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>
                                 Admin QR Code Generator
                             </h3>
-                            <p className="text-xs" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter' }}>
+                            <p className="text-xs" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)', fontFamily: 'Inter' }}>
                                 Privileged tool for Leads &amp; Administrators to issue live QR codes for events &amp; workshops.
                             </p>
                         </div>
@@ -828,7 +828,7 @@ function QRVaultTab({ onOpenLogin }) {
 
                     <form onSubmit={handleCreateQR} className="grid md:grid-cols-2 gap-4">
                         <div>
-                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(196,181,253,0.6)' }}>
+                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(var(--text-secondary-rgb), 0.6)' }}>
                                 QR Code Token (String)
                             </label>
                             <input
@@ -837,12 +837,12 @@ function QRVaultTab({ onOpenLogin }) {
                                 onChange={e => setNewQr({ ...newQr, code: e.target.value })}
                                 placeholder="e.g. REACT-JAM-2026-XP150"
                                 className="w-full px-4 py-2.5 rounded-xl text-sm font-mono uppercase outline-none"
-                                style={{ background: 'rgba(12,12,20,0.8)', border: '1px solid rgba(124,58,237,0.2)', color: '#FFF' }}
+                                style={{ background: 'rgba(var(--bg-glass-rgb), 0.8)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)', color: 'var(--text-primary)' }}
                             />
                         </div>
 
                         <div>
-                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(196,181,253,0.6)' }}>
+                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(var(--text-secondary-rgb), 0.6)' }}>
                                 Label / Title
                             </label>
                             <input
@@ -851,12 +851,12 @@ function QRVaultTab({ onOpenLogin }) {
                                 onChange={e => setNewQr({ ...newQr, label: e.target.value })}
                                 placeholder="e.g. React Workshop Attendance"
                                 className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
-                                style={{ background: 'rgba(12,12,20,0.8)', border: '1px solid rgba(124,58,237,0.2)', color: '#FFF' }}
+                                style={{ background: 'rgba(var(--bg-glass-rgb), 0.8)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)', color: 'var(--text-primary)' }}
                             />
                         </div>
 
                         <div>
-                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(196,181,253,0.6)' }}>
+                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(var(--text-secondary-rgb), 0.6)' }}>
                                 Reward XP
                             </label>
                             <input
@@ -864,19 +864,19 @@ function QRVaultTab({ onOpenLogin }) {
                                 value={newQr.rewardXp}
                                 onChange={e => setNewQr({ ...newQr, rewardXp: e.target.value })}
                                 className="w-full px-4 py-2.5 rounded-xl text-sm font-mono outline-none"
-                                style={{ background: 'rgba(12,12,20,0.8)', border: '1px solid rgba(124,58,237,0.2)', color: '#FFF' }}
+                                style={{ background: 'rgba(var(--bg-glass-rgb), 0.8)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)', color: 'var(--text-primary)' }}
                             />
                         </div>
 
                         <div>
-                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(196,181,253,0.6)' }}>
+                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(var(--text-secondary-rgb), 0.6)' }}>
                                 Reward Card Unlock (Optional)
                             </label>
                             <select
                                 value={newQr.rewardCardId}
                                 onChange={e => setNewQr({ ...newQr, rewardCardId: e.target.value })}
                                 className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
-                                style={{ background: 'rgba(12,12,20,0.8)', border: '1px solid rgba(124,58,237,0.2)', color: '#FFF' }}
+                                style={{ background: 'rgba(var(--bg-glass-rgb), 0.8)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)', color: 'var(--text-primary)' }}
                             >
                                 <option value="">None (XP Only)</option>
                                 <option value="SAP-001">Synapse Access Pass (Level 0)</option>
@@ -889,7 +889,7 @@ function QRVaultTab({ onOpenLogin }) {
                         </div>
 
                         <div className="md:col-span-2 flex items-center gap-3">
-                            <label className="flex items-center gap-2 cursor-pointer text-xs" style={{ color: 'rgba(196,181,253,0.8)' }}>
+                            <label className="flex items-center gap-2 cursor-pointer text-xs" style={{ color: 'rgba(var(--text-secondary-rgb), 0.8)' }}>
                                 <input
                                     type="checkbox"
                                     checked={newQr.isReusable}
@@ -907,8 +907,8 @@ function QRVaultTab({ onOpenLogin }) {
                                 className="w-full py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 hover:scale-[1.01] active:scale-95 cursor-pointer"
                                 style={{
                                     fontFamily: 'Space Grotesk',
-                                    background: 'linear-gradient(135deg, #EC4899, #8B5CF6)',
-                                    color: '#FFF',
+                                    background: 'linear-gradient(135deg, var(--synapse-pink), #8B5CF6)',
+                                    color: 'var(--text-primary)',
                                     boxShadow: '0 0 20px rgba(236,72,153,0.3)'
                                 }}
                             >
@@ -929,9 +929,9 @@ function QRVaultTab({ onOpenLogin }) {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             className="mt-8 p-6 rounded-2xl text-center"
-                            style={{ background: 'rgba(12,12,20,0.9)', border: '1px dashed rgba(236,72,153,0.4)' }}
+                            style={{ background: 'rgba(var(--bg-glass-rgb), 0.9)', border: '1px dashed rgba(236,72,153,0.4)' }}
                         >
-                            <h4 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: '#F5F3FF' }}>
+                            <h4 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-primary)' }}>
                                 Ready to Display / Project:
                             </h4>
                             <div className="inline-block p-4 rounded-2xl bg-white shadow-2xl my-3">
@@ -947,7 +947,7 @@ function QRVaultTab({ onOpenLogin }) {
                     )}
                 </div>
             ) : (
-                <div className="text-center py-6 px-4 rounded-2xl" style={{ background: 'rgba(12,12,20,0.5)', border: '1px solid rgba(124,58,237,0.1)' }}>
+                <div className="text-center py-6 px-4 rounded-2xl" style={{ background: 'rgba(var(--bg-glass-rgb), 0.5)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.1)' }}>
                     <p className="text-xs text-purple-300/50 font-mono">
                         🔒 Admin QR Generator is restricted to Club Leads &amp; Administrators.
                     </p>
@@ -1011,36 +1011,36 @@ export function Nexus() {
                     transition={{ duration: 0.4 }}
                     className="p-8 md:p-12 rounded-3xl max-w-md w-full relative overflow-hidden"
                     style={{
-                        background: 'rgba(12,12,20,0.92)',
-                        border: '1px solid rgba(168,85,247,0.3)',
-                        boxShadow: '0 24px 60px rgba(0,0,0,0.8), 0 0 40px rgba(124,58,237,0.25)',
+                        background: 'rgba(var(--bg-glass-rgb), 0.92)',
+                        border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)',
+                        boxShadow: '0 24px 60px rgba(0,0,0,0.8), 0 0 40px rgba(var(--synapse-violet-rgb), 0.25)',
                         backdropFilter: 'blur(16px)',
                     }}
                 >
                     <div
                         className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center text-3xl"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(236,72,153,0.2))',
-                            border: '1px solid rgba(168,85,247,0.4)',
-                            boxShadow: '0 0 25px rgba(124,58,237,0.3)',
+                            background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.3), rgba(236,72,153,0.2))',
+                            border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.4)',
+                            boxShadow: '0 0 25px rgba(var(--synapse-violet-rgb), 0.3)',
                         }}
                     >
                         <Lock className="text-purple-300" size={28} />
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-black mb-3 tracking-tight" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>
+                    <h2 className="text-2xl md:text-3xl font-black mb-3 tracking-tight" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>
                         NEXUS VAULT RESTRICTED
                     </h2>
-                    <p className="text-sm leading-relaxed mb-8" style={{ color: 'rgba(196,181,253,0.6)', fontFamily: 'Inter' }}>
+                    <p className="text-sm leading-relaxed mb-8" style={{ color: 'rgba(var(--text-secondary-rgb), 0.6)', fontFamily: 'Inter' }}>
                         Nexus is exclusive to Synapse Society members. Please sign in or join to access your digital card collection, active quests, and QR rewards vault.
                     </p>
                     <button
                         onClick={() => setIsLoginOpen(true)}
                         className="w-full py-4 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
                         style={{
-                            background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
-                            color: '#FFF',
+                            background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
+                            color: 'var(--text-primary)',
                             fontFamily: 'Space Grotesk',
-                            boxShadow: '0 0 25px rgba(124,58,237,0.5)',
+                            boxShadow: '0 0 25px rgba(var(--synapse-violet-rgb), 0.5)',
                         }}
                     >
                         Sign In / Join Synapse
@@ -1062,18 +1062,18 @@ export function Nexus() {
                         animate={{ opacity: 1, y: 0 }}
                         className="mb-8 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(236,72,153,0.15))',
-                            border: '1px solid rgba(168,85,247,0.3)',
-                            boxShadow: '0 0 20px rgba(124,58,237,0.15)',
+                            background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.15), rgba(236,72,153,0.15))',
+                            border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)',
+                            boxShadow: '0 0 20px rgba(var(--synapse-violet-rgb), 0.15)',
                         }}
                     >
                         <div className="flex items-center gap-3">
                             <Sparkles className="text-amber-400 animate-pulse flex-shrink-0" size={20} />
                             <div>
-                                <h4 className="text-sm font-bold" style={{ color: '#F5F3FF', fontFamily: 'Space Grotesk' }}>
+                                <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Space Grotesk' }}>
                                     Member Vault Preview
                                 </h4>
-                                <p className="text-xs" style={{ color: 'rgba(196,181,253,0.7)', fontFamily: 'Inter' }}>
+                                <p className="text-xs" style={{ color: 'rgba(var(--text-secondary-rgb), 0.7)', fontFamily: 'Inter' }}>
                                     Sign in to claim your Level 0 Access Pass, earn XP, and unlock exclusive event cards!
                                 </p>
                             </div>
@@ -1083,9 +1083,9 @@ export function Nexus() {
                             className="px-5 py-2 rounded-xl text-xs font-black tracking-wider uppercase transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
                             style={{
                                 fontFamily: 'Space Grotesk',
-                                background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
-                                color: '#FFF',
-                                boxShadow: '0 0 15px rgba(124,58,237,0.3)',
+                                background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
+                                color: 'var(--text-primary)',
+                                boxShadow: '0 0 15px rgba(var(--synapse-violet-rgb), 0.3)',
                             }}
                         >
                             Sign In / Join
@@ -1108,7 +1108,7 @@ export function Nexus() {
                         >
                             <span
                                 style={{
-                                    background: 'linear-gradient(135deg, #A855F7, #E879F9, #818CF8)',
+                                    background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light), #818CF8)',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
                                 }}
@@ -1116,9 +1116,9 @@ export function Nexus() {
                                 NEXUS
                             </span>
                         </h1>
-                        <div className="hidden md:block flex-1 h-[1px] mb-3" style={{ background: 'linear-gradient(90deg, rgba(124,58,237,0.3), transparent)' }} />
+                        <div className="hidden md:block flex-1 h-[1px] mb-3" style={{ background: 'linear-gradient(90deg, rgba(var(--synapse-violet-rgb), 0.3), transparent)' }} />
                     </div>
-                    <p className="text-base mt-4 max-w-xl" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter' }}>
+                    <p className="text-base mt-4 max-w-xl" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)', fontFamily: 'Inter' }}>
                         Your card collection. Active quests. Faction standings. This is where Synapse Society comes alive.
                     </p>
                 </motion.div>
@@ -1137,11 +1137,11 @@ export function Nexus() {
                                 fontSize: '0.75rem',
                                 clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
                                 background: activeTab === tab.id
-                                    ? 'linear-gradient(135deg, rgba(124,58,237,0.5), rgba(168,85,247,0.4))'
-                                    : 'rgba(12,12,20,0.8)',
-                                color: activeTab === tab.id ? '#fff' : 'rgba(196,181,253,0.45)',
-                                border: `1px solid ${activeTab === tab.id ? 'rgba(168,85,247,0.4)' : 'rgba(124,58,237,0.12)'}`,
-                                boxShadow: activeTab === tab.id ? '0 0 16px rgba(124,58,237,0.2)' : 'none',
+                                    ? 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.5), rgba(var(--synapse-violet-light-rgb), 0.4))'
+                                    : 'rgba(var(--bg-glass-rgb), 0.8)',
+                                color: activeTab === tab.id ? '#fff' : 'rgba(var(--text-secondary-rgb), 0.45)',
+                                border: `1px solid ${activeTab === tab.id ? 'rgba(var(--synapse-violet-light-rgb), 0.4)' : 'rgba(var(--synapse-violet-rgb), 0.12)'}`,
+                                boxShadow: activeTab === tab.id ? '0 0 16px rgba(var(--synapse-violet-rgb), 0.2)' : 'none',
                             }}
                         >
                             {tab.icon}
@@ -1185,7 +1185,7 @@ export function Nexus() {
                             exit={{ opacity: 0 }}
                             onClick={() => setSelectedCard(null)}
                             className="fixed inset-0 z-[9999] flex items-center justify-center p-4 cursor-pointer"
-                            style={{ background: 'rgba(5,5,8,0.92)', backdropFilter: 'blur(8px)' }}
+                            style={{ background: 'rgba(var(--bg-glass-rgb), 0.92)', backdropFilter: 'blur(8px)' }}
                         >
                             <motion.div
                                 initial={{ scale: 0.8, opacity: 0, y: 20 }}

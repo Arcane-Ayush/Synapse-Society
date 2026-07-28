@@ -42,14 +42,14 @@ function StatCard({ value, label, suffix = "+" }) {
                 className="text-4xl md:text-5xl font-black mb-1"
                 style={{
                     fontFamily: 'Space Grotesk',
-                    background: 'linear-gradient(135deg, #A855F7, #E879F9)',
+                    background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                 }}
             >
                 {count}{suffix}
             </div>
-            <div className="text-[10px] font-mono tracking-widest" style={{ color: 'rgba(196,181,253,0.45)', textTransform: 'uppercase' }}>
+            <div className="text-[10px] font-mono tracking-widest" style={{ color: 'rgba(var(--text-secondary-rgb), 0.45)', textTransform: 'uppercase' }}>
                 {label}
             </div>
         </div>
@@ -66,13 +66,13 @@ function PillarCard({ icon, title, desc, color, delay }) {
             viewport={{ once: true }}
             whileHover={{ y: -6 }}
             className="relative rounded-2xl p-7 group overflow-hidden"
-            style={{ background: 'rgba(12,12,20,0.85)', border: `1px solid rgba(124,58,237,0.12)` }}
+            style={{ background: 'rgba(var(--bg-glass-rgb), 0.85)', border: `1px solid rgba(var(--synapse-violet-rgb), 0.12)` }}
             onMouseEnter={e => {
                 e.currentTarget.style.borderColor = `${color}40`;
                 e.currentTarget.style.boxShadow = `0 12px 40px ${color}15`;
             }}
             onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'rgba(124,58,237,0.12)';
+                e.currentTarget.style.borderColor = 'rgba(var(--synapse-violet-rgb), 0.12)';
                 e.currentTarget.style.boxShadow = 'none';
             }}
         >
@@ -95,7 +95,7 @@ function PillarCard({ icon, title, desc, color, delay }) {
                 {title[0]}
             </div>
             <h3 className="text-xl font-bold mb-3" style={{ fontFamily: 'Space Grotesk' }}>{title}</h3>
-            <p className="text-sm leading-relaxed" style={{ color: 'rgba(196,181,253,0.55)', fontFamily: 'Inter' }}>{desc}</p>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(var(--text-secondary-rgb), 0.55)', fontFamily: 'Inter' }}>{desc}</p>
 
             {/* Bottom type annotation */}
             <div className="mt-6 tech-annotation" style={{ color: `${color}60` }}>
@@ -124,8 +124,8 @@ function EcosystemCard({ title, desc, url, icon, color, delay, isInternal = fals
                 {...linkProps}
                 className="flex flex-col gap-4 p-6 rounded-2xl transition-all duration-300 block"
                 style={{
-                    background: 'rgba(12,12,20,0.8)',
-                    border: '1px solid rgba(124,58,237,0.12)',
+                    background: 'rgba(var(--bg-glass-rgb), 0.8)',
+                    border: '1px solid rgba(var(--synapse-violet-rgb), 0.12)',
                     textDecoration: 'none',
                 }}
                 onMouseEnter={e => {
@@ -134,7 +134,7 @@ function EcosystemCard({ title, desc, url, icon, color, delay, isInternal = fals
                     e.currentTarget.style.transform = 'translateY(-4px)';
                 }}
                 onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = 'rgba(124,58,237,0.12)';
+                    e.currentTarget.style.borderColor = 'rgba(var(--synapse-violet-rgb), 0.12)';
                     e.currentTarget.style.boxShadow = 'none';
                     e.currentTarget.style.transform = 'translateY(0)';
                 }}
@@ -154,8 +154,8 @@ function EcosystemCard({ title, desc, url, icon, color, delay, isInternal = fals
                     </span>
                 </div>
                 <div>
-                    <h4 className="font-bold text-base mb-1.5" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>{title}</h4>
-                    <p className="text-sm" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter', lineHeight: 1.6 }}>{desc}</p>
+                    <h4 className="font-bold text-base mb-1.5" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>{title}</h4>
+                    <p className="text-sm" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)', fontFamily: 'Inter', lineHeight: 1.6 }}>{desc}</p>
                 </div>
             </Tag>
         </motion.div>
@@ -208,7 +208,7 @@ export function Home() {
             {/* ═══════════════════════ HERO ═══════════════════════ */}
             <section
                 ref={heroRef}
-                className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-4 md:pt-10 overflow-hidden bg-black"
+                className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-4 md:pt-10 overflow-hidden bg-[var(--bg-base)]"
             >
                 {/* 3D BlackHole Background */}
                 <div className="absolute inset-0 z-0">
@@ -231,12 +231,12 @@ export function Home() {
                     >
                         <div className="flex items-center gap-3">
                             <span className="tech-annotation" style={{ color: '#E9D5FF', fontWeight: 600 }}>Student-Run Tech Collective</span>
-                            <div className="w-8 h-[1px]" style={{ background: 'rgba(168,85,247,0.6)' }} />
-                            <span className="tech-annotation" style={{ color: '#C4B5FD', fontWeight: 600 }}>Chandigarh University</span>
+                            <div className="w-8 h-[1px]" style={{ background: 'rgba(var(--synapse-violet-light-rgb), 0.6)' }} />
+                            <span className="tech-annotation" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Chandigarh University</span>
                         </div>
                         <div className="hidden md:flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" style={{ boxShadow: '0 0 8px rgba(52,211,153,0.8)' }} />
-                            <span className="tech-annotation" style={{ color: '#C4B5FD', fontWeight: 600 }}>Season 1 · Active</span>
+                            <span className="tech-annotation" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Season 1 · Active</span>
                         </div>
                     </motion.div>
 
@@ -257,13 +257,13 @@ export function Home() {
                                 ].map((s, i) => (
                                     <div key={s.label} className="flex items-center gap-3">
                                         {i > 0 && (
-                                            <div className="w-[1px] h-6" style={{ background: 'rgba(124,58,237,0.25)' }} />
+                                            <div className="w-[1px] h-6" style={{ background: 'rgba(var(--synapse-violet-rgb), 0.25)' }} />
                                         )}
                                         <div>
-                                            <div className="text-sm font-black" style={{ fontFamily: 'Space Grotesk', color: '#A855F7' }}>
+                                            <div className="text-sm font-black" style={{ fontFamily: 'Space Grotesk', color: 'var(--synapse-violet-light)' }}>
                                                 {s.val}
                                             </div>
-                                            <div className="text-[9px] font-mono tracking-widest" style={{ color: 'rgba(196,181,253,0.35)', textTransform: 'uppercase' }}>
+                                            <div className="text-[9px] font-mono tracking-widest" style={{ color: 'rgba(var(--text-secondary-rgb), 0.35)', textTransform: 'uppercase' }}>
                                                 {s.label}
                                             </div>
                                         </div>
@@ -279,11 +279,11 @@ export function Home() {
                                 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.92] mb-6"
                                 style={{ fontFamily: 'Space Grotesk' }}
                             >
-                                <span style={{ color: '#F5F3FF' }}>Where Ideas</span>
+                                <span style={{ color: 'var(--text-primary)' }}>Where Ideas</span>
                                 <br />
                                 <span
                                     style={{
-                                        background: 'linear-gradient(135deg, #A855F7 0%, #E879F9 40%, #818CF8 80%)',
+                                        background: 'linear-gradient(135deg, var(--synapse-violet-light) 0%, var(--synapse-pink-light) 40%, #818CF8 80%)',
                                         WebkitBackgroundClip: 'text',
                                         WebkitTextFillColor: 'transparent',
                                         backgroundSize: '200% 200%',
@@ -292,9 +292,9 @@ export function Home() {
                                 >
                                     SPARK
                                 </span>
-                                <span style={{ color: '#F5F3FF' }}> into</span>
+                                <span style={{ color: 'var(--text-primary)' }}> into</span>
                                 <br />
-                                <span style={{ color: '#F5F3FF' }}>Reality.</span>
+                                <span style={{ color: 'var(--text-primary)' }}>Reality.</span>
                             </motion.h1>
 
                             <motion.p
@@ -320,7 +320,7 @@ export function Home() {
                                         to="/profile"
                                         className="btn-cyber flex items-center gap-2 group relative overflow-hidden"
                                         style={{
-                                            boxShadow: '0 0 25px rgba(168,85,247,0.5), 0 0 50px rgba(124,58,237,0.3)',
+                                            boxShadow: '0 0 25px rgba(var(--synapse-violet-light-rgb), 0.5), 0 0 50px rgba(var(--synapse-violet-rgb), 0.3)',
                                             border: '1px solid rgba(255,255,255,0.3)',
                                         }}
                                     >
@@ -333,7 +333,7 @@ export function Home() {
                                         onClick={() => setIsLoginOpen(true)}
                                         className="btn-cyber flex items-center gap-2 group cursor-pointer relative overflow-hidden"
                                         style={{
-                                            boxShadow: '0 0 30px rgba(168,85,247,0.6), 0 0 60px rgba(124,58,237,0.35)',
+                                            boxShadow: '0 0 30px rgba(var(--synapse-violet-light-rgb), 0.6), 0 0 60px rgba(var(--synapse-violet-rgb), 0.35)',
                                             border: '1px solid rgba(255,255,255,0.35)',
                                         }}
                                     >
@@ -355,7 +355,7 @@ export function Home() {
                                 transition={{ duration: 1, delay: 1.2 }}
                                 className="mt-8 hidden md:flex items-center gap-3"
                             >
-                                <div className="w-4 h-[1px]" style={{ background: 'rgba(168,85,247,0.6)' }} />
+                                <div className="w-4 h-[1px]" style={{ background: 'rgba(var(--synapse-violet-light-rgb), 0.6)' }} />
                                 <span className="tech-annotation" style={{ color: '#E9D5FF' }}>Build · Learn · Elevate</span>
                             </motion.div>
                         </div>
@@ -388,7 +388,7 @@ export function Home() {
                             <div
                                 className="relative z-10 animate-float translate-x-4 md:translate-x-12"
                                 style={{
-                                    filter: 'drop-shadow(0 0 40px rgba(124,58,237,0.6)) drop-shadow(0 0 80px rgba(168,85,247,0.25))',
+                                    filter: 'drop-shadow(0 0 40px rgba(var(--synapse-violet-rgb), 0.6)) drop-shadow(0 0 80px rgba(var(--synapse-violet-light-rgb), 0.25))',
                                 }}
                             >
                                 <img
@@ -408,7 +408,7 @@ export function Home() {
                                         width: 280,
                                         height: 280,
                                         borderRadius: '50%',
-                                        background: 'radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%)',
+                                        background: 'radial-gradient(circle, rgba(var(--synapse-violet-rgb), 0.18) 0%, transparent 70%)',
                                     }}
                                 />
                             </div>
@@ -423,8 +423,8 @@ export function Home() {
                     transition={{ delay: 2.2, duration: 1 }}
                     className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
                 >
-                    <span className="section-label" style={{ color: 'rgba(168,85,247,0.35)' }}>scroll</span>
-                    <div className="w-[1px] h-8" style={{ background: 'linear-gradient(to bottom, rgba(168,85,247,0.35), transparent)' }} />
+                    <span className="section-label" style={{ color: 'rgba(var(--synapse-violet-light-rgb), 0.35)' }}>scroll</span>
+                    <div className="w-[1px] h-8" style={{ background: 'linear-gradient(to bottom, rgba(var(--synapse-violet-light-rgb), 0.35), transparent)' }} />
                 </motion.div>
             </section>
 
@@ -443,7 +443,7 @@ export function Home() {
                             <h2 className="text-4xl md:text-5xl font-black tracking-tight" style={{ fontFamily: 'Space Grotesk' }}>
                                 The Synapse{' '}
                                 <span style={{
-                                    background: 'linear-gradient(135deg, #A855F7, #E879F9)',
+                                    background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
                                 }}>
@@ -451,7 +451,7 @@ export function Home() {
                                 </span>
                             </h2>
                             {/* Decorative line */}
-                            <div className="hidden md:block flex-1 h-[1px] mb-2" style={{ background: 'linear-gradient(90deg, rgba(124,58,237,0.3), transparent)' }} />
+                            <div className="hidden md:block flex-1 h-[1px] mb-2" style={{ background: 'linear-gradient(90deg, rgba(var(--synapse-violet-rgb), 0.3), transparent)' }} />
                         </div>
                     </motion.div>
 
@@ -476,7 +476,7 @@ export function Home() {
                             }
                             title="Build"
                             desc="Turn ideas into reality. Ship real projects, hack at hackathons, contribute to open source. Your builds make an impact."
-                            color="#A855F7"
+                            color="var(--synapse-violet-light)"
                             delay={0.1}
                         />
                         <PillarCard
@@ -488,7 +488,7 @@ export function Home() {
                             }
                             title="Connect"
                             desc="A network that elevates everyone. Lead teams, mentor peers, and forge connections that outlast university."
-                            color="#D946EF"
+                            color="var(--synapse-pink)"
                             delay={0.2}
                         />
                     </div>
@@ -498,9 +498,9 @@ export function Home() {
             {/* ═══════════════ CARD PREVIEW ═══════════════ */}
             <section
                 className="py-24 px-4 relative overflow-hidden"
-                style={{ background: 'rgba(124,58,237,0.025)', borderTop: '1px solid rgba(124,58,237,0.07)', borderBottom: '1px solid rgba(124,58,237,0.07)' }}
+                style={{ background: 'rgba(var(--synapse-violet-rgb), 0.025)', borderTop: '1px solid rgba(var(--synapse-violet-rgb), 0.07)', borderBottom: '1px solid rgba(var(--synapse-violet-rgb), 0.07)' }}
             >
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ width: 600, height: 400, background: 'radial-gradient(ellipse, rgba(124,58,237,0.09) 0%, transparent 70%)' }} />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ width: 600, height: 400, background: 'radial-gradient(ellipse, rgba(var(--synapse-violet-rgb), 0.09) 0%, transparent 70%)' }} />
 
                 <div className="max-w-7xl mx-auto relative z-10">
                     <motion.div
@@ -515,16 +515,16 @@ export function Home() {
                             <h2 className="text-4xl md:text-5xl font-black tracking-tight" style={{ fontFamily: 'Space Grotesk' }}>
                                 Earn Your{' '}
                                 <span style={{
-                                    background: 'linear-gradient(135deg, #A855F7, #E879F9)',
+                                    background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
                                 }}>
                                     Legend
                                 </span>
                             </h2>
-                            <div className="hidden md:block flex-1 h-[1px] mb-2" style={{ background: 'linear-gradient(90deg, rgba(124,58,237,0.3), transparent)' }} />
+                            <div className="hidden md:block flex-1 h-[1px] mb-2" style={{ background: 'linear-gradient(90deg, rgba(var(--synapse-violet-rgb), 0.3), transparent)' }} />
                         </div>
-                        <p className="text-base mt-4 max-w-xl" style={{ color: 'rgba(196,181,253,0.55)', fontFamily: 'Inter', lineHeight: 1.7 }}>
+                        <p className="text-base mt-4 max-w-xl" style={{ color: 'rgba(var(--text-secondary-rgb), 0.55)', fontFamily: 'Inter', lineHeight: 1.7 }}>
                             Every member starts with an Access Pass. Attend workshops, build projects, and lead teams to unlock higher-tier cards — each with unique character art, unique ID, and real physical hard copies.
                         </p>
                     </motion.div>
@@ -573,14 +573,14 @@ export function Home() {
                             <h2 className="text-4xl md:text-5xl font-black tracking-tight" style={{ fontFamily: 'Space Grotesk' }}>
                                 Our{' '}
                                 <span style={{
-                                    background: 'linear-gradient(135deg, #A855F7, #E879F9)',
+                                    background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
                                 }}>
                                     Ecosystem
                                 </span>
                             </h2>
-                            <div className="hidden md:block flex-1 h-[1px] mb-2" style={{ background: 'linear-gradient(90deg, rgba(124,58,237,0.3), transparent)' }} />
+                            <div className="hidden md:block flex-1 h-[1px] mb-2" style={{ background: 'linear-gradient(90deg, rgba(var(--synapse-violet-rgb), 0.3), transparent)' }} />
                         </div>
                     </motion.div>
 
@@ -590,7 +590,7 @@ export function Home() {
                             desc="The central platform for all things Synapse — resources, events, and community tools."
                             url="https://the-synapse-hub.vercel.app"
                             icon="⎈"
-                            color="#A855F7"
+                            color="var(--synapse-violet-light)"
                             delay={0}
                         />
                         <EcosystemCard
@@ -598,7 +598,7 @@ export function Home() {
                             desc="Ready to connect your neurons? Sign up and get your Synapse Access Pass."
                             url="https://synapse-form.vercel.app"
                             icon="⚲"
-                            color="#D946EF"
+                            color="var(--synapse-pink)"
                             delay={0.1}
                         />
                         <EcosystemCard
@@ -617,7 +617,7 @@ export function Home() {
             {/* ═══════════════ STATS BAR ═══════════════ */}
             <section
                 className="py-20 px-4"
-                style={{ background: 'rgba(12,12,20,0.6)', borderTop: '1px solid rgba(124,58,237,0.07)' }}
+                style={{ background: 'rgba(var(--bg-glass-rgb), 0.6)', borderTop: '1px solid rgba(var(--synapse-violet-rgb), 0.07)' }}
             >
                 <div className="max-w-4xl mx-auto">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
@@ -639,7 +639,7 @@ export function Home() {
                             exit={{ opacity: 0 }}
                             onClick={() => setSelectedCard(null)}
                             className="fixed inset-0 z-[9999] flex items-center justify-center p-4 cursor-pointer"
-                            style={{ background: 'rgba(5,5,8,0.92)', backdropFilter: 'blur(8px)' }}
+                            style={{ background: 'rgba(var(--bg-glass-rgb), 0.92)', backdropFilter: 'blur(8px)' }}
                         >
                             <motion.div
                                 initial={{ scale: 0.8, opacity: 0, y: 20 }}
