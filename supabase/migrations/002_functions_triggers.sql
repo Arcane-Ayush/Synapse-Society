@@ -26,14 +26,9 @@ BEGIN
     VALUES (
         NEW.id,
         v_username,
-        COALESCE(NEW.raw_user_meta_data->>'display_name', v_username),
+        COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', v_username),
         NEW.email
     );
-
-    -- Award the Level 0 card (Access Pass) immediately
-    INSERT INTO public.user_cards (user_id, card_id, source)
-    VALUES (NEW.id, 'SAP-001', 'system')
-    ON CONFLICT DO NOTHING;
 
     RETURN NEW;
 END;
