@@ -289,10 +289,10 @@ export function Profile() {
                     transition={{ duration: 0.6 }}
                     className="p-6 md:p-8 rounded-3xl mb-8 relative overflow-hidden"
                     style={{
-                        background: 'rgba(var(--bg-glass-rgb), 0.95)',
+                        background: 'rgba(var(--bg-glass-rgb), 0.92)',
                         border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(var(--synapse-violet-rgb), 0.15)',
-                        backdropFilter: 'blur(20px)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.2), 0 0 20px rgba(var(--synapse-violet-rgb), 0.08)',
+                        backdropFilter: 'blur(8px)',
                     }}
                 >
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
@@ -317,7 +317,7 @@ export function Profile() {
                                 <div className="flex flex-wrap items-center gap-2 mb-1">
                                     <h1
                                         className="text-xl sm:text-3xl font-black tracking-tight truncate"
-                                        style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}
+                                        style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)', textShadow: 'none' }}
                                     >
                                         {effectiveProfile.display_name}
                                     </h1>
@@ -351,13 +351,13 @@ export function Profile() {
                             onClick={handleSignOut}
                             className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
                             style={{
-                                background: 'rgba(239,68,68,0.1)',
-                                border: '1px solid rgba(239,68,68,0.25)',
-                                color: '#FCA5A5',
+                                background: 'rgba(239,68,68,0.12)',
+                                border: '1px solid rgba(239,68,68,0.4)',
+                                color: 'var(--text-primary)',
                                 fontFamily: 'Space Grotesk',
                             }}
                         >
-                            <LogOut size={13} />
+                            <LogOut size={13} style={{ color: '#EF4444' }} />
                             Sign Out
                         </button>
                     </div>

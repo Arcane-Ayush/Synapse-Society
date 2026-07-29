@@ -61,12 +61,15 @@ export function CircuitBackground() {
             const startNode = nodes[startIdx];
             if (!startNode || startNode.connections.length === 0) return;
             const endIdx = startNode.connections[Math.floor(Math.random() * startNode.connections.length)];
+            const isSolarFlare = document.documentElement.getAttribute('data-theme') === 'orange';
             pulses.push({
                 startIdx,
                 endIdx,
                 progress: 0,
                 speed: 0.003 + Math.random() * 0.004,
-                color: Math.random() > 0.5 ? [168, 85, 247] : [217, 70, 239],
+                color: isSolarFlare
+                    ? (Math.random() > 0.5 ? [234, 88, 12] : [249, 115, 22])
+                    : (Math.random() > 0.5 ? [168, 85, 247] : [217, 70, 239]),
             });
         };
 
@@ -74,6 +77,8 @@ export function CircuitBackground() {
         const draw = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             frame++;
+
+            const isSolarFlare = document.documentElement.getAttribute('data-theme') === 'orange';
 
             // Draw connections (lines)
             nodes.forEach((node, idx) => {
@@ -83,7 +88,9 @@ export function CircuitBackground() {
                     ctx.beginPath();
                     ctx.moveTo(node.x, node.y);
                     ctx.lineTo(other.x, other.y);
-                    ctx.strokeStyle = "rgba(var(--synapse-violet-rgb), 0.07)";
+                    ctx.strokeStyle = isSolarFlare
+                        ? "rgba(234,88,12,0.04)"   // very faint on light theme
+                        : "rgba(124,58,237,0.10)";   // slightly more visible on dark
                     ctx.lineWidth = 1;
                     ctx.stroke();
                 });
@@ -93,17 +100,27 @@ export function CircuitBackground() {
             const time = frame * 0.02;
             nodes.forEach(node => {
                 const pulse = 0.5 + 0.5 * Math.sin(time + node.pulsePhase);
-                const alpha = 0.12 + pulse * 0.15;
+                const alpha = isSolarFlare
+                    ? (0.05 + pulse * 0.06)      // very subtle on light theme
+                    : (0.15 + pulse * 0.18);     // more visible on dark
                 const r = node.radius * (1 + pulse * 0.4);
+
+                const nr = isSolarFlare ? 234 : 124;
+                const ng = isSolarFlare ? 88 : 58;
+                const nb = isSolarFlare ? 12 : 237;
+
+                const vr = isSolarFlare ? 249 : 168;
+                const vg = isSolarFlare ? 115 : 85;
+                const vb = isSolarFlare ? 22 : 247;
 
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, r + 3, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(124,58,237,${alpha * 0.3})`;
+                ctx.fillStyle = `rgba(${nr},${ng},${nb},${alpha * 0.3})`;
                 ctx.fill();
 
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(168,85,247,${alpha})`;
+                ctx.fillStyle = `rgba(${vr},${vg},${vb},${alpha})`;
                 ctx.fill();
             });
 
