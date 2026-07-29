@@ -33,6 +33,8 @@ dist-ssr
 
 test_db.js 
 test.js
+test_db.mjs
+test_db2.mjs
 
 src/test-import.js
 test_cards.js

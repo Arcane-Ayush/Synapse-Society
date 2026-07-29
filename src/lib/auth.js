@@ -87,10 +87,7 @@ export function onAuthStateChange(callback) {
 export async function getProfile(userId) {
     const { data, error } = await supabase
         .from('profiles')
-        .select(`
-            *,
-            levels (label, xp_required)
-        `)
+        .select('*')
         .eq('id', userId)
         .single();
     return { data, error };
