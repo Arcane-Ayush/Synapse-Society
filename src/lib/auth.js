@@ -205,9 +205,20 @@ export async function getMissions() {
 export async function getTeams() {
     const { data, error } = await supabase
         .from('teams')
-        .select('*')
+        .select('*, team_members(count)')
         .order('total_tokens', { ascending: false });
-    return { data, error };
+
+    if (error) return { data: null, error };
+
+    const mapped = data.map(team => ({
+        ...team,
+        badge: team.badge_emoji,
+        color: team.color_hex,
+        tokens: team.total_tokens,
+        members: team.team_members?.[0]?.count || 0
+    }));
+
+    return { data: mapped, error: null };
 }
 
 /**

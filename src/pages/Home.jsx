@@ -142,7 +142,7 @@ function EcosystemCard({ title, desc, url, icon, color, delay, isInternal = fals
                 <div className="flex items-start justify-between">
                     <div
                         className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                        style={{ background: `${color}12`, border: `1px solid ${color}22` }}
+                        style={{ background: `${color}12`, border: `1px solid ${color}22`, color: color }}
                     >
                         {icon}
                     </div>
@@ -230,13 +230,13 @@ export function Home() {
                         className="flex items-center justify-between mb-10"
                     >
                         <div className="flex items-center gap-3">
-                            <span className="tech-annotation" style={{ color: '#E9D5FF', fontWeight: 600 }}>Student-Run Tech Collective</span>
-                            <div className="w-8 h-[1px]" style={{ background: 'rgba(var(--synapse-violet-light-rgb), 0.6)' }} />
-                            <span className="tech-annotation" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Chandigarh University</span>
+                            <span className="tech-annotation" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Student-Run Tech Collective</span>
+                            <div className="w-8 h-[1px]" style={{ background: 'var(--border-bright)' }} />
+                            <span className="tech-annotation" style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Chandigarh University</span>
                         </div>
                         <div className="hidden md:flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" style={{ boxShadow: '0 0 8px rgba(52,211,153,0.8)' }} />
-                            <span className="tech-annotation" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Season 1 · Active</span>
+                            <span className="tech-annotation" style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Season 1 · Active</span>
                         </div>
                     </motion.div>
 
@@ -257,13 +257,13 @@ export function Home() {
                                 ].map((s, i) => (
                                     <div key={s.label} className="flex items-center gap-3">
                                         {i > 0 && (
-                                            <div className="w-[1px] h-6" style={{ background: 'rgba(var(--synapse-violet-rgb), 0.25)' }} />
+                                            <div className="w-[1px] h-6" style={{ background: 'var(--border-accent)' }} />
                                         )}
                                         <div>
-                                            <div className="text-sm font-black" style={{ fontFamily: 'Space Grotesk', color: 'var(--synapse-violet-light)' }}>
+                                            <div className="text-sm font-black" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>
                                                 {s.val}
                                             </div>
-                                            <div className="text-[9px] font-mono tracking-widest" style={{ color: 'rgba(var(--text-secondary-rgb), 0.35)', textTransform: 'uppercase' }}>
+                                            <div className="text-[9px] font-mono tracking-widest" style={{ color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                                                 {s.label}
                                             </div>
                                         </div>
@@ -353,10 +353,10 @@ export function Home() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 1, delay: 1.2 }}
-                                className="mt-8 hidden md:flex items-center gap-3"
+                                className="flex items-center gap-4 pt-4 mt-8" style={{ borderTop: '1px solid var(--border-subtle)' }}
                             >
-                                <div className="w-4 h-[1px]" style={{ background: 'rgba(var(--synapse-violet-light-rgb), 0.6)' }} />
-                                <span className="tech-annotation" style={{ color: '#E9D5FF' }}>Build · Learn · Elevate</span>
+                                <div className="w-6 h-[1px]" style={{ background: 'var(--border-accent)' }} />
+                                <span className="tech-annotation" style={{ color: 'var(--text-muted)' }}>Build · Learn · Elevate</span>
                             </motion.div>
                         </div>
 
@@ -622,9 +622,9 @@ export function Home() {
                 <div className="max-w-4xl mx-auto">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
                         <StatCard value={150} label="Members" />
-                        <StatCard value={8} label="Projects" />
-                        <StatCard value={12} label="Events" />
-                        <StatCard value={3} label="Hackathons" />
+                        <StatCard value={5} label="Projects" />
+                        <StatCard value={8} label="Events" />
+                        <StatCard value={3} label="Workshops" />
                     </div>
                 </div>
             </section>

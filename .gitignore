@@ -30,17 +30,12 @@ dist-ssr
 .env*
 
 #test files
-
-test_db.js 
-test.js
-test_db.mjs
-test_db2.mjs
-
+test*
 src/test-import.js
-test_cards.js
-test_supabase.mjs
 
 
 # to ignore python files
 *.py
+
+
 backendPlan.md

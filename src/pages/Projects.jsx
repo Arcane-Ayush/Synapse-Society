@@ -81,7 +81,7 @@ function SynapseDeck({ projects }) {
                                     <div
                                         className="text-[10px] md:text-xs font-mono tracking-widest uppercase transition-colors whitespace-nowrap"
                                         style={{ 
-                                            color: isActive ? '#D8B4FE' : 'rgba(var(--synapse-violet-light-rgb), 0.75)',
+                                            color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
                                             writingMode: 'horizontal-tb'
                                         }}
                                     >
@@ -96,12 +96,21 @@ function SynapseDeck({ projects }) {
                                     style={{ opacity: isActive ? 1 : 0, transform: isActive ? 'translateY(0)' : 'translateY(12px)' }}
                                 >
                                     {/* ID */}
-                                    <div className="font-mono text-[10px] mb-2 pb-1" style={{ color: '#D8B4FE', borderBottom: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)' }}>
+                                    <div className="font-mono text-[10px] mb-2 pb-1" style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border-subtle)' }}>
                                         SYN.{String((page * PAGE_SIZE) + index + 1).padStart(3, '0')}
                                     </div>
 
                                     {/* Image */}
-                                    <div className="relative w-full mb-3 rounded-lg overflow-hidden bg-purple-950/30 h-[100px] md:h-[45%] shrink-0">
+                                    <div 
+                                        className={`relative w-full mb-3 rounded-lg overflow-hidden bg-purple-950/30 h-[100px] md:h-[45%] shrink-0 ${(project.demoUrl || project.demo_url || project.githubUrl || project.github_url) ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
+                                        onClick={(e) => {
+                                            const url = project.demoUrl || project.demo_url || project.githubUrl || project.github_url;
+                                            if (url) {
+                                                e.stopPropagation();
+                                                window.open(url, '_blank', 'noopener,noreferrer');
+                                            }
+                                        }}
+                                    >
                                         <div
                                             className="absolute inset-0 flex items-center justify-center"
                                             style={{ background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.25), rgba(236,72,153,0.15))' }}
@@ -138,7 +147,7 @@ function SynapseDeck({ projects }) {
                                     </h3>
                                     <p
                                         className="text-[11px] leading-relaxed mb-3 line-clamp-3"
-                                        style={{ color: 'rgba(216,180,254,0.85)', fontFamily: 'Inter' }}
+                                        style={{ color: 'var(--text-muted)', fontFamily: 'Inter' }}
                                     >
                                         {project.description}
                                     </p>
@@ -151,7 +160,7 @@ function SynapseDeck({ projects }) {
                                                 className="text-[9px] font-mono px-1.5 py-0.5 rounded"
                                                 style={{
                                                     background: 'rgba(var(--synapse-violet-light-rgb), 0.15)',
-                                                    color: '#E9D5FF',
+                                                    color: 'var(--text-primary)',
                                                     border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)',
                                                 }}
                                             >
@@ -169,7 +178,7 @@ function SynapseDeck({ projects }) {
                                                 rel="noopener noreferrer"
                                                 onClick={e => e.stopPropagation()}
                                                 className="flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded-lg transition-all duration-200"
-                                                style={{ background: 'rgba(var(--synapse-violet-rgb), 0.15)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.3)', color: '#D8B4FE' }}
+                                                style={{ background: 'rgba(var(--synapse-violet-rgb), 0.15)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.3)', color: 'var(--text-primary)' }}
                                                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-rgb), 0.35)'}
                                                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-rgb), 0.15)'}
                                             >
@@ -183,7 +192,7 @@ function SynapseDeck({ projects }) {
                                                 rel="noopener noreferrer"
                                                 onClick={e => e.stopPropagation()}
                                                 className="flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded-lg transition-all duration-200"
-                                                style={{ background: 'rgba(var(--synapse-violet-light-rgb), 0.15)', border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)', color: '#E9D5FF' }}
+                                                style={{ background: 'rgba(var(--synapse-violet-light-rgb), 0.15)', border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)', color: 'var(--text-primary)' }}
                                                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-light-rgb), 0.3)'}
                                                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-light-rgb), 0.15)'}
                                             >

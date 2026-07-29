@@ -266,7 +266,7 @@ function MissionsTab({ missions = [] }) {
                         className="text-3xl font-black opacity-10 group-hover:opacity-20 transition-opacity"
                         style={{ fontFamily: 'Space Grotesk', color: typeColor }}
                     >
-                        #{String(mission.id).padStart(2, '0')}
+                        #{String(i + 1).padStart(2, '0')}
                     </span>
                 </div>
 

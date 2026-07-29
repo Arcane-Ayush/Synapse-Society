@@ -329,7 +329,7 @@
     font-size: 0.62rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(168, 85, 247, 0.45);
+    color: var(--text-muted);
     writing-mode: horizontal-tb;
   }
 
@@ -338,7 +338,7 @@
     font-size: 0.58rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(124, 58, 237, 0.35);
+    color: var(--text-muted);
     writing-mode: vertical-rl;
     text-orientation: mixed;
   }
@@ -410,15 +410,15 @@
 
   /* === QUEST BOARD CARD (Sakura QuestBoard style) === */
   .quest-card {
-    background: rgba(12, 12, 22, 0.9);
-    border: 1px solid rgba(124,58,237,0.12);
+    background: var(--bg-glass);
+    border: 1px solid var(--border-subtle);
     border-radius: 20px;
     transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .quest-card:hover {
-    border-color: rgba(124,58,237,0.35);
-    box-shadow: 0 12px 40px rgba(124,58,237,0.12), 0 0 0 1px rgba(124,58,237,0.08);
+    border-color: var(--border-accent);
+    box-shadow: 0 12px 40px var(--shadow-color), 0 0 0 1px var(--border-accent);
     transform: translateY(-4px);
   }
 
