@@ -457,7 +457,97 @@ function MissionsTab({ missions = [], userMissions = [], user, refreshMissions }
 }
 
 // ── Factions Tab ──────────────────────────────────────────────────
-function FactionsTab({ teams = [] }) {
+function FactionsTab({ teams = [], userTeam = null, user, isLead, hackathonRegistrationOpen, refreshTeams, refreshAppSettings }) {
+    const [inviteCode, setInviteCode] = useState('');
+    const [actionLoading, setActionLoading] = useState(false);
+    const [actionMessage, setActionMessage] = useState(null); // { type, text }
+
+    // Register Modal State
+    const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+    const [newFactionName, setNewFactionName] = useState('');
+    const [newFactionEmoji, setNewFactionEmoji] = useState('🔥');
+    const [newFactionColor, setNewFactionColor] = useState('#7C3AED');
+    
+    const handleToggleRegistration = async () => {
+        setActionLoading(true);
+        setActionMessage(null);
+        const { toggleHackathonRegistration } = await import('../lib/auth');
+        const res = await toggleHackathonRegistration(!hackathonRegistrationOpen);
+        if (res.error) {
+            const isMissingTable = res.error?.code === 'PGRST205';
+            const isRLS = res.error?.code === '42501';
+            setActionMessage({ 
+                type: 'error', 
+                text: isMissingTable 
+                    ? 'DB table missing — run the app_settings migration in Supabase.' 
+                    : isRLS 
+                    ? 'Permission denied — add RLS policy for app_settings in Supabase.'
+                    : 'Failed to toggle registration.' 
+            });
+        } else {
+            if (refreshAppSettings) await refreshAppSettings();
+            setActionMessage({ type: 'success', text: `Registration is now ${!hackathonRegistrationOpen ? 'OPEN' : 'CLOSED'}` });
+        }
+        setActionLoading(false);
+    };
+
+
+    const handleJoin = async () => {
+        if (!inviteCode.trim() || !user) return;
+        setActionLoading(true);
+        setActionMessage(null);
+        const { joinTeam } = await import('../lib/auth');
+        const res = await joinTeam(user.id, inviteCode);
+        if (res.error) {
+            setActionMessage({ type: 'error', text: res.error.message || 'Invalid invite code' });
+        } else {
+            if (refreshTeams) await refreshTeams();
+            setActionMessage({ type: 'success', text: 'Successfully joined faction!' });
+        }
+        setActionLoading(false);
+    };
+
+    const handleLeave = async () => {
+        if (!user || !userTeam) return;
+        
+        // If it's not custom, mock the request logic.
+        if (!userTeam.teams.is_custom) {
+            setActionMessage({ type: 'success', text: 'Request to leave submitted to Faction Lead.' });
+            return;
+        }
+
+        setActionLoading(true);
+        setActionMessage(null);
+        const { leaveTeam } = await import('../lib/auth');
+        const res = await leaveTeam(user.id, userTeam.teams.id);
+        if (res.error) {
+            setActionMessage({ type: 'error', text: 'Error leaving faction' });
+        } else {
+            if (refreshTeams) await refreshTeams();
+            setActionMessage({ type: 'success', text: 'Successfully left the faction.' });
+        }
+        setActionLoading(false);
+    };
+
+    const handleRegister = async () => {
+        if (!user || !newFactionName.trim()) return;
+        setActionLoading(true);
+        setActionMessage(null);
+        
+        const { createTeam } = await import('../lib/auth');
+        const res = await createTeam(user.id, newFactionName, newFactionColor, newFactionEmoji);
+        
+        if (res.error) {
+            setActionMessage({ type: 'error', text: res.error.message || 'Error creating faction' });
+        } else {
+            if (refreshTeams) await refreshTeams();
+            setActionMessage({ type: 'success', text: 'Faction registered successfully!' });
+            setIsRegisterOpen(false);
+            setNewFactionName('');
+        }
+        setActionLoading(false);
+    };
+
     return (
         <div>
             <div className="flex items-center justify-between mb-8">
@@ -470,10 +560,106 @@ function FactionsTab({ teams = [] }) {
                 <div className="text-2xl">⚔️</div>
             </div>
 
+            {/* Faction Action Area */}
+            {user ? (
+                <div className="mb-10 p-6 rounded-2xl" style={{ background: 'rgba(var(--bg-glass-rgb), 0.4)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)' }}>
+                    {userTeam ? (
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className="text-4xl">{userTeam.teams.badge_emoji}</div>
+                                <div>
+                                    <div className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--synapse-violet-light)' }}>MY FACTION</div>
+                                    <h4 className="text-xl font-bold" style={{ fontFamily: 'Space Grotesk' }}>{userTeam.teams.name}</h4>
+                                    
+                                    {userTeam.teams.is_custom && userTeam.teams.invite_code && (
+                                        <div className="mt-2 text-xs font-mono px-3 py-1.5 rounded bg-black/30 inline-block border border-purple-500/20">
+                                            Invite Code: <span className="text-purple-300 select-all">{userTeam.teams.invite_code}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleLeave}
+                                disabled={actionLoading}
+                                className="px-5 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase transition-all whitespace-nowrap disabled:opacity-50"
+                                style={{
+                                    background: 'rgba(239, 68, 68, 0.1)',
+                                    color: '#EF4444',
+                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                }}
+                            >
+                                {actionLoading ? 'PROCESSING...' : (userTeam.teams.is_custom ? 'LEAVE FACTION' : 'REQUEST TO LEAVE')}
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col md:flex-row gap-6">
+                            <div className="flex-1">
+                                <div className="text-[10px] font-mono tracking-widest mb-3" style={{ color: 'var(--synapse-violet-light)' }}>JOIN FACTION</div>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Enter Invite Code"
+                                        value={inviteCode}
+                                        onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                                        className="flex-1 px-4 py-2.5 rounded-lg bg-black/30 border border-purple-500/30 text-sm font-mono focus:outline-none focus:border-purple-400"
+                                    />
+                                    <button
+                                        onClick={handleJoin}
+                                        disabled={actionLoading || !inviteCode.trim()}
+                                        className="px-6 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase transition-all disabled:opacity-50"
+                                        style={{ background: 'var(--synapse-violet)', color: 'white' }}
+                                    >
+                                        JOIN
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex-1 flex flex-col justify-end">
+                                <button
+                                    onClick={() => setIsRegisterOpen(true)}
+                                    disabled={!hackathonRegistrationOpen}
+                                    className="w-full px-6 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase transition-all"
+                                    style={{
+                                        background: 'rgba(var(--bg-glass-rgb), 0.5)',
+                                        color: hackathonRegistrationOpen ? 'var(--text-primary)' : 'rgba(var(--text-secondary-rgb), 0.4)',
+                                        border: '1px dashed rgba(var(--synapse-violet-rgb), 0.3)',
+                                        cursor: hackathonRegistrationOpen ? 'pointer' : 'not-allowed'
+                                    }}
+                                >
+                                    {hackathonRegistrationOpen ? 'REGISTER FACTION' : 'REGISTRATION CLOSED'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    {actionMessage && (
+                        <div className="mt-4 p-3 rounded-lg text-xs text-center font-mono" style={{ background: actionMessage.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: actionMessage.type === 'success' ? '#6EE7B7' : '#FCA5A5' }}>
+                            {actionMessage.text}
+                        </div>
+                    )}
+                    {isLead && (
+                        <div className="mt-6 pt-4 border-t border-purple-500/20 flex justify-end">
+                            <button
+                                onClick={handleToggleRegistration}
+                                disabled={actionLoading}
+                                className="px-4 py-2 rounded-lg text-xs font-bold tracking-widest uppercase transition-all"
+                                style={{
+                                    background: 'rgba(236, 72, 153, 0.1)',
+                                    color: '#F472B6',
+                                    border: '1px solid rgba(236, 72, 153, 0.3)'
+                                }}
+                            >
+                                {actionLoading ? 'PROCESSING...' : (hackathonRegistrationOpen ? 'CLOSE CUSTOM REGISTRATION' : 'OPEN CUSTOM REGISTRATION')}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            ) : null}
+
             <div className="space-y-4">
                 {[...teams].sort((a, b) => (b.total_tokens || 0) - (a.total_tokens || 0)).map((team, index) => {
                     const rank = index + 1;
                     const isFirst = rank === 1;
+                    const sortedTeams = [...teams].sort((a, b) => (b.total_tokens || 0) - (a.total_tokens || 0));
+                    const maxTokens = sortedTeams[0]?.tokens || 1;
 
                     return (
                         <motion.div
@@ -527,7 +713,7 @@ function FactionsTab({ teams = [] }) {
                                     <div
                                         className="h-full rounded-full transition-all duration-1000"
                                         style={{
-                                            width: `${(team.tokens / teams[0].tokens) * 100}%`,
+                                            width: `${(team.tokens / maxTokens) * 100}%`,
                                             background: `linear-gradient(90deg, ${team.color}, ${team.color}88)`,
                                             boxShadow: `0 0 6px ${team.color}55`,
                                         }}
@@ -583,6 +769,89 @@ function FactionsTab({ teams = [] }) {
                     Registration Opens Soon
                 </button>
             </motion.div>
+
+            {/* Registration Modal Overlay */}
+            {createPortal(
+                <AnimatePresence>
+                    {isRegisterOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+                            style={{ background: 'rgba(var(--bg-glass-rgb), 0.92)', backdropFilter: 'blur(8px)' }}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.9, y: 20 }}
+                                className="w-full max-w-sm rounded-2xl p-6 relative overflow-hidden"
+                                style={{
+                                    background: 'var(--bg-glass)',
+                                    border: '1px solid rgba(var(--synapse-violet-rgb), 0.3)',
+                                    boxShadow: '0 24px 60px rgba(0,0,0,0.8)'
+                                }}
+                            >
+                                <button 
+                                    onClick={() => setIsRegisterOpen(false)}
+                                    className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                                >
+                                    ✕
+                                </button>
+                                
+                                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: 'Space Grotesk' }}>Register Faction</h3>
+                                
+                                <div className="space-y-4 mb-6">
+                                    <div>
+                                        <label className="block text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--text-secondary)' }}>FACTION NAME</label>
+                                        <input
+                                            type="text"
+                                            value={newFactionName}
+                                            onChange={(e) => setNewFactionName(e.target.value)}
+                                            placeholder="E.g. Code Ninjas"
+                                            className="w-full px-4 py-2.5 rounded-lg bg-black/40 border border-purple-500/20 focus:border-purple-400 focus:outline-none text-white"
+                                        />
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <label className="block text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--text-secondary)' }}>EMOJI</label>
+                                            <input
+                                                type="text"
+                                                maxLength={2}
+                                                value={newFactionEmoji}
+                                                onChange={(e) => setNewFactionEmoji(e.target.value)}
+                                                className="w-full px-4 py-2.5 rounded-lg bg-black/40 border border-purple-500/20 text-center text-xl focus:border-purple-400 focus:outline-none"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--text-secondary)' }}>COLOR</label>
+                                            <input
+                                                type="color"
+                                                value={newFactionColor}
+                                                onChange={(e) => setNewFactionColor(e.target.value)}
+                                                className="w-full h-12 rounded-lg bg-black/40 border border-purple-500/20 p-1 cursor-pointer"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button
+                                    onClick={handleRegister}
+                                    disabled={actionLoading || !newFactionName.trim()}
+                                    className="w-full py-3 rounded-lg font-bold tracking-widest uppercase text-xs transition-all disabled:opacity-50"
+                                    style={{
+                                        background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
+                                        color: 'white'
+                                    }}
+                                >
+                                    {actionLoading ? 'REGISTERING...' : 'CREATE FACTION'}
+                                </button>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
         </div>
     );
 }
@@ -1011,21 +1280,43 @@ export function Nexus() {
     const [activeTab, setActiveTab] = useState('cards');
     const [selectedCard, setSelectedCard] = useState(null);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user, isLead } = useAuth();
     
     // DB Data State
     const [membershipCards, setMembershipCards] = useState([]);
     const [eventCards, setEventCards] = useState([]);
     const [missions, setMissions] = useState([]);
     const [userMissions, setUserMissions] = useState([]);
+    const [userTeam, setUserTeam] = useState(null);
     const [teams, setTeams] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
+    const [hackathonRegistrationOpen, setHackathonRegistrationOpen] = useState(false);
 
     const refreshMissions = async () => {
         if (!user) return;
         const { getUserMissions } = await import('../lib/auth');
         const res = await getUserMissions(user.id);
         if (res.data) setUserMissions(res.data);
+    };
+
+    const refreshTeams = async () => {
+        if (!user) return;
+        const { getUserTeam, getTeams } = await import('../lib/auth');
+        const [myTeamRes, allTeamsRes] = await Promise.all([
+            getUserTeam(user.id),
+            getTeams()
+        ]);
+        if (myTeamRes.data) setUserTeam(myTeamRes.data);
+        else setUserTeam(null);
+        if (allTeamsRes.data) setTeams(allTeamsRes.data);
+    };
+
+    const refreshAppSettings = async () => {
+        const { getAppSettings } = await import('../lib/auth');
+        const res = await getAppSettings();
+        if (res.data) {
+            setHackathonRegistrationOpen(!!res.data['hackathon_registration_open']);
+        }
     };
 
     useEffect(() => {
@@ -1037,15 +1328,19 @@ export function Nexus() {
         };
         window.addEventListener('keydown', handleKeyDown);
         
+        // Fetch app settings unconditionally
+        refreshAppSettings();
+        
         if (isAuthenticated && user) {
             setLoadingData(true);
-            import('../lib/auth').then(({ getAllCards, getMissions, getTeams, getUserMissions }) => {
+            import('../lib/auth').then(({ getAllCards, getMissions, getTeams, getUserMissions, getUserTeam }) => {
                 Promise.all([
                     getAllCards(),
                     getMissions(),
                     getTeams(),
-                    getUserMissions(user.id)
-                ]).then(([cardsRes, missionsRes, teamsRes, userMissionsRes]) => {
+                    getUserMissions(user.id),
+                    getUserTeam(user.id)
+                ]).then(([cardsRes, missionsRes, teamsRes, userMissionsRes, userTeamRes]) => {
                     if (cardsRes.data) {
                         setMembershipCards(cardsRes.data.filter(c => c.type === 'membership'));
                         setEventCards(cardsRes.data.filter(c => c.type === 'event' || c.type === 'achievement'));
@@ -1053,6 +1348,7 @@ export function Nexus() {
                     if (missionsRes.data) setMissions(missionsRes.data);
                     if (teamsRes.data) setTeams(teamsRes.data);
                     if (userMissionsRes.data) setUserMissions(userMissionsRes.data);
+                    if (userTeamRes.data) setUserTeam(userTeamRes.data);
                     setLoadingData(false);
                 });
             });
@@ -1226,7 +1522,15 @@ export function Nexus() {
                             <>
                                 {activeTab === 'cards' && <CardsTab setSelectedCard={setSelectedCard} membershipCards={membershipCards} eventCards={eventCards} />}
                                 {activeTab === 'missions' && <MissionsTab missions={missions} userMissions={userMissions} user={user} refreshMissions={refreshMissions} />}
-                                {activeTab === 'factions' && <FactionsTab teams={teams} />}
+                                {activeTab === 'factions' && <FactionsTab 
+                                    teams={teams} 
+                                    userTeam={userTeam} 
+                                    user={user} 
+                                    isLead={isLead}
+                                    hackathonRegistrationOpen={hackathonRegistrationOpen}
+                                    refreshTeams={refreshTeams}
+                                    refreshAppSettings={refreshAppSettings}
+                                />}
                                 {activeTab === 'qr' && <QRVaultTab onOpenLogin={() => setIsLoginOpen(true)} />}
                             </>
                         )}

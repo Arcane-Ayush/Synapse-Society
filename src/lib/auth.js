@@ -251,6 +251,122 @@ export async function getTeams() {
 }
 
 /**
+ * Fetch the team for a specific user.
+ */
+export async function getUserTeam(userId) {
+    if (!userId) return { data: null, error: null };
+    const { data, error } = await supabase
+        .from('team_members')
+        .select('*, teams(*)')
+        .eq('user_id', userId)
+        .maybeSingle();
+    return { data, error };
+}
+
+/**
+ * Join a team using an invite code.
+ */
+export async function joinTeam(userId, inviteCode) {
+    if (!userId || !inviteCode) return { data: null, error: new Error('Missing userId or inviteCode') };
+    
+    // 1. Find the team by invite code
+    const { data: team, error: teamErr } = await supabase
+        .from('teams')
+        .select('*')
+        .eq('invite_code', inviteCode.trim().toUpperCase())
+        .maybeSingle();
+        
+    if (teamErr) return { data: null, error: teamErr };
+    if (!team) return { data: null, error: new Error('Invalid invite code.') };
+    
+    // 2. Insert into team_members
+    const { data, error } = await supabase
+        .from('team_members')
+        .insert([{ team_id: team.id, user_id: userId }])
+        .select('*, teams(*)');
+        
+    return { data, error };
+}
+
+/**
+ * Create a new custom Team Faction.
+ */
+export async function createTeam(userId, name, color, emoji) {
+    if (!userId || !name) return { data: null, error: new Error('Missing required fields.') };
+    
+    // Generate random 6-character invite code
+    const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const inviteCode = `SYN-${randomCode}`;
+    
+    // 1. Create team
+    const { data: team, error: teamErr } = await supabase
+        .from('teams')
+        .insert([{ 
+            name, 
+            color_hex: color, 
+            badge_emoji: emoji, 
+            invite_code: inviteCode,
+            is_custom: true
+        }])
+        .select()
+        .single();
+        
+    if (teamErr) return { data: null, error: teamErr };
+    
+    // 2. Add creator to team
+    const { data, error } = await supabase
+        .from('team_members')
+        .insert([{ team_id: team.id, user_id: userId }])
+        .select('*, teams(*)');
+        
+    return { data, error };
+}
+
+/**
+ * Leave a custom team.
+ */
+export async function leaveTeam(userId, teamId) {
+    if (!userId || !teamId) return { data: null, error: new Error('Missing userId or teamId') };
+    
+    const { data, error } = await supabase
+        .from('team_members')
+        .delete()
+        .match({ user_id: userId, team_id: teamId });
+        
+    return { data, error };
+}
+
+/**
+ * Fetch global app settings.
+ */
+export async function getAppSettings() {
+    const { data, error } = await supabase
+        .from('app_settings')
+        .select('*');
+        
+    if (error) return { data: null, error };
+    
+    const settings = {};
+    data.forEach(item => {
+        settings[item.setting_key] = item.setting_value;
+    });
+    
+    return { data: settings, error: null };
+}
+
+/**
+ * Toggle hackathon registration (Admin only).
+ */
+export async function toggleHackathonRegistration(isOpen) {
+    const { data, error } = await supabase
+        .from('app_settings')
+        .upsert([{ setting_key: 'hackathon_registration_open', setting_value: isOpen }])
+        .select();
+        
+    return { data, error };
+}
+
+/**
  * Fetch all projects.
  */
 export async function getProjects() {
