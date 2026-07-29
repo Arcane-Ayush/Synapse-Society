@@ -203,7 +203,20 @@ const MISSION_TYPE_COLORS = {
     Community: '#3B82F6',
 };
 
-function MissionsTab({ missions = [] }) {
+function MissionsTab({ missions = [], userMissions = [], user, refreshMissions }) {
+    const [acceptingId, setAcceptingId] = useState(null);
+
+    const handleAcceptQuest = async (missionId) => {
+        if (!user) return;
+        setAcceptingId(missionId);
+        const { acceptMission } = await import('../lib/auth');
+        const res = await acceptMission(missionId, user.id);
+        if (!res.error && refreshMissions) {
+            await refreshMissions();
+        }
+        setAcceptingId(null);
+    };
+
     const worldEvent = missions.find(m => m.assigned_to === 'All');
     const coopMissions = missions.filter(m => m.assigned_to === 'Teams');
     const openMissions = missions.filter(m => m.assigned_to === 'Open');
@@ -213,6 +226,18 @@ function MissionsTab({ missions = [] }) {
         const typeColor = MISSION_TYPE_COLORS[mission.type] || 'var(--synapse-violet-light)';
         const isWorld = mission.assignedTo === 'All';
         const isCoop = mission.assignedTo === 'Teams';
+        
+        const participantCount = mission.user_missions?.[0]?.count || 0;
+        const maxParticipants = mission.max_participants;
+        const isFull = maxParticipants !== null && participantCount >= maxParticipants;
+        
+        const myUserMission = userMissions.find(um => um.mission_id === mission.id);
+        const hasAccepted = !!myUserMission;
+        const isAccepting = acceptingId === mission.id;
+        
+        // For now, allow accepting if it's open/all, not full, and not already accepted
+        // Later this can be expanded for specific Team assignments
+        const canAccept = !hasAccepted && !isFull && (mission.assigned_to === 'Open' || mission.assigned_to === 'All');
 
         return (
             <motion.div
@@ -220,7 +245,7 @@ function MissionsTab({ missions = [] }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.1, ease: [0.23, 1, 0.32, 1] }}
-                className="quest-card p-6 group"
+                className={`quest-card p-6 group ${hasAccepted ? 'border-green-500/30' : ''}`}
             >
                 <div className="flex justify-between items-start mb-5">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -335,9 +360,33 @@ function MissionsTab({ missions = [] }) {
                             <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
                             <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
                         </svg>
-                        {mission.tokens}
+                        {mission.xp || mission.tokens || 0}
                         <span className="text-[9px] font-mono tracking-widest ml-0.5" style={{ color: 'rgba(252,211,77,0.6)' }}>XP</span>
                     </div>
+                </div>
+
+                {/* Quest Acceptance Actions */}
+                <div className="mt-5 pt-5 flex items-center justify-between" style={{ borderTop: `1px dashed rgba(var(--synapse-violet-rgb), 0.15)` }}>
+                    <div className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
+                        {maxParticipants === null ? 'Unlimited spots' : (
+                            <span><span style={{ color: isFull ? 'var(--synapse-pink)' : 'var(--text-primary)' }}>{participantCount}</span> / {maxParticipants} filled</span>
+                        )}
+                    </div>
+                    
+                    <button
+                        onClick={() => handleAcceptQuest(mission.id)}
+                        disabled={!canAccept || isAccepting}
+                        className="px-4 py-1.5 rounded text-[10px] font-bold tracking-widest uppercase transition-all"
+                        style={{
+                            background: hasAccepted ? 'rgba(16, 185, 129, 0.1)' : (canAccept ? 'rgba(var(--synapse-violet-rgb), 0.15)' : 'rgba(var(--bg-glass-rgb), 0.5)'),
+                            color: hasAccepted ? '#10B981' : (canAccept ? 'var(--text-primary)' : 'rgba(var(--text-secondary-rgb), 0.4)'),
+                            border: `1px solid ${hasAccepted ? 'rgba(16, 185, 129, 0.3)' : (canAccept ? 'rgba(var(--synapse-violet-rgb), 0.3)' : 'transparent')}`,
+                            cursor: (canAccept && !isAccepting) ? 'pointer' : 'not-allowed',
+                            opacity: isAccepting ? 0.7 : 1
+                        }}
+                    >
+                        {isAccepting ? 'ACCEPTING...' : (hasAccepted ? 'IN PROGRESS' : (isFull ? 'FULL' : (canAccept ? 'ACCEPT QUEST' : 'LOCKED')))}
+                    </button>
                 </div>
             </motion.div>
         );
@@ -962,14 +1011,22 @@ export function Nexus() {
     const [activeTab, setActiveTab] = useState('cards');
     const [selectedCard, setSelectedCard] = useState(null);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
     
     // DB Data State
     const [membershipCards, setMembershipCards] = useState([]);
     const [eventCards, setEventCards] = useState([]);
     const [missions, setMissions] = useState([]);
+    const [userMissions, setUserMissions] = useState([]);
     const [teams, setTeams] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
+
+    const refreshMissions = async () => {
+        if (!user) return;
+        const { getUserMissions } = await import('../lib/auth');
+        const res = await getUserMissions(user.id);
+        if (res.data) setUserMissions(res.data);
+    };
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -980,27 +1037,29 @@ export function Nexus() {
         };
         window.addEventListener('keydown', handleKeyDown);
         
-        if (isAuthenticated) {
+        if (isAuthenticated && user) {
             setLoadingData(true);
-            import('../lib/auth').then(({ getAllCards, getMissions, getTeams }) => {
+            import('../lib/auth').then(({ getAllCards, getMissions, getTeams, getUserMissions }) => {
                 Promise.all([
                     getAllCards(),
                     getMissions(),
-                    getTeams()
-                ]).then(([cardsRes, missionsRes, teamsRes]) => {
+                    getTeams(),
+                    getUserMissions(user.id)
+                ]).then(([cardsRes, missionsRes, teamsRes, userMissionsRes]) => {
                     if (cardsRes.data) {
                         setMembershipCards(cardsRes.data.filter(c => c.type === 'membership'));
                         setEventCards(cardsRes.data.filter(c => c.type === 'event' || c.type === 'achievement'));
                     }
                     if (missionsRes.data) setMissions(missionsRes.data);
                     if (teamsRes.data) setTeams(teamsRes.data);
+                    if (userMissionsRes.data) setUserMissions(userMissionsRes.data);
                     setLoadingData(false);
                 });
             });
         }
         
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isAuthenticated]);
+    }, [isAuthenticated, user]);
 
     if (!isAuthenticated) {
         return (
@@ -1166,7 +1225,7 @@ export function Nexus() {
                         ) : (
                             <>
                                 {activeTab === 'cards' && <CardsTab setSelectedCard={setSelectedCard} membershipCards={membershipCards} eventCards={eventCards} />}
-                                {activeTab === 'missions' && <MissionsTab missions={missions} />}
+                                {activeTab === 'missions' && <MissionsTab missions={missions} userMissions={userMissions} user={user} refreshMissions={refreshMissions} />}
                                 {activeTab === 'factions' && <FactionsTab teams={teams} />}
                                 {activeTab === 'qr' && <QRVaultTab onOpenLogin={() => setIsLoginOpen(true)} />}
                             </>

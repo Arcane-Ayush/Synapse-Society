@@ -193,9 +193,38 @@ export async function getActivities() {
 export async function getMissions() {
     const { data, error } = await supabase
         .from('missions')
-        .select('*')
+        .select('*, user_missions(count)')
         .in('status', ['Active', 'Upcoming'])
         .order('deadline', { ascending: true });
+    return { data, error };
+}
+
+/**
+ * Fetch all missions accepted by a specific user.
+ */
+export async function getUserMissions(userId) {
+    if (!userId) return { data: [], error: null };
+    const { data, error } = await supabase
+        .from('user_missions')
+        .select('*')
+        .eq('user_id', userId);
+    return { data, error };
+}
+
+/**
+ * Accept a mission (Quests)
+ */
+export async function acceptMission(missionId, userId) {
+    if (!missionId || !userId) return { data: null, error: new Error('Missing missionId or userId') };
+    
+    // Insert into user_missions
+    const { data, error } = await supabase
+        .from('user_missions')
+        .insert([
+            { mission_id: missionId, user_id: userId, status: 'In Progress', started_at: new Date().toISOString() }
+        ])
+        .select();
+        
     return { data, error };
 }
 
