@@ -920,12 +920,13 @@ function QRVaultTab({ onOpenLogin }) {
                 if (xpErr) throw xpErr;
                 if (xpRes?.success === false) throw new Error(xpRes?.error || 'XP award failed');
 
-                // Award SAP-001 card via SECURITY DEFINER function (safe — can't be abused)
-                const { data: cardRes, error: cardErr } = await supabase.rpc('claim_form_reward', {
+                // Award SAP-001 card via award_card RPC
+                const { data: cardRes, error: cardErr } = await supabase.rpc('award_card', {
                     p_user_id: user.id,
-                    p_card_id: 'SAP-001'
+                    p_card_id: 'SAP-001',
+                    p_source: 'form_signup'
                 });
-                console.log('[QR] claim_form_reward result:', cardRes, cardErr);
+                console.log('[QR] award_card result:', cardRes, cardErr);
 
                 // Refresh auth context so UI updates immediately
                 if (refreshProfile) await refreshProfile();
@@ -986,11 +987,11 @@ function QRVaultTab({ onOpenLogin }) {
             }
 
             if (qr.reward_card_id) {
-                await supabase.from('user_cards').upsert({
-                    user_id: user.id,
-                    card_id: qr.reward_card_id,
-                    source: 'qr_scan'
-                }, { onConflict: 'user_id,card_id', ignoreDuplicates: true });
+                await supabase.rpc('award_card', {
+                    p_user_id: user.id,
+                    p_card_id: qr.reward_card_id,
+                    p_source: 'qr_scan'
+                });
             }
 
             await supabase.from('qr_scan_history').insert({
