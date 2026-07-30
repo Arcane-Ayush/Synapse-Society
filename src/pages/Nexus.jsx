@@ -858,7 +858,7 @@ function FactionsTab({ teams = [], userTeam = null, user, isLead, hackathonRegis
 
 // ── QR Vault Tab ──────────────────────────────────────────────────
 function QRVaultTab({ onOpenLogin }) {
-    const { user, profile, isAuthenticated, isLead } = useAuth();
+    const { user, profile, isAuthenticated, isLead, refreshCards, refreshProfile } = useAuth();
     const [qrCodeInput, setQrCodeInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
@@ -907,26 +907,29 @@ function QRVaultTab({ onOpenLogin }) {
                     return;
                 }
 
-                // Award 10 XP
+                // Award 10 XP via SECURITY DEFINER function
                 const { data: xpRes, error: xpErr } = await supabase.rpc('award_xp', {
                     p_user_id: user.id,
                     p_amount: 10,
                     p_reason: 'Form Signup Reward',
                     p_source: 'qr_scan',
-                    p_reference_id: 'FORM-SIGNUP-REWARD'
+                    p_reference_id: null
                 });
 
+                console.log('[QR] award_xp result:', xpRes, xpErr);
                 if (xpErr) throw xpErr;
+                if (xpRes?.success === false) throw new Error(xpRes?.error || 'XP award failed');
 
-                // Award SAP-001 card
-                const { error: cardErr } = await supabase.rpc('award_card', {
+                // Award SAP-001 card via SECURITY DEFINER function (safe — can't be abused)
+                const { data: cardRes, error: cardErr } = await supabase.rpc('claim_form_reward', {
                     p_user_id: user.id,
                     p_card_id: 'SAP-001'
                 });
+                console.log('[QR] claim_form_reward result:', cardRes, cardErr);
 
-                if (cardErr && cardErr.code !== '23505') { // Ignore unique violation if they somehow already have it
-                    throw cardErr;
-                }
+                // Refresh auth context so UI updates immediately
+                if (refreshProfile) await refreshProfile();
+                if (refreshCards) await refreshCards();
 
                 setMessage({ type: 'success', text: '🎉 Form Reward Claimed! +10 XP and Synapse Access Pass unlocked!' });
                 setQrCodeInput('');
@@ -983,11 +986,11 @@ function QRVaultTab({ onOpenLogin }) {
             }
 
             if (qr.reward_card_id) {
-                await supabase.from('user_cards').insert({
+                await supabase.from('user_cards').upsert({
                     user_id: user.id,
                     card_id: qr.reward_card_id,
                     source: 'qr_scan'
-                }).onConflict('user_id, card_id').ignore();
+                }, { onConflict: 'user_id,card_id', ignoreDuplicates: true });
             }
 
             await supabase.from('qr_scan_history').insert({
@@ -1001,8 +1004,11 @@ function QRVaultTab({ onOpenLogin }) {
                 text: `🎉 Redeemed! +${qr.reward_xp} XP credited to your profile!`
             });
             setQrCodeInput('');
+            if (refreshProfile) await refreshProfile();
+            if (refreshCards) await refreshCards();
         } catch (err) {
-            setMessage({ type: 'error', text: 'An error occurred during verification.' });
+            console.error('QR Redeem error:', err);
+            setMessage({ type: 'error', text: `Verification failed: ${err?.message || 'Unknown error'}` });
         } finally {
             setLoading(false);
         }

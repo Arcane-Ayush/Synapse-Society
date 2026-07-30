@@ -14,6 +14,16 @@ export function AuthProvider({ children }) {
     const [ownedCardIds, setOwnedCardIds] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    async function loadCards(authUser) {
+        if (!authUser) { setOwnedCardIds([]); return; }
+        const cardsRes = await getUserCards(authUser.id);
+        if (cardsRes.data) {
+            setOwnedCardIds(cardsRes.data.map(item => item.cards.id));
+        } else {
+            setOwnedCardIds([]);
+        }
+    }
+
     async function loadProfile(authUser) {
         if (!authUser) {
             setProfile(null);
@@ -91,8 +101,10 @@ export function AuthProvider({ children }) {
     const checkUnlockStatus = (card) => {
         if (!card) return false;
         if (!user) return false;
-        if (card.type === 'membership') return (profile?.total_xp ?? 0) >= (card.xpRequired ?? 0);
-        return ownedCardIds?.includes(card.id) ?? false;
+        if (ownedCardIds?.includes(card.id)) return true;
+        const userXp = profile?.xp ?? 0;
+        const reqXp = card.xpRequired ?? card.worth ?? 0;
+        return userXp >= reqXp;
     };
 
     const value = {
@@ -105,6 +117,7 @@ export function AuthProvider({ children }) {
         isLead: profile?.club_role === 'lead' || profile?.club_role === 'administrator',
         signOut: handleSignOut,
         refreshProfile: () => loadProfile(user),
+        refreshCards: () => loadCards(user),
         checkUnlockStatus,
     };
 

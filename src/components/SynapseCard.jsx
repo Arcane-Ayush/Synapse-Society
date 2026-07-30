@@ -146,10 +146,10 @@ export function SynapseCard({ card, size = "md", showBack = false, className = "
     if (!card) return null;
 
     // Use unified unlocking rule, but allow explicitly overriding via card.unlocked
-    const isUnlocked = card.unlocked !== undefined ? card.unlocked : (
+    const isUnlocked = card.unlocked ?? (
         isAuthenticated && (
-            (card.type === 'membership' && (profile?.total_xp ?? 0) >= (card.xpRequired ?? 0)) ||
-            (ownedCardIds?.includes(card.id))
+            (ownedCardIds?.includes(card.id)) ||
+            ((profile?.xp ?? 0) >= (card.xpRequired ?? card.worth ?? 0))
         )
     );
 

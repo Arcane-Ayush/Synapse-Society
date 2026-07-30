@@ -70,7 +70,7 @@ function XPBar({ xp = 0, currentLevel = 0 }) {
 
 export function Profile() {
     const navigate = useNavigate();
-    const { user, profile, loading, isAuthenticated, signOut, refreshProfile, checkUnlockStatus } = useAuth();
+    const { user, profile, loading, isAuthenticated, signOut, refreshProfile, checkUnlockStatus, ownedCardIds } = useAuth();
     const [activeSubTab, setActiveSubTab] = useState('overview'); // 'overview' | 'cards' | 'titles' | 'settings'
     const [userCards, setUserCards] = useState([]);
     const [xpHistory, setXpHistory] = useState([]);
@@ -109,7 +109,7 @@ export function Profile() {
         }).catch(err => {
             console.error("Failed to load profile data:", err);
         });
-    }, [user, profile]);
+    }, [user, profile, ownedCardIds]);
 
     if (loading) {
         return (
