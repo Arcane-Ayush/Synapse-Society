@@ -655,10 +655,10 @@ function FactionsTab({ teams = [], userTeam = null, user, isLead, hackathonRegis
             ) : null}
 
             <div className="space-y-4">
-                {[...teams].sort((a, b) => (b.total_tokens || 0) - (a.total_tokens || 0)).map((team, index) => {
+                {[...teams].sort((a, b) => (b.tokens || 0) - (a.tokens || 0)).map((team, index) => {
                     const rank = index + 1;
                     const isFirst = rank === 1;
-                    const sortedTeams = [...teams].sort((a, b) => (b.total_tokens || 0) - (a.total_tokens || 0));
+                    const sortedTeams = [...teams].sort((a, b) => (b.tokens || 0) - (a.tokens || 0));
                     const maxTokens = sortedTeams[0]?.tokens || 1;
 
                     return (

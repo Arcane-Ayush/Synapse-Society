@@ -116,8 +116,8 @@
     @apply antialiased;
     overflow-x: hidden;
 
-    /* Sleek minimal dot cursor */
-    cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='4' fill='%23A855F7' fill-opacity='1'/%3E%3Ccircle cx='12' cy='12' r='8' stroke='%23A855F7' stroke-width='1' stroke-opacity='0.4'/%3E%3C/svg%3E") 12 12, auto;
+    /* Precision Cyber Pointer (Dark Nebula default) */
+    cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 2L20 11L12 13L9 21L3 2Z' fill='%23A855F7' stroke='%23C084FC' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='3' cy='2' r='1.5' fill='%23FFFFFF'/%3E%3C/svg%3E") 3 2, auto;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -524,11 +524,29 @@
   50% { clip-path: polygon(12px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%); }
   75% { clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%); }
 }
-/* Custom Cyber Cursor */
+/* === Theme-Aware Precision Cyber Cursors === */
+/* Dark Nebula Default & Hover */
 body {
-  cursor: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="4" fill="%23A855F7" opacity="0.8"/><circle cx="12" cy="12" r="10" stroke="%237C3AED" stroke-width="1.5" opacity="0.5"/></svg>') 12 12, auto;
+  cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 2L20 11L12 13L9 21L3 2Z' fill='%23A855F7' stroke='%23C084FC' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='3' cy='2' r='1.5' fill='%23FFFFFF'/%3E%3C/svg%3E") 3 2, auto;
 }
 
 a, button, [role="button"], input, select, textarea, .cursor-pointer {
-  cursor: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5" fill="%23D946EF"/><circle cx="12" cy="12" r="11" stroke="%23D946EF" stroke-width="2" opacity="0.9"/></svg>') 12 12, pointer !important;
+  cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 2L20 11L12 13L9 21L3 2Z' fill='%23EC4899' stroke='%23F472B6' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='13' r='2.5' fill='%23F472B6' opacity='0.7'/%3E%3Ccircle cx='3' cy='2' r='1.5' fill='%23FFFFFF'/%3E%3C/svg%3E") 3 2, pointer !important;
 }
+
+/* Solar Flare Default & Hover */
+[data-theme="orange"] body,
+[data-theme="orange"] {
+  cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 2L20 11L12 13L9 21L3 2Z' fill='%23EA580C' stroke='%23FB923C' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='3' cy='2' r='1.5' fill='%23431407'/%3E%3C/svg%3E") 3 2, auto;
+}
+
+[data-theme="orange"] a,
+[data-theme="orange"] button,
+[data-theme="orange"] [role="button"],
+[data-theme="orange"] input,
+[data-theme="orange"] select,
+[data-theme="orange"] textarea,
+[data-theme="orange"] .cursor-pointer {
+  cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 2L20 11L12 13L9 21L3 2Z' fill='%23C2410C' stroke='%23F97316' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='13' r='2.5' fill='%23F97316' opacity='0.7'/%3E%3Ccircle cx='3' cy='2' r='1.5' fill='%23FFF7ED'/%3E%3C/svg%3E") 3 2, pointer !important;
+}
+
