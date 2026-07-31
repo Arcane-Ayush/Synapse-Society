@@ -221,11 +221,95 @@ export async function acceptMission(missionId, userId) {
     const { data, error } = await supabase
         .from('user_missions')
         .insert([
-            { mission_id: missionId, user_id: userId, status: 'In Progress', started_at: new Date().toISOString() }
+            { mission_id: missionId, user_id: userId, status: 'in_progress', started_at: new Date().toISOString() }
         ])
         .select();
         
     return { data, error };
+}
+
+/**
+ * Submit proof URL and/or Image for an accepted quest.
+ */
+export async function submitMissionProof(missionId, userId, submissionUrl = '', submissionNotes = '', submissionImageUrl = null) {
+    if (!missionId || !userId) {
+        return { data: null, error: new Error('Missing user or quest identification.') };
+    }
+    if (!submissionUrl && !submissionImageUrl) {
+        return { data: null, error: new Error('Please provide a proof URL or upload an image proof.') };
+    }
+    const { data, error } = await supabase
+        .from('user_missions')
+        .update({
+            status: 'submitted',
+            submission_url: submissionUrl || null,
+            submission_notes: submissionNotes || null,
+            submission_image_url: submissionImageUrl || null,
+            submitted_at: new Date().toISOString()
+        })
+        .eq('mission_id', missionId)
+        .eq('user_id', userId)
+        .select();
+    return { data, error };
+}
+
+/**
+ * Fetch all pending quest submissions for Lead/Admin review.
+ */
+export async function getPendingSubmissions() {
+    const { data, error } = await supabase
+        .from('user_missions')
+        .select(`
+            *,
+            profiles:user_id (id, display_name, username, avatar_url, email),
+            missions:mission_id (id, title, xp_reward, type, assigned_to, proof_type)
+        `)
+        .eq('status', 'submitted')
+        .order('submitted_at', { ascending: false });
+    return { data: data || [], error };
+}
+
+/**
+ * Approve or Reject a submitted quest.
+ */
+export async function reviewMissionSubmission(userMissionId, targetUserId, missionTitle, xpReward, approved) {
+    if (approved) {
+        // 1. Award XP via RPC
+        const { data: xpRes, error: xpErr } = await supabase.rpc('award_xp', {
+            p_user_id: targetUserId,
+            p_amount: xpReward || 50,
+            p_reason: `Quest Completed: ${missionTitle}`,
+            p_source: 'quest_completion',
+            p_reference_id: null
+        });
+        if (xpErr) return { data: null, error: xpErr };
+
+        // 2. Mark user_mission as completed
+        const { data, error } = await supabase
+            .from('user_missions')
+            .update({
+                status: 'completed',
+                completed_at: new Date().toISOString(),
+                xp_awarded: xpReward
+            })
+            .eq('id', userMissionId)
+            .select();
+        return { data, error };
+    } else {
+        // Reject -> reset to in_progress so user can re-submit
+        const { data, error } = await supabase
+            .from('user_missions')
+            .update({
+                status: 'in_progress',
+                submission_url: null,
+                submission_notes: null,
+                submission_image_url: null,
+                submitted_at: null
+            })
+            .eq('id', userMissionId)
+            .select();
+        return { data, error };
+    }
 }
 
 /**
@@ -235,7 +319,7 @@ export async function getTeams() {
     const { data, error } = await supabase
         .from('teams')
         .select('*, team_members(count)')
-        .order('total_tokens', { ascending: false });
+        .order('tokens', { ascending: false });
 
     if (error) return { data: null, error };
 

@@ -203,18 +203,175 @@ const MISSION_TYPE_COLORS = {
     Community: '#3B82F6',
 };
 
-function MissionsTab({ missions = [], userMissions = [], user, refreshMissions }) {
+function MissionsTab({ missions = [], userMissions = [], user, refreshMissions, setUserMissions }) {
+    const { isLead, refreshProfile } = useAuth();
     const [acceptingId, setAcceptingId] = useState(null);
+    const [acceptError, setAcceptError] = useState(null);
+
+    // Proof Submission Modal State
+    const [submittingMission, setSubmittingMission] = useState(null);
+    const [submissionUrl, setSubmissionUrl] = useState('');
+    const [submissionNotes, setSubmissionNotes] = useState('');
+    const [submissionImage, setSubmissionImage] = useState(null); // compressed Base64
+    const [imageError, setImageError] = useState(null);
+    const [submittingLoading, setSubmittingLoading] = useState(false);
+
+    // Lead Review Drawer State
+    const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [pendingSubmissions, setPendingSubmissions] = useState([]);
+    const [reviewLoading, setReviewLoading] = useState(false);
+    const [actioningId, setActioningId] = useState(null);
+    const [previewImageModal, setPreviewImageModal] = useState(null);
 
     const handleAcceptQuest = async (missionId) => {
         if (!user) return;
         setAcceptingId(missionId);
-        const { acceptMission } = await import('../lib/auth');
-        const res = await acceptMission(missionId, user.id);
-        if (!res.error && refreshMissions) {
-            await refreshMissions();
+        setAcceptError(null);
+        try {
+            const { acceptMission } = await import('../lib/auth');
+            const res = await acceptMission(missionId, user.id);
+            if (res.error) {
+                console.error('[Quests] Accept mission error:', res.error);
+                setAcceptError(res.error.message || 'Failed to accept quest');
+            } else {
+                if (setUserMissions) {
+                    setUserMissions(prev => [...prev, { mission_id: missionId, user_id: user.id, status: 'in_progress' }]);
+                }
+                if (refreshMissions) {
+                    await refreshMissions();
+                }
+            }
+        } catch (err) {
+            console.error('[Quests] Accept mission exception:', err);
+            setAcceptError(err.message || 'An error occurred');
+        } finally {
+            setAcceptingId(null);
         }
-        setAcceptingId(null);
+    };
+
+    const handleImageSelect = (e) => {
+        const file = e.target.files?.[0];
+        setImageError(null);
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            setImageError('Selected file must be an image.');
+            return;
+        }
+
+        // Raw size limit: 3MB
+        if (file.size > 3 * 1024 * 1024) {
+            setImageError('File size is too large (max 3MB raw file limit).');
+            return;
+        }
+
+        // Compress image via Canvas API to ensure < 500KB JPEG
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const maxDim = 900;
+
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width * maxDim) / height);
+                        height = maxDim;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compress to JPEG 70% quality
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                setSubmissionImage(compressedDataUrl);
+            };
+            img.onerror = () => setImageError('Failed to load image.');
+            img.src = event.target.result;
+        };
+        reader.onerror = () => setImageError('Failed to read image file.');
+        reader.readAsDataURL(file);
+    };
+
+    const handleSubmitProof = async (e) => {
+        e.preventDefault();
+        if (!submittingMission || !user) return;
+
+        const proofType = submittingMission.proof_type || 'url';
+        if ((proofType === 'url' || proofType === 'both') && !submissionUrl.trim() && !submissionImage) {
+            alert('Please provide a valid proof URL.');
+            return;
+        }
+        if (proofType === 'image' && !submissionImage) {
+            alert('Please upload an image proof.');
+            return;
+        }
+
+        setSubmittingLoading(true);
+        try {
+            const { submitMissionProof } = await import('../lib/auth');
+            const res = await submitMissionProof(
+                submittingMission.id,
+                user.id,
+                submissionUrl.trim(),
+                submissionNotes.trim(),
+                submissionImage
+            );
+
+            if (res.error) {
+                alert(res.error.message || 'Failed to submit proof.');
+            } else {
+                if (setUserMissions) {
+                    setUserMissions(prev => prev.map(um => um.mission_id === submittingMission.id ? { ...um, status: 'submitted', submission_url: submissionUrl.trim() } : um));
+                }
+                if (refreshMissions) await refreshMissions();
+                setSubmittingMission(null);
+                setSubmissionUrl('');
+                setSubmissionNotes('');
+                setSubmissionImage(null);
+                setImageError(null);
+            }
+        } catch (err) {
+            console.error('Submit error:', err);
+            alert(err.message || 'Error submitting proof.');
+        } finally {
+            setSubmittingLoading(false);
+        }
+    };
+
+    const loadPendingSubmissions = async () => {
+        setReviewLoading(true);
+        const { getPendingSubmissions } = await import('../lib/auth');
+        const res = await getPendingSubmissions();
+        if (res.data) setPendingSubmissions(res.data);
+        setReviewLoading(false);
+    };
+
+    const handleReviewAction = async (userMissionId, targetUserId, missionTitle, xpReward, approved) => {
+        setActioningId(userMissionId);
+        try {
+            const { reviewMissionSubmission } = await import('../lib/auth');
+            const res = await reviewMissionSubmission(userMissionId, targetUserId, missionTitle, xpReward, approved);
+            if (res.error) {
+                alert(res.error.message || 'Review action failed');
+            } else {
+                setPendingSubmissions(prev => prev.filter(s => s.id !== userMissionId));
+                if (refreshMissions) await refreshMissions();
+                if (refreshProfile) await refreshProfile();
+            }
+        } catch (err) {
+            console.error('Review action error:', err);
+        } finally {
+            setActioningId(null);
+        }
     };
 
     const worldEvent = missions.find(m => m.assigned_to === 'All');
@@ -224,20 +381,21 @@ function MissionsTab({ missions = [], userMissions = [], user, refreshMissions }
 
     const QuestCard = ({ mission, i }) => {
         const typeColor = MISSION_TYPE_COLORS[mission.type] || 'var(--synapse-violet-light)';
-        const isWorld = mission.assignedTo === 'All';
-        const isCoop = mission.assignedTo === 'Teams';
+        const isWorld = mission.assigned_to === 'All';
+        const isCoop = mission.assigned_to === 'Teams';
         
         const participantCount = mission.user_missions?.[0]?.count || 0;
         const maxParticipants = mission.max_participants;
         const isFull = maxParticipants !== null && participantCount >= maxParticipants;
         
         const myUserMission = userMissions.find(um => um.mission_id === mission.id);
-        const hasAccepted = !!myUserMission;
+        const status = myUserMission?.status;
+        const isAccepted = status === 'in_progress';
+        const isSubmitted = status === 'submitted';
+        const isCompleted = status === 'completed';
         const isAccepting = acceptingId === mission.id;
         
-        // For now, allow accepting if it's open/all, not full, and not already accepted
-        // Later this can be expanded for specific Team assignments
-        const canAccept = !hasAccepted && !isFull && (mission.assigned_to === 'Open' || mission.assigned_to === 'All');
+        const canAccept = !myUserMission && !isFull && (mission.assigned_to === 'Open' || mission.assigned_to === 'All');
 
         return (
             <motion.div
@@ -245,7 +403,7 @@ function MissionsTab({ missions = [], userMissions = [], user, refreshMissions }
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.1, ease: [0.23, 1, 0.32, 1] }}
-                className={`quest-card p-6 group ${hasAccepted ? 'border-green-500/30' : ''}`}
+                className={`quest-card p-6 group ${isCompleted ? 'border-green-500/40 bg-green-500/5' : isSubmitted ? 'border-amber-500/40' : isAccepted ? 'border-purple-500/40' : ''}`}
             >
                 <div className="flex justify-between items-start mb-5">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -284,7 +442,7 @@ function MissionsTab({ missions = [], userMissions = [], user, refreshMissions }
                                 clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
                             }}
                         >
-                            {mission.type.toUpperCase()}
+                            {mission.type?.toUpperCase()}
                         </span>
                     </div>
                     <span
@@ -303,9 +461,9 @@ function MissionsTab({ missions = [], userMissions = [], user, refreshMissions }
                                 className="font-bold px-2 py-0.5 rounded-md text-blue-400"
                                 style={{ background: 'rgba(59,130,246,0.1)' }}
                             >
-                                {mission.assignedTo}
+                                {mission.assigned_to}
                             </span>
-                        ) : mission.assignedTo === 'Open' ? (
+                        ) : mission.assigned_to === 'Open' ? (
                             <span
                                 className="font-bold px-2 py-0.5 text-purple-300 animate-pulse"
                                 style={{ background: 'rgba(var(--synapse-violet-rgb), 0.1)', borderRadius: '6px' }}
@@ -315,7 +473,7 @@ function MissionsTab({ missions = [], userMissions = [], user, refreshMissions }
                         ) : (
                             <>Assigned to{' '}
                                 <span style={{ color: 'var(--synapse-violet-light)', background: 'rgba(var(--synapse-violet-rgb), 0.1)', padding: '1px 6px', borderRadius: '4px' }}>
-                                    {mission.assignedTo}
+                                    {mission.assigned_to}
                                 </span>
                             </>
                         )}
@@ -360,7 +518,7 @@ function MissionsTab({ missions = [], userMissions = [], user, refreshMissions }
                             <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
                             <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
                         </svg>
-                        {mission.xp || mission.tokens || 0}
+                        {mission.xp_reward || mission.xp || mission.tokens || 0}
                         <span className="text-[9px] font-mono tracking-widest ml-0.5" style={{ color: 'rgba(252,211,77,0.6)' }}>XP</span>
                     </div>
                 </div>
@@ -373,20 +531,41 @@ function MissionsTab({ missions = [], userMissions = [], user, refreshMissions }
                         )}
                     </div>
                     
-                    <button
-                        onClick={() => handleAcceptQuest(mission.id)}
-                        disabled={!canAccept || isAccepting}
-                        className="px-4 py-1.5 rounded text-[10px] font-bold tracking-widest uppercase transition-all"
-                        style={{
-                            background: hasAccepted ? 'rgba(16, 185, 129, 0.1)' : (canAccept ? 'rgba(var(--synapse-violet-rgb), 0.15)' : 'rgba(var(--bg-glass-rgb), 0.5)'),
-                            color: hasAccepted ? '#10B981' : (canAccept ? 'var(--text-primary)' : 'rgba(var(--text-secondary-rgb), 0.4)'),
-                            border: `1px solid ${hasAccepted ? 'rgba(16, 185, 129, 0.3)' : (canAccept ? 'rgba(var(--synapse-violet-rgb), 0.3)' : 'transparent')}`,
-                            cursor: (canAccept && !isAccepting) ? 'pointer' : 'not-allowed',
-                            opacity: isAccepting ? 0.7 : 1
-                        }}
-                    >
-                        {isAccepting ? 'ACCEPTING...' : (hasAccepted ? 'IN PROGRESS' : (isFull ? 'FULL' : (canAccept ? 'ACCEPT QUEST' : 'LOCKED')))}
-                    </button>
+                    {isCompleted ? (
+                        <span className="px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                            <CheckCircle2 size={12} /> COMPLETED
+                        </span>
+                    ) : isSubmitted ? (
+                        <span className="px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase bg-amber-500/10 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                            ⏳ PENDING REVIEW
+                        </span>
+                    ) : isAccepted ? (
+                        <button
+                            onClick={() => setSubmittingMission(mission)}
+                            className="px-4 py-1.5 rounded text-[10px] font-bold tracking-widest uppercase transition-all shadow-md hover:scale-105"
+                            style={{
+                                background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
+                                color: 'white',
+                            }}
+                        >
+                            📤 SUBMIT PROOF
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => handleAcceptQuest(mission.id)}
+                            disabled={!canAccept || isAccepting}
+                            className="px-4 py-1.5 rounded text-[10px] font-bold tracking-widest uppercase transition-all"
+                            style={{
+                                background: canAccept ? 'rgba(var(--synapse-violet-rgb), 0.15)' : 'rgba(var(--bg-glass-rgb), 0.5)',
+                                color: canAccept ? 'var(--text-primary)' : 'rgba(var(--text-secondary-rgb), 0.4)',
+                                border: `1px solid ${canAccept ? 'rgba(var(--synapse-violet-rgb), 0.3)' : 'transparent'}`,
+                                cursor: (canAccept && !isAccepting) ? 'pointer' : 'not-allowed',
+                                opacity: isAccepting ? 0.7 : 1
+                            }}
+                        >
+                            {isAccepting ? 'ACCEPTING...' : (isFull ? 'FULL' : (canAccept ? 'ACCEPT QUEST' : 'LOCKED'))}
+                        </button>
+                    )}
                 </div>
             </motion.div>
         );
@@ -402,20 +581,45 @@ function MissionsTab({ missions = [], userMissions = [], user, refreshMissions }
                         Complete quests to earn tokens and XP for your card progression.
                     </p>
                 </div>
-                <div
-                    className="text-center px-4 py-3"
-                    style={{
-                        background: 'rgba(var(--synapse-violet-rgb), 0.08)',
-                        border: '1px solid rgba(var(--synapse-violet-rgb), 0.15)',
-                        clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
-                    }}
-                >
-                    <div className="text-2xl font-black" style={{ fontFamily: 'Space Grotesk', color: 'var(--synapse-violet-light)' }}>
-                        {missions.filter(m => m.status === 'Active').length}
+                
+                <div className="flex items-center gap-4">
+                    {isLead && (
+                        <button
+                            onClick={() => { setIsReviewOpen(true); loadPendingSubmissions(); }}
+                            className="px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase transition-transform hover:scale-105 shadow-md flex items-center gap-2"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(236,72,153,0.2), rgba(124,58,237,0.2))',
+                                color: 'var(--synapse-pink-light)',
+                                border: '1px solid rgba(236,72,153,0.4)',
+                            }}
+                        >
+                            <Shield size={14} />
+                            Review Submissions
+                        </button>
+                    )}
+                    
+                    <div
+                        className="text-center px-4 py-3"
+                        style={{
+                            background: 'rgba(var(--synapse-violet-rgb), 0.08)',
+                            border: '1px solid rgba(var(--synapse-violet-rgb), 0.15)',
+                            clipPath: 'polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)',
+                        }}
+                    >
+                        <div className="text-2xl font-black" style={{ fontFamily: 'Space Grotesk', color: 'var(--synapse-violet-light)' }}>
+                            {missions.filter(m => m.status === 'Active').length}
+                        </div>
+                        <div className="text-[9px] font-mono" style={{ color: 'rgba(var(--text-secondary-rgb), 0.35)' }}>ACTIVE</div>
                     </div>
-                    <div className="text-[9px] font-mono" style={{ color: 'rgba(var(--text-secondary-rgb), 0.35)' }}>ACTIVE</div>
                 </div>
             </div>
+
+            {/* Error message */}
+            {acceptError && (
+                <div className="mb-6 p-3 rounded-lg text-xs font-mono text-center" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#FCA5A5', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                    ❌ {acceptError}
+                </div>
+            )}
 
             {/* World event — full width */}
             {worldEvent && (
@@ -451,6 +655,276 @@ function MissionsTab({ missions = [], userMissions = [], user, refreshMissions }
                         ))}
                     </div>
                 </div>
+            )}
+
+            {/* Modal: Submit Proof of Work */}
+            {createPortal(
+                <AnimatePresence>
+                    {submittingMission && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                            onClick={() => setSubmittingMission(null)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.95, y: 15 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.95, y: 15 }}
+                                onClick={e => e.stopPropagation()}
+                                className="p-6 md:p-8 rounded-3xl max-w-lg w-full relative border border-purple-500/30"
+                                style={{ background: 'var(--bg-glass-fallback)', boxShadow: '0 24px 60px rgba(0,0,0,0.9)' }}
+                            >
+                                <h3 className="text-xl font-black mb-2" style={{ fontFamily: 'Space Grotesk' }}>
+                                    Submit Quest Proof
+                                </h3>
+                                <p className="text-xs mb-6 text-purple-300/70 font-mono">
+                                    Quest: <strong className="text-white">{submittingMission.title}</strong> (+{submittingMission.xp_reward || 0} XP)
+                                </p>
+
+                                <form onSubmit={handleSubmitProof} className="space-y-4">
+                                    {(submittingMission.proof_type === 'url' || submittingMission.proof_type === 'both' || !submittingMission.proof_type) && (
+                                        <div>
+                                            <label className="block text-[10px] font-mono tracking-widest uppercase mb-1.5 text-purple-300">
+                                                Proof URL {submittingMission.proof_type === 'image' ? '(Optional)' : '*'} (GitHub / Drive / Figma / Demo)
+                                            </label>
+                                            <input
+                                                type="url"
+                                                required={submittingMission.proof_type === 'url'}
+                                                placeholder="https://github.com/username/project or https://drive.google.com/..."
+                                                value={submissionUrl}
+                                                onChange={e => setSubmissionUrl(e.target.value)}
+                                                className="w-full px-4 py-3 rounded-xl bg-black/50 border border-purple-500/30 text-sm font-mono text-white focus:outline-none focus:border-purple-400"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {(submittingMission.proof_type === 'image' || submittingMission.proof_type === 'both') && (
+                                        <div>
+                                            <label className="block text-[10px] font-mono tracking-widest uppercase mb-1.5 text-purple-300">
+                                                Image Proof * (Screenshot / Photo, max 1MB)
+                                            </label>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                required={submittingMission.proof_type === 'image'}
+                                                onChange={handleImageSelect}
+                                                className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-purple-500/30 text-xs font-mono text-white focus:outline-none file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-500/20 file:text-purple-300 hover:file:bg-purple-500/30"
+                                            />
+                                            {imageError && (
+                                                <p className="text-xs text-red-400 mt-1 font-mono">{imageError}</p>
+                                            )}
+                                            {submissionImage && (
+                                                <div className="mt-3 relative rounded-xl overflow-hidden border border-purple-500/40 max-h-40 bg-black/60">
+                                                    <img src={submissionImage} alt="Proof preview" className="w-full h-36 object-contain" />
+                                                    <span className="absolute bottom-2 right-2 text-[9px] font-mono bg-black/80 px-2 py-0.5 rounded text-emerald-300">
+                                                        ✓ Compressed (&lt; 1MB)
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className="block text-[10px] font-mono tracking-widest uppercase mb-1.5 text-purple-300">
+                                            Notes / Comments (Optional)
+                                        </label>
+                                        <textarea
+                                            rows={2}
+                                            placeholder="Brief note about your submission..."
+                                            value={submissionNotes}
+                                            onChange={e => setSubmissionNotes(e.target.value)}
+                                            className="w-full px-4 py-3 rounded-xl bg-black/50 border border-purple-500/30 text-sm font-mono text-white focus:outline-none focus:border-purple-400"
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-3 pt-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setSubmittingMission(null); setSubmissionImage(null); }}
+                                            className="flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-widest bg-white/5 border border-white/10 hover:bg-white/10"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={submittingLoading}
+                                            className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50"
+                                            style={{ background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-pink))', color: 'white' }}
+                                        >
+                                            {submittingLoading ? 'Submitting...' : 'Submit Proof'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
+
+            {/* Modal: Lead Review Submissions Drawer */}
+            {createPortal(
+                <AnimatePresence>
+                    {isReviewOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                            onClick={() => setIsReviewOpen(false)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.95, y: 15 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.95, y: 15 }}
+                                onClick={e => e.stopPropagation()}
+                                className="p-6 md:p-8 rounded-3xl max-w-3xl w-full max-h-[85vh] overflow-y-auto relative border border-pink-500/30"
+                                style={{ background: 'var(--bg-glass-fallback)', boxShadow: '0 24px 60px rgba(0,0,0,0.9)' }}
+                            >
+                                <div className="flex justify-between items-center mb-6 border-b border-pink-500/20 pb-4">
+                                    <div>
+                                        <h3 className="text-xl font-black flex items-center gap-2" style={{ fontFamily: 'Space Grotesk' }}>
+                                            <Shield size={20} className="text-pink-400" /> Pending Quest Submissions
+                                        </h3>
+                                        <p className="text-xs text-purple-300/70 font-mono mt-1">
+                                            Review member submissions, verify URL or Image proof, and award XP.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsReviewOpen(false)}
+                                        className="text-xs font-mono px-3 py-1.5 rounded bg-white/10 hover:bg-white/20"
+                                    >
+                                        ✕ CLOSE
+                                    </button>
+                                </div>
+
+                                {reviewLoading ? (
+                                    <div className="py-12 text-center font-mono text-sm text-purple-300">
+                                        Loading submissions...
+                                    </div>
+                                ) : pendingSubmissions.length === 0 ? (
+                                    <div className="py-12 text-center font-mono text-sm text-purple-300/50">
+                                        🎉 No pending quest submissions to review!
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {pendingSubmissions.map(sub => (
+                                            <div
+                                                key={sub.id}
+                                                className="p-5 rounded-2xl border border-purple-500/20 bg-black/40 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center"
+                                            >
+                                                <div className="space-y-1 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold text-sm text-white">
+                                                            {sub.profiles?.display_name || sub.profiles?.username || 'Member'}
+                                                        </span>
+                                                        <span className="text-[10px] font-mono text-purple-300/60">
+                                                            @{sub.profiles?.username || 'user'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-xs text-pink-300 font-medium">
+                                                        Quest: {sub.missions?.title} (+{sub.missions?.xp_reward} XP)
+                                                    </div>
+
+                                                    {sub.submission_url && (
+                                                        <a
+                                                            href={sub.submission_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-xs font-mono text-blue-400 hover:underline flex items-center gap-1 mt-1 break-all"
+                                                        >
+                                                            🔗 {sub.submission_url} ↗
+                                                        </a>
+                                                    )}
+
+                                                    {sub.submission_image_url && (
+                                                        <div className="mt-2">
+                                                            <button
+                                                                onClick={() => setPreviewImageModal(sub.submission_image_url)}
+                                                                className="group relative rounded-xl overflow-hidden border border-purple-500/30 block hover:border-purple-400 transition-colors"
+                                                            >
+                                                                <img
+                                                                    src={sub.submission_image_url}
+                                                                    alt="Image proof"
+                                                                    className="h-28 w-44 object-cover group-hover:scale-105 transition-transform"
+                                                                />
+                                                                <span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-mono text-white transition-opacity">
+                                                                    🔍 Click to View
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {sub.submission_notes && (
+                                                        <p className="text-xs italic text-gray-400 mt-1">
+                                                            "{sub.submission_notes}"
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex gap-2 flex-shrink-0 w-full md:w-auto">
+                                                    <button
+                                                        onClick={() => handleReviewAction(sub.id, sub.user_id, sub.missions?.title, sub.missions?.xp_reward, false)}
+                                                        disabled={actioningId === sub.id}
+                                                        className="flex-1 md:flex-initial px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20"
+                                                    >
+                                                        REJECT
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleReviewAction(sub.id, sub.user_id, sub.missions?.title, sub.missions?.xp_reward, true)}
+                                                        disabled={actioningId === sub.id}
+                                                        className="flex-1 md:flex-initial px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30"
+                                                    >
+                                                        {actioningId === sub.id ? 'VERIFYING...' : 'APPROVE & AWARD XP'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
+
+            {/* Modal: Fullscreen Image Lightbox Preview */}
+            {createPortal(
+                <AnimatePresence>
+                    {previewImageModal && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+                            onClick={() => setPreviewImageModal(null)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9 }}
+                                animate={{ scale: 1 }}
+                                exit={{ scale: 0.9 }}
+                                onClick={e => e.stopPropagation()}
+                                className="relative max-w-4xl w-full p-2 bg-black/80 rounded-2xl border border-purple-500/30 flex flex-col items-center"
+                            >
+                                <button
+                                    onClick={() => setPreviewImageModal(null)}
+                                    className="absolute top-4 right-4 text-white bg-black/70 px-3 py-1 rounded-full text-xs font-mono border border-white/20 hover:bg-white/20"
+                                >
+                                    ✕ CLOSE
+                                </button>
+                                <img
+                                    src={previewImageModal}
+                                    alt="Full size proof"
+                                    className="max-h-[80vh] w-auto object-contain rounded-xl"
+                                />
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>,
+                document.body
             )}
         </div>
     );
@@ -1528,7 +2002,7 @@ export function Nexus() {
                         ) : (
                             <>
                                 {activeTab === 'cards' && <CardsTab setSelectedCard={setSelectedCard} membershipCards={membershipCards} eventCards={eventCards} />}
-                                {activeTab === 'missions' && <MissionsTab missions={missions} userMissions={userMissions} user={user} refreshMissions={refreshMissions} />}
+                                {activeTab === 'missions' && <MissionsTab missions={missions} userMissions={userMissions} user={user} refreshMissions={refreshMissions} setUserMissions={setUserMissions} />}
                                 {activeTab === 'factions' && <FactionsTab 
                                     teams={teams} 
                                     userTeam={userTeam} 
