@@ -25,7 +25,7 @@ export function Navbar() {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
-    const { isAuthenticated, profile, signOut } = useAuth();
+    const { isAuthenticated, profile, signOut, isFormRedeemed } = useAuth();
 
     async function handleSignOut() {
         await signOut();
@@ -43,6 +43,8 @@ export function Navbar() {
     }, []);
 
     useEffect(() => { setIsOpen(false); }, [location]);
+
+    const displayedNavItems = isFormRedeemed ? navItems.filter(item => item.name !== "About") : navItems;
 
     return (
         <>
@@ -99,7 +101,7 @@ export function Navbar() {
 
                     {/* Desktop Nav */}
                     <nav className="hidden md:flex items-center gap-1">
-                        {navItems.map((item) => {
+                        {displayedNavItems.map((item) => {
                             const isActive = location.pathname === item.path;
                             const isNexus = item.name === "Nexus";
                             return (
@@ -213,35 +215,53 @@ export function Navbar() {
                                     ↗
                                 </span>
                             </a>
-                            <a
-                                href="https://synapse-form.vercel.app"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group flex items-center gap-1.5 text-[10px] font-bold tracking-widest transition-all duration-300 relative overflow-hidden"
-                                style={{
-                                    fontFamily: 'Space Mono',
-                                    color: 'var(--text-primary)',
-                                    background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
-                                    padding: '6px 16px',
-                                    clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)',
-                                    textDecoration: 'none',
-                                    boxShadow: '0 0 20px rgba(var(--synapse-violet-rgb), 0.4)',
-                                }}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.filter = 'brightness(1.1)';
-                                    e.currentTarget.style.boxShadow = '0 0 30px rgba(var(--synapse-violet-light-rgb), 0.6)';
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.filter = 'brightness(1)';
-                                    e.currentTarget.style.boxShadow = '0 0 20px rgba(var(--synapse-violet-rgb), 0.4)';
-                                }}
-                            >
-                                <Zap size={10} />
-                                JOIN
-                                <span style={{ transition: 'transform 0.2s ease', display: 'inline-block' }} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
-                                    ↗
-                                </span>
-                            </a>
+                            {isFormRedeemed ? (
+                                <Link
+                                    to="/about"
+                                    className="group flex items-center gap-1.5 text-[10px] font-bold tracking-widest transition-all duration-300 relative overflow-hidden"
+                                    style={{
+                                        fontFamily: 'Space Mono',
+                                        color: 'var(--text-primary)',
+                                        background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
+                                        padding: '6px 16px',
+                                        clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)',
+                                        textDecoration: 'none',
+                                        boxShadow: '0 0 20px rgba(var(--synapse-violet-rgb), 0.4)',
+                                    }}
+                                >
+                                    ABOUT
+                                </Link>
+                            ) : (
+                                <a
+                                    href="https://synapse-form.vercel.app"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group flex items-center gap-1.5 text-[10px] font-bold tracking-widest transition-all duration-300 relative overflow-hidden"
+                                    style={{
+                                        fontFamily: 'Space Mono',
+                                        color: 'var(--text-primary)',
+                                        background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
+                                        padding: '6px 16px',
+                                        clipPath: 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)',
+                                        textDecoration: 'none',
+                                        boxShadow: '0 0 20px rgba(var(--synapse-violet-rgb), 0.4)',
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.filter = 'brightness(1.1)';
+                                        e.currentTarget.style.boxShadow = '0 0 30px rgba(var(--synapse-violet-light-rgb), 0.6)';
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.filter = 'brightness(1)';
+                                        e.currentTarget.style.boxShadow = '0 0 20px rgba(var(--synapse-violet-rgb), 0.4)';
+                                    }}
+                                >
+                                    <Zap size={10} />
+                                    JOIN
+                                    <span style={{ transition: 'transform 0.2s ease', display: 'inline-block' }} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+                                        ↗
+                                    </span>
+                                </a>
+                            )}
                         </div>
 
                         {/* Mobile Auth Button (glowing user icon on header) */}
@@ -310,7 +330,7 @@ export function Navbar() {
                         }}
                     >
                         <div className="p-3 flex flex-col gap-1">
-                            {navItems.map((item) => {
+                            {displayedNavItems.map((item) => {
                                 const isActive = location.pathname === item.path;
                                 const isNexus = item.name === "Nexus";
                                 return (
@@ -369,10 +389,40 @@ export function Navbar() {
                             )}
 
                             <div className="mt-2 pt-2 flex gap-2" style={{ borderTop: '1px solid rgba(var(--synapse-violet-rgb), 0.15)' }}>
-                                {externalLinks.map(link => (
+                                <a
+                                    href="https://the-synapse-hub.vercel.app"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-bold tracking-widest transition-all duration-150"
+                                    style={{
+                                        fontFamily: 'Space Mono',
+                                        color: 'rgba(var(--synapse-violet-light-rgb), 0.85)',
+                                        background: 'rgba(var(--synapse-violet-rgb), 0.08)',
+                                        border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)',
+                                        borderRadius: '10px',
+                                    }}
+                                >
+                                    Synapse Hub ↗
+                                </a>
+
+                                {isFormRedeemed ? (
+                                    <Link
+                                        to="/about"
+                                        onClick={() => setIsOpen(false)}
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-bold tracking-widest transition-all duration-150"
+                                        style={{
+                                            fontFamily: 'Space Mono',
+                                            color: 'rgba(var(--synapse-violet-light-rgb), 0.85)',
+                                            background: 'rgba(var(--synapse-violet-rgb), 0.08)',
+                                            border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)',
+                                            borderRadius: '10px',
+                                        }}
+                                    >
+                                        About
+                                    </Link>
+                                ) : (
                                     <a
-                                        key={link.name}
-                                        href={link.url}
+                                        href="https://synapse-form.vercel.app"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-bold tracking-widest transition-all duration-150"
@@ -384,9 +434,9 @@ export function Navbar() {
                                             borderRadius: '10px',
                                         }}
                                     >
-                                        {link.label} ↗
+                                        Apply Now ↗
                                     </a>
-                                ))}
+                                )}
                             </div>
                         </div>
                     </motion.div>

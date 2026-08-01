@@ -12,7 +12,37 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [profile, setProfile] = useState(null);
     const [ownedCardIds, setOwnedCardIds] = useState([]);
+    const [isFormRedeemed, setIsFormRedeemed] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    async function checkFormRedemption(authUser) {
+        if (!authUser) { setIsFormRedeemed(false); return; }
+        try {
+            const { data: xpRecord } = await supabase
+                .from('xp_history')
+                .select('id')
+                .eq('user_id', authUser.id)
+                .eq('reason', 'Form Signup Reward')
+                .maybeSingle();
+
+            if (xpRecord) {
+                setIsFormRedeemed(true);
+                return;
+            }
+
+            const { data: cardRecord } = await supabase
+                .from('user_cards')
+                .select('id')
+                .eq('user_id', authUser.id)
+                .eq('card_id', 'SAP-001')
+                .maybeSingle();
+
+            setIsFormRedeemed(!!cardRecord);
+        } catch (e) {
+            console.error('Form redemption check error:', e);
+            setIsFormRedeemed(false);
+        }
+    }
 
     async function loadCards(authUser) {
         if (!authUser) { setOwnedCardIds([]); return; }
@@ -22,12 +52,14 @@ export function AuthProvider({ children }) {
         } else {
             setOwnedCardIds([]);
         }
+        await checkFormRedemption(authUser);
     }
 
     async function loadProfile(authUser) {
         if (!authUser) {
             setProfile(null);
             setOwnedCardIds([]);
+            setIsFormRedeemed(false);
             return;
         }
         
@@ -43,6 +75,7 @@ export function AuthProvider({ children }) {
         } else {
             setOwnedCardIds([]);
         }
+        await checkFormRedemption(authUser);
     }
 
     useEffect(() => {
@@ -111,6 +144,7 @@ export function AuthProvider({ children }) {
         user,
         profile,
         ownedCardIds,
+        isFormRedeemed,
         loading,
         isAuthenticated: !!user,
         isAdmin: profile?.club_role === 'administrator',

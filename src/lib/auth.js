@@ -109,6 +109,12 @@ export async function updateProfile(userId, updates) {
         .eq('id', userId)
         .select()
         .single();
+
+    if (error) {
+        if (error.message?.includes('profiles_username_key') || error.message?.includes('unique constraint') || error.message?.includes('duplicate key')) {
+            return { data: null, error: new Error('Username already exists. Please choose a different username.') };
+        }
+    }
     return { data, error };
 }
 
@@ -319,7 +325,7 @@ export async function getTeams() {
     const { data, error } = await supabase
         .from('teams')
         .select('*, team_members(count)')
-        .order('tokens', { ascending: false });
+        .order('total_tokens', { ascending: false });
 
     if (error) return { data: null, error };
 
@@ -344,7 +350,14 @@ export async function getUserTeam(userId) {
         .select('*, teams(*)')
         .eq('user_id', userId)
         .maybeSingle();
-    return { data, error };
+
+    if (error || !data) return { data: null, error };
+
+    if (data.teams) {
+        data.teams.tokens = data.teams.total_tokens ?? data.teams.tokens ?? 0;
+    }
+
+    return { data, error: null };
 }
 
 /**
