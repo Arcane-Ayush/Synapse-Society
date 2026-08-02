@@ -70,8 +70,9 @@ function XPBar({ xp = 0, currentLevel = 0 }) {
 
 export function Profile() {
     const navigate = useNavigate();
-    const { user, profile, loading, isAuthenticated, signOut, refreshProfile, checkUnlockStatus, ownedCardIds } = useAuth();
-    const [activeSubTab, setActiveSubTab] = useState('overview'); // 'overview' | 'cards' | 'titles' | 'settings'
+    const { user, profile, loading, isAuthenticated, isLead, signOut, refreshProfile, checkUnlockStatus, ownedCardIds } = useAuth();
+    
+    const [activeSubTab, setActiveSubTab] = useState('overview'); // 'overview' | 'cards' | 'titles' | 'settings' | 'admin'
     const [userCards, setUserCards] = useState([]);
     const [xpHistory, setXpHistory] = useState([]);
     const [userRank, setUserRank] = useState(1);
@@ -87,8 +88,26 @@ export function Profile() {
     const [resendMessage, setResendMessage] = useState(null);
 
     const [isLoginOpen, setIsLoginOpen] = useState(false);
-
     const [allCards, setAllCards] = useState([]);
+
+    // Admin Dispatcher State
+    const [batchUserList, setBatchUserList] = useState('');
+    const [batchXpAmount, setBatchXpAmount] = useState(100);
+    const [batchXpReason, setBatchXpReason] = useState('Special Event Award');
+    const [batchCardId, setBatchCardId] = useState('');
+    const [availableCardsList, setAvailableCardsList] = useState([]);
+    const [batchLoading, setBatchLoading] = useState(false);
+    const [batchResults, setBatchResults] = useState(null);
+
+    useEffect(() => {
+        if (isLead) {
+            import('../lib/auth').then(({ getAllAvailableCards }) => {
+                getAllAvailableCards().then(res => {
+                    if (res.data) setAvailableCardsList(res.data);
+                });
+            });
+        }
+    }, [isLead]);
 
     useEffect(() => {
         if (!user) return;
@@ -224,6 +243,43 @@ export function Profile() {
         }
     }
 
+    async function handleBatchDispatch(e) {
+        e.preventDefault();
+        if (!batchUserList.trim()) return;
+        setBatchLoading(true);
+        setBatchResults(null);
+
+        const identifiers = batchUserList.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+
+        try {
+            const { bulkAwardRewards } = await import('../lib/auth');
+            const res = await bulkAwardRewards({
+                identifiers,
+                xpAmount: Number(batchXpAmount) || 0,
+                xpReason: batchXpReason.trim() || 'Admin Award',
+                cardId: batchCardId || null,
+                source: 'admin_award'
+            });
+
+            if (res.error) {
+                setBatchResults({ error: res.error.message });
+            } else {
+                setBatchResults({
+                    success: true,
+                    matchedCount: res.matchedCount,
+                    totalRequested: res.totalRequested,
+                    data: res.data
+                });
+                if (refreshProfile) await refreshProfile();
+            }
+        } catch (err) {
+            console.error('Batch error:', err);
+            setBatchResults({ error: err.message || 'Batch reward dispatch failed.' });
+        } finally {
+            setBatchLoading(false);
+        }
+    }
+
     async function handleSignOut() {
         await signOut();
         navigate('/');
@@ -234,6 +290,7 @@ export function Profile() {
         { id: 'cards', label: 'Vault', icon: <CreditCard size={14} /> },
         { id: 'titles', label: 'Titles & Badges', icon: <Trophy size={14} /> },
         { id: 'settings', label: 'Account & Safety', icon: <Shield size={14} /> },
+        ...(isLead ? [{ id: 'admin', label: 'Reward Dispatcher', icon: <Sparkles size={14} /> }] : []),
     ];
 
     const cardInspectPortal = typeof document !== 'undefined' ? createPortal(
@@ -699,6 +756,133 @@ export function Profile() {
                                 </div>
 
                             </div>
+                        </motion.div>
+                    )}
+
+                    {activeSubTab === 'admin' && isLead && (
+                        <motion.div
+                            key="admin"
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="p-6 md:p-8 rounded-3xl space-y-6"
+                            style={{ background: 'rgba(var(--bg-glass-rgb), 0.85)', border: '1px solid rgba(236,72,153,0.3)' }}
+                        >
+                            <div>
+                                <h3 className="text-lg font-black flex items-center gap-2" style={{ fontFamily: 'Space Grotesk' }}>
+                                    <Sparkles size={20} className="text-pink-400" /> Admin Reward Dispatcher
+                                </h3>
+                                <p className="text-xs text-purple-300/70 font-mono mt-1">
+                                    Award XP and custom cards to any list of users by typing or pasting usernames or emails.
+                                </p>
+                            </div>
+
+                            <form onSubmit={handleBatchDispatch} className="space-y-5">
+                                <div>
+                                    <label className="block text-[10px] font-mono tracking-widest uppercase mb-1.5 text-purple-300">
+                                        Member Usernames / Emails * (Separated by commas or newlines)
+                                    </label>
+                                    <textarea
+                                        rows={4}
+                                        required
+                                        placeholder="ayush2025official, rishikeshrana619, connect.ayushmishra.nets@gmail.com, ..."
+                                        value={batchUserList}
+                                        onChange={e => setBatchUserList(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-xl bg-black/50 border border-purple-500/30 text-sm font-mono text-white focus:outline-none focus:border-pink-400"
+                                    />
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] font-mono tracking-widest uppercase mb-1.5 text-purple-300">
+                                            XP Amount to Award
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="5"
+                                            placeholder="100"
+                                            value={batchXpAmount}
+                                            onChange={e => setBatchXpAmount(e.target.value)}
+                                            className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-purple-500/30 text-sm font-mono text-white focus:outline-none focus:border-pink-400"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-mono tracking-widest uppercase mb-1.5 text-purple-300">
+                                            Award Reason / Description
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Hackathon Winner, Special Contribution"
+                                            value={batchXpReason}
+                                            onChange={e => setBatchXpReason(e.target.value)}
+                                            className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-purple-500/30 text-sm font-mono text-white focus:outline-none focus:border-pink-400"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-mono tracking-widest uppercase mb-1.5 text-purple-300">
+                                        Grant Custom Card (Optional)
+                                    </label>
+                                    <select
+                                        value={batchCardId}
+                                        onChange={e => setBatchCardId(e.target.value)}
+                                        className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-purple-500/30 text-sm font-mono text-white focus:outline-none focus:border-pink-400"
+                                    >
+                                        <option value="">-- No Card (XP Only) --</option>
+                                        {availableCardsList.map(card => (
+                                            <option key={card.id} value={card.id} className="bg-neutral-900 text-white">
+                                                [{card.id}] {card.id} ({card.rarity || 'Special'})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={batchLoading || !batchUserList.trim()}
+                                    className="w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-transform hover:scale-[1.01] active:scale-95 disabled:opacity-50 shadow-lg cursor-pointer"
+                                    style={{
+                                        background: 'linear-gradient(135deg, rgba(236,72,153,0.9), rgba(124,58,237,0.9))',
+                                        color: 'white',
+                                        fontFamily: 'Space Grotesk'
+                                    }}
+                                >
+                                    {batchLoading ? 'DISPATCHING REWARDS...' : '✨ GRANT REWARDS TO LIST'}
+                                </button>
+                            </form>
+
+                            {batchResults && (
+                                <div className="p-4 rounded-2xl bg-black/50 border border-purple-500/30 space-y-3 font-mono text-xs">
+                                    {batchResults.error ? (
+                                        <div className="text-red-400 font-bold">
+                                            ❌ {batchResults.error}
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="text-emerald-400 font-bold flex justify-between">
+                                                <span>🎉 Rewards Dispatched Successfully!</span>
+                                                <span>{batchResults.matchedCount} of {batchResults.totalRequested} users matched</span>
+                                            </div>
+
+                                            <div className="space-y-1.5 max-h-40 overflow-y-auto pt-2 border-t border-purple-500/20">
+                                                {batchResults.data?.map(res => (
+                                                    <div key={res.userId} className="flex justify-between items-center text-[11px] py-1 border-b border-white/5">
+                                                        <span className="text-white font-bold">@{res.username}</span>
+                                                        <span className="text-emerald-300">
+                                                            {res.xpSuccess ? `+${batchXpAmount} XP ` : ''}
+                                                            {res.cardSuccess ? `| Card [${batchCardId}] ` : ''}
+                                                            ✓
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>

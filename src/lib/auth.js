@@ -548,3 +548,81 @@ export async function generateFormCode(email) {
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     return "SYN-" + hashHex.slice(0, 8).toUpperCase();
 }
+
+/**
+ * Fetch all available cards for admin selection.
+ */
+export async function getAllAvailableCards() {
+    const { data, error } = await supabase
+        .from('cards')
+        .select('*')
+        .order('id', { ascending: true });
+    return { data: data || [], error };
+}
+
+/**
+ * Bulk award XP and/or Cards to a list of usernames/emails.
+ */
+export async function bulkAwardRewards({ identifiers = [], xpAmount = 0, xpReason = 'Admin Award', cardId = null, source = 'admin_award' }) {
+    if (!identifiers || identifiers.length === 0) {
+        return { data: null, error: new Error('No user identifiers provided.') };
+    }
+
+    const cleanIdentifiers = identifiers.map(i => {
+        let s = i.trim().toLowerCase();
+        if (s.startsWith('@')) s = s.slice(1);
+        return s;
+    }).filter(Boolean);
+
+    // 1. Resolve user IDs from profiles table
+    const { data: profiles, error: pErr } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, email');
+
+    if (pErr) return { data: null, error: pErr };
+
+    const matchedUsers = profiles.filter(p => {
+        const u = p.username?.toLowerCase();
+        const e = p.email?.toLowerCase();
+        const d = p.display_name?.toLowerCase();
+        return cleanIdentifiers.some(ident => ident === u || ident === e || ident === d);
+    });
+
+    if (matchedUsers.length === 0) {
+        return { data: [], matchedCount: 0, totalRequested: cleanIdentifiers.length, error: new Error('No matching user profiles found for the given list.') };
+    }
+
+    const results = [];
+
+    for (const u of matchedUsers) {
+        const resObj = { userId: u.id, username: u.username || u.display_name || u.email, xpSuccess: false, cardSuccess: false };
+
+        // Award XP if amount > 0
+        if (xpAmount > 0) {
+            const { data: xpRes, error: xpErr } = await supabase.rpc('award_xp', {
+                p_user_id: u.id,
+                p_amount: Number(xpAmount),
+                p_reason: xpReason || 'Admin Award',
+                p_source: 'admin_award',
+                p_reference_id: null
+            });
+            resObj.xpSuccess = !xpErr && xpRes?.success !== false;
+            resObj.xpError = xpErr?.message || xpRes?.error;
+        }
+
+        // Award Card if cardId provided
+        if (cardId) {
+            const { data: cardRes, error: cardErr } = await supabase.rpc('award_card', {
+                p_user_id: u.id,
+                p_card_id: cardId,
+                p_source: source || 'admin_award'
+            });
+            resObj.cardSuccess = !cardErr && cardRes?.success !== false;
+            resObj.cardError = cardErr?.message || cardRes?.error;
+        }
+
+        results.push(resObj);
+    }
+
+    return { data: results, matchedCount: matchedUsers.length, totalRequested: cleanIdentifiers.length, error: null };
+}
