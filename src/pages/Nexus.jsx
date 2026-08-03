@@ -1346,10 +1346,26 @@ function QRVaultTab({ onOpenLogin }) {
         isReusable: false
     });
     const [createdQr, setCreatedQr] = useState(null);
+    const [qrImageUrl, setQrImageUrl] = useState(null); // locally-generated QR image
     const [adminLoading, setAdminLoading] = useState(false);
     const [adminMessage, setAdminMessage] = useState(null);
 
-    // Redeem handler
+    // Generate QR image locally (avoids leaking code strings to api.qrserver.com)
+    useEffect(() => {
+        if (!createdQr?.code) { setQrImageUrl(null); return; }
+        import('qrcode').then(mod => {
+            const QRCode = mod.default ?? mod;
+            QRCode.toDataURL(createdQr.code, {
+                width: 220,
+                margin: 2,
+                errorCorrectionLevel: 'M',
+                color: { dark: '#000000', light: '#FFFFFF' }
+            }).then(url => setQrImageUrl(url))
+              .catch(err => console.error('[QR] Local generation failed:', err));
+        });
+    }, [createdQr?.code]);
+
+    // ── Form & regular QR redemption ──────────────────────────────────
     async function handleRedeem(e) {
         e.preventDefault();
         if (!isAuthenticated) {
@@ -1360,129 +1376,58 @@ function QRVaultTab({ onOpenLogin }) {
 
         setLoading(true);
         setMessage(null);
+        const code = qrCodeInput.trim().toUpperCase();
 
         try {
-            // First check if this is their unique Form Code
-            const { generateFormCode } = await import('../lib/auth');
-            const expectedFormCode = await generateFormCode(user.email);
-            
-            if (qrCodeInput.trim().toUpperCase() === expectedFormCode) {
-                // Verify they haven't claimed it yet
-                const { data: existing } = await supabase
-                    .from('xp_history')
-                    .select('id')
-                    .eq('user_id', user.id)
-                    .eq('reason', 'Form Signup Reward')
-                    .maybeSingle();
+            // ── Step 1: Try as a form signup code (server validates the secret) ──
+            const { data: formData, error: formError } = await supabase.rpc('redeem_form_signup_code', {
+                p_user_id: user.id,
+                p_code: code,
+            });
 
-                if (existing) {
-                    setMessage({ type: 'error', text: 'You have already claimed your form reward!' });
-                    setLoading(false);
-                    return;
-                }
-
-                // Award 10 XP via SECURITY DEFINER function
-                const { data: xpRes, error: xpErr } = await supabase.rpc('award_xp', {
-                    p_user_id: user.id,
-                    p_amount: 10,
-                    p_reason: 'Form Signup Reward',
-                    p_source: 'qr_scan',
-                    p_reference_id: null
-                });
-
-                console.log('[QR] award_xp result:', xpRes, xpErr);
-                if (xpErr) throw xpErr;
-                if (xpRes?.success === false) throw new Error(xpRes?.error || 'XP award failed');
-
-                // Award SAP-001 card via award_card RPC
-                const { data: cardRes, error: cardErr } = await supabase.rpc('award_card', {
-                    p_user_id: user.id,
-                    p_card_id: 'SAP-001',
-                    p_source: 'form_signup'
-                });
-                console.log('[QR] award_card result:', cardRes, cardErr);
-
-                // Refresh auth context so UI updates immediately
+            if (formError) {
+                console.error('[QR] redeem_form_signup_code error:', formError);
+            } else if (formData?.success) {
+                // Form code successfully claimed
                 if (refreshProfile) await refreshProfile();
                 if (refreshCards) await refreshCards();
-
                 setMessage({ type: 'success', text: '🎉 Form Reward Claimed! +10 XP and Synapse Access Pass unlocked!' });
                 setQrCodeInput('');
-                setLoading(false);
+                return;
+            } else if (formData?.error === 'Already claimed') {
+                setMessage({ type: 'error', text: 'You have already claimed your form signup reward!' });
                 return;
             }
+            // If 'Invalid form code', fall through to regular QR flow
 
-            // Normal QR Code Flow
-            const { data: qr, error: qrErr } = await supabase
-                .from('qr_codes')
-                .select('*')
-                .eq('code', qrCodeInput.trim().toUpperCase())
-                .single();
-
-            if (qrErr || !qr) {
-                setMessage({ type: 'error', text: 'Invalid or unrecognized QR code token.' });
-                setLoading(false);
-                return;
-            }
-
-            if (!qr.is_active) {
-                setMessage({ type: 'error', text: 'This QR code is no longer active.' });
-                setLoading(false);
-                return;
-            }
-
-            if (!qr.is_reusable) {
-                const { data: existing } = await supabase
-                    .from('qr_scan_history')
-                    .select('id')
-                    .eq('user_id', user.id)
-                    .eq('qr_id', qr.id)
-                    .eq('success', true)
-                    .maybeSingle();
-
-                if (existing) {
-                    setMessage({ type: 'error', text: 'You have already redeemed this QR code!' });
-                    setLoading(false);
-                    return;
-                }
-            }
-
-            const { data: xpRes, error: xpErr } = await supabase.rpc('award_xp', {
+            // ── Step 2: Try as a regular event QR code (atomic server-side) ─────
+            const { data: qrData, error: qrError } = await supabase.rpc('redeem_qr_code', {
                 p_user_id: user.id,
-                p_amount: qr.reward_xp,
-                p_reason: `QR Code: ${qr.label || qr.code}`,
-                p_source: 'qr_scan',
-                p_reference_id: qr.id
+                p_code: code,
             });
 
-            if (xpErr) {
-                setMessage({ type: 'error', text: 'Failed to credit XP. Try again.' });
+            if (qrError) {
+                console.error('[QR] redeem_qr_code error:', qrError);
+                setMessage({ type: 'error', text: 'Failed to redeem code. Please try again.' });
                 return;
             }
 
-            if (qr.reward_card_id) {
-                await supabase.rpc('award_card', {
-                    p_user_id: user.id,
-                    p_card_id: qr.reward_card_id,
-                    p_source: 'qr_scan'
-                });
+            if (!qrData?.success) {
+                setMessage({ type: 'error', text: qrData?.error || 'Invalid or unrecognized QR code token.' });
+                return;
             }
 
-            await supabase.from('qr_scan_history').insert({
-                user_id: user.id,
-                qr_id: qr.id,
-                success: true
-            });
-
-            setMessage({
-                type: 'success',
-                text: `🎉 Redeemed! +${qr.reward_xp} XP credited to your profile!`
-            });
-            setQrCodeInput('');
+            // Success!
             if (refreshProfile) await refreshProfile();
             if (refreshCards) await refreshCards();
+            setMessage({
+                type: 'success',
+                text: `🎉 Redeemed! +${qrData.xp_awarded} XP credited to your profile!`
+                    + (qrData.leveled_up ? ` 🆙 Level up! You are now Level ${qrData.level_new}!` : '')
+            });
+            setQrCodeInput('');
         } catch (err) {
-            console.error('QR Redeem error:', err);
+            console.error('[QR] Redeem exception:', err);
             setMessage({ type: 'error', text: `Verification failed: ${err?.message || 'Unknown error'}` });
         } finally {
             setLoading(false);
@@ -1734,11 +1679,17 @@ function QRVaultTab({ onOpenLogin }) {
                                 Ready to Display / Project:
                             </h4>
                             <div className="inline-block p-4 rounded-2xl bg-white shadow-2xl my-3">
-                                <img
-                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(createdQr.code)}`}
-                                    alt={createdQr.code}
-                                    className="w-48 h-48 mx-auto"
-                                />
+                                {qrImageUrl ? (
+                                    <img
+                                        src={qrImageUrl}
+                                        alt={createdQr.code}
+                                        className="w-48 h-48 mx-auto"
+                                    />
+                                ) : (
+                                    <div className="w-48 h-48 mx-auto flex items-center justify-center text-xs text-gray-400 font-mono">
+                                        Generating...
+                                    </div>
+                                )}
                             </div>
                             <p className="font-mono text-sm font-bold text-pink-400">{createdQr.code}</p>
                             <p className="text-xs text-purple-300/70 mt-1">{createdQr.label} — +{createdQr.reward_xp} XP</p>

@@ -261,18 +261,43 @@ export async function submitMissionProof(missionId, userId, submissionUrl = '', 
 
 /**
  * Fetch all pending quest submissions for Lead/Admin review.
+ * Uses a SECURITY DEFINER RPC so submitter email is only ever
+ * returned to leads/administrators — never to regular members.
  */
 export async function getPendingSubmissions() {
-    const { data, error } = await supabase
-        .from('user_missions')
-        .select(`
-            *,
-            profiles:user_id (id, display_name, username, avatar_url, email),
-            missions:mission_id (id, title, xp_reward, type, assigned_to, proof_type)
-        `)
-        .eq('status', 'submitted')
-        .order('submitted_at', { ascending: false });
-    return { data: data || [], error };
+    const { data, error } = await supabase.rpc('get_pending_submissions');
+    if (error) return { data: [], error };
+
+    // Re-shape flat RPC rows into the nested structure the UI expects
+    const shaped = (data || []).map(row => ({
+        id:                   row.id,
+        user_id:              row.user_id,
+        mission_id:           row.mission_id,
+        status:               row.status,
+        submission_url:       row.submission_url,
+        submission_notes:     row.submission_notes,
+        submission_image_url: row.submission_image_url,
+        started_at:           row.started_at,
+        submitted_at:         row.submitted_at,
+        completed_at:         row.completed_at,
+        xp_awarded:           row.xp_awarded,
+        profiles: {
+            id:           row.profile_id,
+            display_name: row.profile_display_name,
+            username:     row.profile_username,
+            avatar_url:   row.profile_avatar_url,
+            email:        row.profile_email,
+        },
+        missions: {
+            id:          row.mission_id,
+            title:       row.mission_title,
+            xp_reward:   row.mission_xp_reward,
+            type:        row.mission_type,
+            assigned_to: row.mission_assigned_to,
+            proof_type:  row.mission_proof_type,
+        },
+    }));
+    return { data: shaped, error: null };
 }
 
 /**
@@ -285,7 +310,7 @@ export async function reviewMissionSubmission(userMissionId, targetUserId, missi
             p_user_id: targetUserId,
             p_amount: xpReward || 50,
             p_reason: `Quest Completed: ${missionTitle}`,
-            p_source: 'quest_completion',
+            p_source: 'mission',
             p_reference_id: null
         });
         if (xpErr) return { data: null, error: xpErr };
@@ -391,8 +416,10 @@ export async function joinTeam(userId, inviteCode) {
 export async function createTeam(userId, name, color, emoji) {
     if (!userId || !name) return { data: null, error: new Error('Missing required fields.') };
     
-    // Generate random 6-character invite code
-    const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    // Generate cryptographically secure 6-character invite code
+    const buf = new Uint8Array(4);
+    crypto.getRandomValues(buf);
+    const randomCode = Array.from(buf, b => b.toString(36)).join('').slice(0, 6).toUpperCase();
     const inviteCode = `SYN-${randomCode}`;
     
     // 1. Create team
@@ -536,17 +563,21 @@ export async function getXpHistory(userId, limit = 20) {
 }
 
 /**
- * Generate a unique access code based on a user's email.
- * This matches the logic on the Synapse Form site to verify form submission without DB linking.
+ * Validate and claim a form signup code.
+ * The secret salt and hashing logic have been moved server-side into the
+ * `redeem_form_signup_code` Supabase RPC (see migration 20260803000000).
+ * This client function is a thin wrapper that calls the secure server-side RPC.
+ *
+ * @param {string} userId - The authenticated user's ID
+ * @param {string} code   - The code the user submitted
+ * @returns {Promise<{ data, error }>}
  */
-export async function generateFormCode(email) {
-    if (!email) return null;
-    const encoder = new TextEncoder();
-    const data = encoder.encode(email.toLowerCase().trim() + "SYNAPSE_SECRET_SALT_2026");
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return "SYN-" + hashHex.slice(0, 8).toUpperCase();
+export async function redeemFormSignupCode(userId, code) {
+    const { data, error } = await supabase.rpc('redeem_form_signup_code', {
+        p_user_id: userId,
+        p_code: code,
+    });
+    return { data, error };
 }
 
 /**
@@ -561,41 +592,36 @@ export async function getAllAvailableCards() {
 }
 
 /**
- * Bulk award XP and/or Cards to a list of usernames/emails.
+ * Bulk award XP and/or Cards to a list of usernames/emails/display_names.
+ *
+ * Security: user resolution is delegated to the `bulk_resolve_users` SECURITY
+ * DEFINER RPC. Email addresses are matched server-side and NEVER returned to
+ * the client — only (id, username, display_name) come back.
  */
 export async function bulkAwardRewards({ identifiers = [], xpAmount = 0, xpReason = 'Admin Award', cardId = null, source = 'admin_award' }) {
     if (!identifiers || identifiers.length === 0) {
         return { data: null, error: new Error('No user identifiers provided.') };
     }
 
-    const cleanIdentifiers = identifiers.map(i => {
-        let s = i.trim().toLowerCase();
-        if (s.startsWith('@')) s = s.slice(1);
-        return s;
-    }).filter(Boolean);
+    const cleanIdentifiers = identifiers
+        .map(i => i.trim())
+        .filter(Boolean);
 
-    // 1. Resolve user IDs from profiles table
-    const { data: profiles, error: pErr } = await supabase
-        .from('profiles')
-        .select('id, username, display_name, email');
+    // 1. Resolve user IDs server-side — email matching happens in DB, never in browser
+    const { data: matchedUsers, error: pErr } = await supabase.rpc('bulk_resolve_users', {
+        p_identifiers: cleanIdentifiers,
+    });
 
     if (pErr) return { data: null, error: pErr };
 
-    const matchedUsers = profiles.filter(p => {
-        const u = p.username?.toLowerCase();
-        const e = p.email?.toLowerCase();
-        const d = p.display_name?.toLowerCase();
-        return cleanIdentifiers.some(ident => ident === u || ident === e || ident === d);
-    });
-
-    if (matchedUsers.length === 0) {
+    if (!matchedUsers || matchedUsers.length === 0) {
         return { data: [], matchedCount: 0, totalRequested: cleanIdentifiers.length, error: new Error('No matching user profiles found for the given list.') };
     }
 
     const results = [];
 
     for (const u of matchedUsers) {
-        const resObj = { userId: u.id, username: u.username || u.display_name || u.email, xpSuccess: false, cardSuccess: false };
+        const resObj = { userId: u.id, username: u.username || u.display_name, xpSuccess: false, cardSuccess: false };
 
         // Award XP if amount > 0
         if (xpAmount > 0) {
