@@ -269,10 +269,12 @@ export async function getPendingSubmissions() {
     if (error) return { data: [], error };
 
     // Re-shape flat RPC rows into the nested structure the UI expects
+    // Note: output columns renamed (submission_id, submitter_id, quest_id) to
+    // avoid PostgreSQL "column reference is ambiguous" errors with RETURNS TABLE.
     const shaped = (data || []).map(row => ({
-        id:                   row.id,
-        user_id:              row.user_id,
-        mission_id:           row.mission_id,
+        id:                   row.submission_id,
+        user_id:              row.submitter_id,
+        mission_id:           row.quest_id,
         status:               row.status,
         submission_url:       row.submission_url,
         submission_notes:     row.submission_notes,
@@ -289,7 +291,7 @@ export async function getPendingSubmissions() {
             email:        row.profile_email,
         },
         missions: {
-            id:          row.mission_id,
+            id:          row.quest_id,
             title:       row.mission_title,
             xp_reward:   row.mission_xp_reward,
             type:        row.mission_type,
@@ -621,12 +623,13 @@ export async function bulkAwardRewards({ identifiers = [], xpAmount = 0, xpReaso
     const results = [];
 
     for (const u of matchedUsers) {
-        const resObj = { userId: u.id, username: u.username || u.display_name, xpSuccess: false, cardSuccess: false };
+        // bulk_resolve_users returns 'user_id' (not 'id') to avoid SQL ambiguity
+        const resObj = { userId: u.user_id, username: u.username || u.display_name, xpSuccess: false, cardSuccess: false };
 
         // Award XP if amount > 0
         if (xpAmount > 0) {
             const { data: xpRes, error: xpErr } = await supabase.rpc('award_xp', {
-                p_user_id: u.id,
+                p_user_id: u.user_id,
                 p_amount: Number(xpAmount),
                 p_reason: xpReason || 'Admin Award',
                 p_source: 'admin_award',
@@ -639,7 +642,7 @@ export async function bulkAwardRewards({ identifiers = [], xpAmount = 0, xpReaso
         // Award Card if cardId provided
         if (cardId) {
             const { data: cardRes, error: cardErr } = await supabase.rpc('award_card', {
-                p_user_id: u.id,
+                p_user_id: u.user_id,
                 p_card_id: cardId,
                 p_source: source || 'admin_award'
             });
