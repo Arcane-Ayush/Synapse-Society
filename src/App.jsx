@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Layout } from './layouts/Layout';
 import { Home } from './pages/Home';
@@ -9,6 +9,7 @@ import { Nexus } from './pages/Nexus';
 import { About } from './pages/About';
 import { Login } from './pages/Login';
 import { Profile } from './pages/Profile';
+import { HiddenPortal } from './pages/HiddenPortal';
 import { PageTransition } from './components/PageTransition';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -25,6 +26,9 @@ function AnimatedRoutes() {
         <Route path="/about" element={<PageTransition><About /></PageTransition>} />
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
         <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
+        <Route path="/hiddenportal" element={<PageTransition><HiddenPortal /></PageTransition>} />
+        <Route path="/synapse/admin/portal/2026/hidden/access/alpha" element={<PageTransition><HiddenPortal /></PageTransition>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
   );
