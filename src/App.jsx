@@ -10,6 +10,7 @@ import { About } from './pages/About';
 import { Login } from './pages/Login';
 import { Profile } from './pages/Profile';
 import { HiddenPortal } from './pages/HiddenPortal';
+import { Inauguration } from './pages/Inauguration';
 import { PageTransition } from './components/PageTransition';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -27,7 +28,18 @@ function AnimatedRoutes() {
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
         <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
         <Route path="/hiddenportal" element={<PageTransition><HiddenPortal /></PageTransition>} />
-        <Route path="/synapse/admin/portal/2026/hidden/access/alpha" element={<PageTransition><HiddenPortal /></PageTransition>} />
+        <Route path="/ucn/app/event/launch/state/components/exists/202608100001/userslpha" element={<PageTransition><HiddenPortal /></PageTransition>} />
+
+        {/* Dignitary & Ceremonial Inauguration Routes */}
+        <Route path="/inauguration" element={<PageTransition><Inauguration /></PageTransition>} />
+        <Route path="/inauguration/:dignitary" element={<PageTransition><Inauguration /></PageTransition>} />
+        <Route path="/hod" element={<PageTransition><Inauguration /></PageTransition>} />
+        <Route path="/dean" element={<PageTransition><Inauguration /></PageTransition>} />
+        <Route path="/provc" element={<PageTransition><Inauguration /></PageTransition>} />
+        <Route path="/president" element={<PageTransition><Inauguration /></PageTransition>} />
+        <Route path="/audience" element={<PageTransition><Inauguration /></PageTransition>} />
+        <Route path="/synapse/admin/portal/2026/inauguration/:dignitary" element={<PageTransition><Inauguration /></PageTransition>} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
