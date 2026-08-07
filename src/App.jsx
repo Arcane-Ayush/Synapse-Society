@@ -27,7 +27,7 @@ function AnimatedRoutes() {
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
         <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
         <Route path="/hiddenportal" element={<PageTransition><HiddenPortal /></PageTransition>} />
-        <Route path="/synapse/admin/portal/2026/hidden/access/alpha" element={<PageTransition><HiddenPortal /></PageTransition>} />
+        <Route path="/ucn/app/event/launch/state/components/exists/202608100001/users" element={<PageTransition><HiddenPortal /></PageTransition>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>

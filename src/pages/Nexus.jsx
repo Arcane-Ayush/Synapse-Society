@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { SynapseCard } from "../components/SynapseCard";
-import { Zap, Target, Users, Trophy, Lock, Calendar, ChevronRight, QrCode, Plus, Shield, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
+import { Zap, Target, Users, Trophy, Lock, Calendar, ChevronRight, QrCode, Plus, Shield, CheckCircle2, AlertCircle, Sparkles, Camera, CameraOff, X } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { LoginModal } from "../components/LoginModal";
+import { Html5Qrcode } from "html5-qrcode";
 
 const TABS = [
     {
@@ -1337,6 +1338,10 @@ function QRVaultTab({ onOpenLogin }) {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
 
+    // Camera Scanner State
+    const [isCameraActive, setIsCameraActive] = useState(false);
+    const [cameraError, setCameraError] = useState(null);
+
     // Admin QR Creator
     const [newQr, setNewQr] = useState({
         code: '',
@@ -1365,24 +1370,79 @@ function QRVaultTab({ onOpenLogin }) {
         });
     }, [createdQr?.code]);
 
+    // Live Camera Scanner Lifecycle
+    useEffect(() => {
+        let html5QrCode = null;
+        let isMounted = true;
+
+        if (isCameraActive) {
+            setCameraError(null);
+            const timer = setTimeout(() => {
+                const scannerElement = document.getElementById("synapse-qr-reader");
+                if (!scannerElement) return;
+
+                html5QrCode = new Html5Qrcode("synapse-qr-reader");
+                const config = {
+                    fps: 10,
+                    qrbox: { width: 220, height: 220 },
+                    aspectRatio: 1.0
+                };
+
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    (decodedText) => {
+                        if (isMounted) {
+                            const code = decodedText.trim();
+                            setQrCodeInput(code);
+                            setIsCameraActive(false);
+                            // Auto-trigger redemption with scanned code
+                            handleRedeem(null, code);
+                        }
+                    },
+                    () => {
+                        // QR scan frame error / empty frame — ignore
+                    }
+                ).catch(err => {
+                    console.error('[QR Scanner] Camera start error:', err);
+                    if (isMounted) {
+                        setCameraError("Camera access failed or permission was denied. Please check your browser permissions.");
+                    }
+                });
+            }, 100);
+
+            return () => {
+                clearTimeout(timer);
+                isMounted = false;
+                if (html5QrCode) {
+                    if (html5QrCode.isScanning) {
+                        html5QrCode.stop().then(() => html5QrCode.clear()).catch(err => console.error(err));
+                    } else {
+                        html5QrCode.clear().catch(err => console.error(err));
+                    }
+                }
+            };
+        }
+    }, [isCameraActive]);
+
     // ── Form & regular QR redemption ──────────────────────────────────
-    async function handleRedeem(e) {
-        e.preventDefault();
+    async function handleRedeem(e, directCode = null) {
+        if (e) e.preventDefault();
         if (!isAuthenticated) {
             onOpenLogin();
             return;
         }
-        if (!qrCodeInput.trim()) return;
+        const codeToRedeem = (directCode || qrCodeInput).trim().toUpperCase();
+        if (!codeToRedeem) return;
 
         setLoading(true);
         setMessage(null);
-        const code = qrCodeInput.trim().toUpperCase();
 
         try {
             // ── Step 1: Try as a form signup code (server validates the secret) ──
             const { data: formData, error: formError } = await supabase.rpc('redeem_form_signup_code', {
                 p_user_id: user.id,
-                p_code: code,
+                p_code: codeToRedeem,
             });
 
             if (formError) {
@@ -1403,7 +1463,7 @@ function QRVaultTab({ onOpenLogin }) {
             // ── Step 2: Try as a regular event QR code (atomic server-side) ─────
             const { data: qrData, error: qrError } = await supabase.rpc('redeem_qr_code', {
                 p_user_id: user.id,
-                p_code: code,
+                p_code: codeToRedeem,
             });
 
             if (qrError) {
@@ -1497,37 +1557,117 @@ function QRVaultTab({ onOpenLogin }) {
                         Redeem Event QR Code
                     </h3>
                     <p className="text-sm leading-relaxed" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)', fontFamily: 'Inter' }}>
-                        Enter the secret code or token from event slides, workshops, or posters to claim your XP and special card unlocks!
+                        Enter the secret code or token from event slides, workshops, or posters, or use your camera to scan!
                     </p>
                 </div>
 
-                <form onSubmit={handleRedeem} className="max-w-md mx-auto flex flex-col sm:flex-row gap-3">
-                    <input
-                        type="text"
-                        value={qrCodeInput}
-                        onChange={e => setQrCodeInput(e.target.value)}
-                        placeholder="e.g. SYNAPSE-LAUNCH-2026"
-                        className="flex-1 px-4 py-3 rounded-xl text-sm font-mono uppercase outline-none transition-all"
-                        style={{
-                            background: 'rgba(var(--bg-glass-rgb), 0.9)',
-                            border: '1px solid rgba(var(--synapse-violet-rgb), 0.3)',
-                            color: 'var(--text-primary)'
-                        }}
-                    />
+                <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
+                    <form onSubmit={handleRedeem} className="w-full flex flex-col sm:flex-row gap-3">
+                        <input
+                            type="text"
+                            value={qrCodeInput}
+                            onChange={e => setQrCodeInput(e.target.value)}
+                            placeholder="e.g. SYNAPSE-LAUNCH-2026"
+                            className="flex-1 px-4 py-3 rounded-xl text-sm font-mono uppercase outline-none transition-all"
+                            style={{
+                                background: 'rgba(var(--bg-glass-rgb), 0.9)',
+                                border: '1px solid rgba(var(--synapse-violet-rgb), 0.3)',
+                                color: 'var(--text-primary)'
+                            }}
+                        />
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="px-6 py-3 rounded-xl text-xs font-black tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                            style={{
+                                fontFamily: 'Space Grotesk',
+                                background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
+                                color: 'var(--text-primary)',
+                                boxShadow: '0 0 20px rgba(var(--synapse-violet-rgb), 0.3)'
+                            }}
+                        >
+                            {loading ? 'Verifying...' : 'Redeem Code'}
+                        </button>
+                    </form>
+
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase tracking-widest text-purple-300/40 font-mono">— OR —</span>
+                    </div>
+
                     <button
-                        type="submit"
-                        disabled={loading}
-                        className="px-6 py-3 rounded-xl text-xs font-black tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                        type="button"
+                        onClick={() => { setCameraError(null); setIsCameraActive(!isCameraActive); }}
+                        className="px-5 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase flex items-center gap-2 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
                         style={{
-                            fontFamily: 'Space Grotesk',
-                            background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
-                            color: 'var(--text-primary)',
-                            boxShadow: '0 0 20px rgba(var(--synapse-violet-rgb), 0.3)'
+                            background: isCameraActive ? 'rgba(239, 68, 68, 0.2)' : 'rgba(var(--synapse-violet-rgb), 0.15)',
+                            border: isCameraActive ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)',
+                            color: isCameraActive ? '#FCA5A5' : 'var(--synapse-violet-light)',
+                            boxShadow: '0 0 15px rgba(var(--synapse-violet-rgb), 0.15)'
                         }}
                     >
-                        {loading ? 'Verifying...' : 'Redeem Code'}
+                        {isCameraActive ? <CameraOff size={16} /> : <Camera size={16} />}
+                        <span>{isCameraActive ? 'Close Camera Scanner' : 'Scan with Camera'}</span>
                     </button>
-                </form>
+                </div>
+
+                {/* Camera Scanner Container */}
+                <AnimatePresence>
+                    {isCameraActive && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 15 }}
+                            className="max-w-md mx-auto mt-6 p-4 rounded-2xl relative overflow-hidden"
+                            style={{
+                                background: 'rgba(0, 0, 0, 0.75)',
+                                border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.35)',
+                                boxShadow: '0 0 35px rgba(var(--synapse-violet-rgb), 0.25)'
+                            }}
+                        >
+                            <div className="flex items-center justify-between mb-3 px-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                                    <span className="text-xs font-bold tracking-wider uppercase text-purple-200">Live Camera Scanner</span>
+                                </div>
+                                <button
+                                    onClick={() => setIsCameraActive(false)}
+                                    className="p-1 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            {cameraError ? (
+                                <div className="p-4 rounded-xl text-center text-xs text-rose-300 bg-rose-500/10 border border-rose-500/30 space-y-2">
+                                    <AlertCircle size={20} className="mx-auto text-rose-400" />
+                                    <p>{cameraError}</p>
+                                    <button
+                                        onClick={() => { setCameraError(null); setIsCameraActive(false); setTimeout(() => setIsCameraActive(true), 100); }}
+                                        className="px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-200 hover:bg-rose-500/30 text-[11px] font-semibold cursor-pointer"
+                                    >
+                                        Retry Camera
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="relative rounded-xl overflow-hidden bg-black/90 flex items-center justify-center min-h-[250px] border border-purple-500/20">
+                                    <div id="synapse-qr-reader" className="w-full h-full"></div>
+                                    {/* Scanner Overlay Frame */}
+                                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                                        <div className="w-48 h-48 border-2 border-purple-400/80 rounded-2xl relative shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+                                            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-purple-300 -mt-1 -ml-1"></div>
+                                            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-purple-300 -mt-1 -mr-1"></div>
+                                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-purple-300 -mb-1 -ml-1"></div>
+                                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-purple-300 -mb-1 -mr-1"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            <p className="text-[11px] text-center text-purple-300/60 mt-3 font-mono">
+                                Point camera at event QR code to scan automatically
+                            </p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {message && (
                     <motion.div
