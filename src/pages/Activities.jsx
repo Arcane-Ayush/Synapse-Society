@@ -145,8 +145,8 @@ function ActivityCard({ activity, index }) {
                     </div>
 
                     {/* Right side actions */}
-                    <div className="flex items-center gap-4 mt-2 md:mt-0">
-                        {/* Register button — cyber slanted style */}
+                    <div className="flex items-center gap-3 mt-2 md:mt-0">
+                        {/* Active Register button */}
                         {activity.link && activity.status !== 'Completed' && (
                             <a
                                 href={activity.link}
@@ -158,6 +158,21 @@ function ActivityCard({ activity, index }) {
                                 Register
                                 <span className="arrow">↗</span>
                             </a>
+                        )}
+
+                        {/* Registration Opening Soon badge when registration link is disabled */}
+                        {!activity.link && activity.status !== 'Completed' && (
+                            <span
+                                className="text-[10px] font-mono tracking-wider px-2.5 py-1 rounded-lg flex items-center gap-1.5 flex-shrink-0"
+                                style={{
+                                    background: 'rgba(255, 255, 255, 0.03)',
+                                    color: 'rgba(var(--text-secondary-rgb), 0.5)',
+                                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                                }}
+                            >
+                                <Clock size={10} style={{ color: 'var(--synapse-violet-light)' }} />
+                                Opening Soon
+                            </span>
                         )}
 
                         {/* Expand Hint */}
@@ -226,7 +241,9 @@ export function Activities() {
                 const mapped = (res.data || []).map(a => ({
                     ...a,
                     date: a.event_date,
-                    time: a.event_time,
+                    time: a.time_info || a.event_time,
+                    xpReward: a.xp_reward ?? a.xpReward,
+                    link: a.register_url || a.link,
                     participants: a.max_participants ? `0/${a.max_participants}` : undefined
                 }));
                 setDbActivities(mapped);
