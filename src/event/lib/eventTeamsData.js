@@ -1,0 +1,33 @@
+import { supabase } from '../../lib/supabase';
+
+/**
+ * Fetch all 40 event squads live from Supabase database.
+ * No hardcoded frontend mock arrays.
+ */
+export async function getEventTeams() {
+    try {
+        const { data, error } = await supabase
+            .from('event_teams')
+            .select('*')
+            .order('id', { ascending: true });
+        if (data && data.length > 0) return data;
+    } catch (e) {
+        console.error('Error fetching event teams:', e);
+    }
+    return [];
+}
+
+export async function getTeamByCode(code) {
+    if (!code) return null;
+    const clean = code.trim().toUpperCase();
+    try {
+        const { data } = await supabase
+            .from('event_teams')
+            .select('*')
+            .or(`code.ilike.${clean},name.ilike.%${clean}%`)
+            .maybeSingle();
+        return data || null;
+    } catch (e) {
+        return null;
+    }
+}

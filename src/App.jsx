@@ -11,6 +11,9 @@ import { Login } from './pages/Login';
 import { Profile } from './pages/Profile';
 import { HiddenPortal } from './pages/HiddenPortal';
 import { Inauguration } from './pages/Inauguration';
+import { AttendeePortal } from './event/AttendeePortal';
+import { EventAdmin } from './event/EventAdmin';
+import { StagePresentation } from './event/StagePresentation';
 import { PageTransition } from './components/PageTransition';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -28,8 +31,19 @@ function AnimatedRoutes() {
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
         <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
         <Route path="/hiddenportal" element={<PageTransition><HiddenPortal /></PageTransition>} />
-        <Route path="/ucn/app/event/launch/state/components/exists/202608100001/users" element={<PageTransition><HiddenPortal /></PageTransition>} />
-        <Route path="/ucn/app/event/launch/state/components/exists/202608100001/userslpha" element={<PageTransition><HiddenPortal /></PageTransition>} />
+
+        {/* Neural Nexus Live Event Attendee Portal (Printed QR Routes) */}
+        <Route path="/ucn/app/event/launch/state/components/exists/202608100001/users" element={<PageTransition><AttendeePortal /></PageTransition>} />
+        <Route path="/ucn/app/event/launch/state/components/exists/202608100001/userslpha" element={<PageTransition><AttendeePortal /></PageTransition>} />
+        <Route path="/users" element={<PageTransition><AttendeePortal /></PageTransition>} />
+
+        {/* Neural Nexus Live Event Admin Mission Control */}
+        <Route path="/ucn/app/event/launch/state/components/exists/202608100001/event_admin" element={<PageTransition><EventAdmin /></PageTransition>} />
+        <Route path="/event-admin" element={<PageTransition><EventAdmin /></PageTransition>} />
+
+        {/* Neural Nexus Main Widescreen Stage & Presentation Screen */}
+        <Route path="/stage" element={<PageTransition><StagePresentation /></PageTransition>} />
+        <Route path="/presentation" element={<PageTransition><StagePresentation /></PageTransition>} />
 
         {/* Dignitary & Ceremonial Inauguration Routes */}
         <Route path="/inauguration" element={<PageTransition><Inauguration /></PageTransition>} />
