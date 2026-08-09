@@ -34,9 +34,9 @@ export function TeamAllocationModule({ user, assignedTeam, onTeamSelected }) {
         if (onTeamSelected) onTeamSelected(selectedTeam);
     };
 
-    const handleCodeSubmit = (e) => {
+    const handleCodeSubmit = async (e) => {
         e.preventDefault();
-        const found = getTeamByCode(customCode);
+        const found = await getTeamByCode(customCode);
         if (found) {
             handleSelect(found);
             setAssignedEventTeam(user?.id, found);

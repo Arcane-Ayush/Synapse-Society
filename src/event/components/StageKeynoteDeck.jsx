@@ -266,7 +266,7 @@ export function StageKeynoteDeck({ currentPhase, onSelectPhase }) {
                                             {t.code}
                                         </span>
                                         <span className="text-[9px] font-mono text-zinc-400 truncate w-full mt-0.5">
-                                            {t.name.split('·')[1]?.trim() || t.name}
+                                            {(t.name || '').split('·')[1]?.trim() || t.name || ''}
                                         </span>
                                     </div>
                                 ))}

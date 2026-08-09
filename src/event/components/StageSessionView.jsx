@@ -49,6 +49,25 @@ export function StageSessionView({ eventState, isAdmin = false }) {
         return () => clearInterval(interval);
     }, [eventState?.adEnabled]);
 
+    // Sync timer props from eventState in real-time
+    useEffect(() => {
+        if (eventState?.roundTimerDurationSec !== undefined) {
+            setRoundSeconds(eventState.roundTimerDurationSec);
+        }
+        if (eventState?.roundTimerRunning !== undefined) {
+            setRoundRunning(eventState.roundTimerRunning);
+        }
+    }, [eventState?.roundTimerDurationSec, eventState?.roundTimerRunning]);
+
+    useEffect(() => {
+        if (eventState?.breakDurationSec !== undefined) {
+            setRedBullSeconds(eventState.breakDurationSec);
+        }
+        if (eventState?.breakTimerRunning !== undefined) {
+            setRedBullRunning(eventState.breakTimerRunning);
+        }
+    }, [eventState?.breakDurationSec, eventState?.breakTimerRunning]);
+
     // Timers ticks with auto time's up buzzer trigger
     useEffect(() => {
         let interval = null;

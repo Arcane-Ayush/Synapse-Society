@@ -15,13 +15,13 @@ export function AgentIdBadge({ user, profile, isDocked = false, assignedTeam = n
     if (isDocked) {
         return (
             <motion.div
-                initial={{ y: -20, opacity: 0 }}
+                initial={{ y: -10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-                className="w-full sticky top-3 z-40 px-3"
+                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                className="w-full"
             >
                 <div
-                    className="max-w-xl mx-auto rounded-2xl p-3 px-4 flex items-center justify-between gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-300"
+                    className="w-full rounded-2xl p-3 px-4 flex items-center justify-between gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-300"
                     style={{
                         background: 'linear-gradient(135deg, rgba(13, 13, 22, 0.95) 0%, rgba(20, 15, 35, 0.95) 100%)',
                         border: assignedTeam ? `1px solid ${assignedTeam.color}66` : '1px solid rgba(var(--synapse-violet-rgb), 0.35)',

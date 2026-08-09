@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Shield, Radio, Users, Clock, Play, Pause, Zap, Award, Flame,
+    Shield, Radio, Users, Clock, Play, Pause, Zap, Award, Flame, Trophy,
     CheckCircle2, RotateCcw, PlusCircle, MinusCircle, Coins, XCircle, ChevronRight,
-    Sparkles, Send, UserPlus, Image, Eye, EyeOff, Layers, Search, Coffee, ArrowUpRight, ArrowDownLeft
+    Sparkles, Send, UserPlus, Image, Eye, EyeOff, Layers, Search, Coffee,
+    ArrowUpRight, ArrowDownLeft, Trash2, Undo2, ChevronDown, ChevronUp, ExternalLink, Monitor, Video
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import {
     EVENT_PHASES,
     DEFAULT_EVENT_STATE,
     broadcastEventState,
+    broadcastTimerUpdate,
     subscribeToEventState,
     fetchEventTeamsFromDb,
     toggleTeamElimination,
@@ -18,6 +20,7 @@ import {
     toggleTeamActiveStatus
 } from './lib/eventState';
 import { playEventSound, broadcastPlaySound } from './lib/soundSystem';
+import { supabase } from '../lib/supabase';
 
 export function EventAdmin() {
     const { profile, isLead, isAuthenticated } = useAuth();
@@ -26,6 +29,8 @@ export function EventAdmin() {
     const [broadcastSuccess, setBroadcastSuccess] = useState(false);
     const [awardMessage, setAwardMessage] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [round3TeamIds, setRound3TeamIds] = useState([]);
+    const [showDisqualifiedArchive, setShowDisqualifiedArchive] = useState(false);
 
     // Timer States
     const [customRoundMinutes, setCustomRoundMinutes] = useState(45);
@@ -37,6 +42,9 @@ export function EventAdmin() {
     const [customBreakMinutes, setCustomBreakMinutes] = useState(15);
     const [breakSeconds, setBreakSeconds] = useState(15 * 60);
     const [breakRunning, setBreakRunning] = useState(false);
+
+    // Ad & Stage Media Url
+    const [adMediaUrlInput, setAdMediaUrlInput] = useState(DEFAULT_EVENT_STATE.adMediaUrl || '');
 
     // Prompt Editors
     const [r1Prompt, setR1Prompt] = useState(DEFAULT_EVENT_STATE.round1Prompt);
@@ -64,6 +72,8 @@ export function EventAdmin() {
                 if (newState.round2Prompt) setR2Prompt(newState.round2Prompt);
                 if (newState.round3Prompt) setR3Prompt(newState.round3Prompt);
                 if (newState.breakTitle) setCustomBreakTitle(newState.breakTitle);
+                if (newState.adMediaUrl) setAdMediaUrlInput(newState.adMediaUrl);
+                if (Array.isArray(newState.round3TeamIds)) setRound3TeamIds(newState.round3TeamIds);
             }
         });
         return () => unsubscribe();
@@ -78,6 +88,7 @@ export function EventAdmin() {
                     if (prev <= 1) {
                         setRoundRunning(false);
                         broadcastPlaySound('buzzer');
+                        broadcastTimerUpdate({ roundTimerRunning: false, roundTimerDurationSec: 0 });
                         return 0;
                     }
                     return prev - 1;
@@ -96,6 +107,7 @@ export function EventAdmin() {
                     if (prev <= 1) {
                         setBreakRunning(false);
                         broadcastPlaySound('chime');
+                        broadcastTimerUpdate({ breakTimerRunning: false, breakDurationSec: 0 });
                         return 0;
                     }
                     return prev - 1;
@@ -118,21 +130,82 @@ export function EventAdmin() {
         setTimeout(() => setBroadcastSuccess(false), 2000);
     };
 
+    // Stage Timer Control Functions
+    const handleToggleRoundTimer = async () => {
+        const nextState = !roundRunning;
+        setRoundRunning(nextState);
+        await broadcastTimerUpdate({
+            roundTimerRunning: nextState,
+            roundTimerDurationSec: roundSeconds
+        });
+    };
+
+    const handleApplyRoundDuration = async (minutes) => {
+        const secs = minutes * 60;
+        setCustomRoundMinutes(minutes);
+        setRoundSeconds(secs);
+        setRoundRunning(false);
+        await broadcastTimerUpdate({
+            roundTimerDurationSec: secs,
+            roundTimerRunning: false
+        });
+        setAwardMessage(`Round stage timer set to ${minutes} mins.`);
+        setTimeout(() => setAwardMessage(null), 2000);
+    };
+
+    const handleAdjustRoundSeconds = async (deltaSec) => {
+        const next = Math.max(0, roundSeconds + deltaSec);
+        setRoundSeconds(next);
+        await broadcastTimerUpdate({
+            roundTimerDurationSec: next,
+            roundTimerRunning: roundRunning
+        });
+    };
+
     const handleStartBreak = async () => {
+        const secs = customBreakMinutes * 60;
         const updated = {
             ...eventState,
             phase: EVENT_PHASES.PHASE_3_BREAK,
             phaseTitle: customBreakTitle,
             breakTitle: customBreakTitle,
-            breakDurationSec: customBreakMinutes * 60
+            breakDurationSec: secs,
+            breakTimerRunning: true
         };
-        setBreakSeconds(customBreakMinutes * 60);
+        setBreakSeconds(secs);
         setBreakRunning(true);
         setEventState(updated);
         await broadcastEventState(updated);
         broadcastPlaySound('chime');
         setAwardMessage(`Break started: "${customBreakTitle}" for ${customBreakMinutes} mins`);
         setTimeout(() => setAwardMessage(null), 3000);
+    };
+
+    // Presentation & Stage Controls
+    const handleToggleAds = async () => {
+        const nextVal = !eventState.adEnabled;
+        const updated = { ...eventState, adEnabled: nextVal };
+        setEventState(updated);
+        await broadcastEventState(updated);
+        setAwardMessage(`Sponsor ads on stage: ${nextVal ? 'ENABLED' : 'MUTED'}`);
+        setTimeout(() => setAwardMessage(null), 2000);
+    };
+
+    const handleSaveAdMedia = async () => {
+        const updated = { ...eventState, adMediaUrl: adMediaUrlInput.trim() };
+        setEventState(updated);
+        await broadcastEventState(updated);
+        setAwardMessage('Stage sponsor media URL updated!');
+        setTimeout(() => setAwardMessage(null), 2000);
+    };
+
+    const handleToggleRedemptionLeaderboard = async () => {
+        const nextVal = !eventState.redemptionLeaderboardVisible;
+        const updated = { ...eventState, redemptionLeaderboardVisible: nextVal };
+        setEventState(updated);
+        await broadcastEventState(updated);
+        setAwardMessage(`Redemption track on stage leaderboard: ${nextVal ? 'SHOWN' : 'HIDDEN'}`);
+        setTimeout(() => setAwardMessage(null), 2000);
     };
 
     const handleSavePrompts = async () => {
@@ -149,18 +222,79 @@ export function EventAdmin() {
         setTimeout(() => setAwardMessage(null), 2500);
     };
 
-    const handleToggleElimination = async (team) => {
-        const newEliminatedState = !team.is_eliminated;
-        await toggleTeamElimination(team.id, newEliminatedState);
-        setTeams(prev => prev.map(t => t.id === team.id ? { ...t, is_eliminated: newEliminatedState, is_qualified: !newEliminatedState } : t));
+    // Promote a team to Round 3
+    const handlePromoteToRound3 = async (teamId) => {
+        const updatedIds = Array.from(new Set([...round3TeamIds, teamId]));
+        setRound3TeamIds(updatedIds);
+        const updatedState = { ...eventState, round3TeamIds: updatedIds };
+        setEventState(updatedState);
+        await broadcastEventState(updatedState);
+
+        await supabase
+            .from('event_teams')
+            .update({ is_qualified: true, is_eliminated: false, updated_at: new Date().toISOString() })
+            .eq('id', teamId);
+
+        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, is_qualified: true, is_eliminated: false } : t));
+        broadcastPlaySound('fanfare');
+        setAwardMessage(`Squad promoted directly to Round 3 Grand Final!`);
+        setTimeout(() => setAwardMessage(null), 2500);
     };
 
-    const handleToggleActive = async (team) => {
-        const newActive = !team.is_active;
-        await toggleTeamActiveStatus(team.id, newActive);
-        setTeams(prev => prev.map(t => t.id === team.id ? { ...t, is_active: newActive } : t));
+    // Demote / Remove a team from Round 3
+    const handleDemoteFromRound3 = async (teamId) => {
+        const updatedIds = round3TeamIds.filter(id => id !== teamId);
+        setRound3TeamIds(updatedIds);
+        const updatedState = { ...eventState, round3TeamIds: updatedIds };
+        setEventState(updatedState);
+        await broadcastEventState(updatedState);
+        setAwardMessage(`Squad removed from Round 3.`);
+        setTimeout(() => setAwardMessage(null), 2000);
     };
 
+    // Disqualify / Eliminate a team from anywhere
+    const handleEliminateTeam = async (teamId) => {
+        const updatedIds = round3TeamIds.filter(id => id !== teamId);
+        setRound3TeamIds(updatedIds);
+        const updatedState = { ...eventState, round3TeamIds: updatedIds };
+        setEventState(updatedState);
+        await broadcastEventState(updatedState);
+
+        await supabase
+            .from('event_teams')
+            .update({ is_eliminated: true, is_qualified: false, updated_at: new Date().toISOString() })
+            .eq('id', teamId);
+
+        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, is_eliminated: true, is_qualified: false } : t));
+        setAwardMessage(`Squad disqualified.`);
+        setTimeout(() => setAwardMessage(null), 2000);
+    };
+
+    // Qualify team to Track A
+    const handleQualifyToTrackA = async (teamId) => {
+        await supabase
+            .from('event_teams')
+            .update({ is_qualified: true, is_eliminated: false, updated_at: new Date().toISOString() })
+            .eq('id', teamId);
+
+        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, is_qualified: true, is_eliminated: false } : t));
+        setAwardMessage(`Squad assigned to Round 2 Track A (Qualifiers).`);
+        setTimeout(() => setAwardMessage(null), 2000);
+    };
+
+    // Route team to Track B (Redemption)
+    const handleRouteToTrackB = async (teamId) => {
+        await supabase
+            .from('event_teams')
+            .update({ is_eliminated: true, is_qualified: false, updated_at: new Date().toISOString() })
+            .eq('id', teamId);
+
+        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, is_eliminated: true, is_qualified: false } : t));
+        setAwardMessage(`Squad routed to Round 2 Track B (Redemption).`);
+        setTimeout(() => setAwardMessage(null), 2000);
+    };
+
+    // Award S-Coins
     const handleAwardPoints = async (teamId, amt = 100) => {
         if (!teamId || !amt) return;
         const res = await awardTeamSCoins(teamId, amt);
@@ -171,6 +305,7 @@ export function EventAdmin() {
         }
     };
 
+    // Member Register
     const handleRegisterMember = async (e) => {
         e.preventDefault();
         if (!registerTeamId || !agentIdInput.trim()) return;
@@ -194,16 +329,11 @@ export function EventAdmin() {
 
     // Category Pools
     const activeTeams = teams.filter(t => t.is_active);
-    const round1Pool = activeTeams; // All active squads
-    const round2QualifiedPool = activeTeams.filter(t => !t.is_eliminated); // Top squads
-    const round2RedemptionPool = activeTeams.filter(t => t.is_eliminated); // Eliminated squads
-    const round3FinalistsPool = activeTeams.filter(t => !t.is_eliminated).slice(0, 4); // Top 4 finalists
-
-    // Metrics
-    const totalCount = teams.length;
-    const activeCount = activeTeams.length;
-    const standingCount = round2QualifiedPool.length;
-    const eliminatedCount = round2RedemptionPool.length;
+    const round3Finalists = activeTeams.filter(t => round3TeamIds.includes(t.id));
+    const round2TrackA = activeTeams.filter(t => t.is_qualified && !t.is_eliminated && !round3TeamIds.includes(t.id));
+    const round2TrackB = activeTeams.filter(t => t.is_eliminated && !round3TeamIds.includes(t.id));
+    const round1Pool = activeTeams;
+    const disqualifiedPool = activeTeams.filter(t => t.is_eliminated);
 
     if (!isAuthenticated || !isLead) {
         return (
@@ -241,20 +371,24 @@ export function EventAdmin() {
 
                 <div className="flex items-center flex-wrap gap-2 text-xs font-mono">
                     <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
-                        <span className="text-zinc-400">TOTAL: </span>
-                        <strong className="text-white">{totalCount}</strong>
+                        <span className="text-zinc-400">TOTAL SQUADS: </span>
+                        <strong className="text-white">{teams.length}</strong>
                     </div>
                     <div className="px-3 py-1.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-cyan-300">
                         <span>ACTIVE: </span>
-                        <strong>{activeCount}</strong>
+                        <strong>{activeTeams.length}</strong>
                     </div>
                     <div className="px-3 py-1.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-emerald-300">
-                        <span>QUALIFIED: </span>
-                        <strong>{standingCount}</strong>
+                        <span>TRACK A (QUALIFIERS): </span>
+                        <strong>{round2TrackA.length}</strong>
                     </div>
                     <div className="px-3 py-1.5 rounded-xl bg-pink-950/30 border border-pink-500/30 text-pink-300">
-                        <span>REDEMPTION: </span>
-                        <strong>{eliminatedCount}</strong>
+                        <span>TRACK B (REDEMPTION): </span>
+                        <strong>{round2TrackB.length}</strong>
+                    </div>
+                    <div className="px-3 py-1.5 rounded-xl bg-yellow-950/30 border border-yellow-500/30 text-yellow-300">
+                        <span>ROUND 3 (FINALISTS): </span>
+                        <strong>{round3Finalists.length}/10</strong>
                     </div>
                     {broadcastSuccess && (
                         <span className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse font-bold">
@@ -264,122 +398,128 @@ export function EventAdmin() {
                 </div>
             </div>
 
-            {/* Notification */}
+            {/* Notification Banner */}
             {awardMessage && (
                 <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs font-mono font-bold flex items-center gap-2">
                     <CheckCircle2 size={14} className="text-emerald-400" /> {awardMessage}
                 </div>
             )}
 
-            {/* ── 1. LIVE EVENT SCENE TRANSITIONS & DEDICATED BREAK BOX ───────── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Main Event Progression */}
-                <div className="lg:col-span-2 p-5 rounded-2xl bg-black/40 border border-white/10 space-y-3">
+            {/* ── 1. LIVE EVENT SCENE TRANSITIONS (FULL NAMES VISIBLE) & BREAK BOX */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                {/* Main Event Scenes - Full Names Legible */}
+                <div className="lg:col-span-8 p-5 rounded-2xl bg-black/40 border border-white/10 space-y-3">
                     <div className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <Zap size={14} /> Main Event Scenes
+                        <Zap size={14} /> 1. Live Event Scene Transitions
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         {[
-                            { key: EVENT_PHASES.PHASE_0_CHECKIN, label: 'Phase 0: Check-In', sub: 'ID Pass' },
-                            { key: EVENT_PHASES.PHASE_0_5_AUDIENCE_TAP, label: 'Phase 0.5: Tap', sub: 'Arc Sync' },
-                            { key: EVENT_PHASES.PHASE_1_TEAMS, label: 'Phase 1: Teams', sub: 'Squad Pass' },
-                            { key: EVENT_PHASES.PHASE_2_ROUND_1, label: 'Round 1: Rev Hack', sub: 'Hackathon' },
-                            { key: EVENT_PHASES.PHASE_4_ROUND_2, label: 'Round 2: Dual Track', sub: 'Qual + Quiz' },
-                            { key: EVENT_PHASES.PHASE_5_ROUND_3, label: 'Round 3: Grand Final', sub: 'On Stage' },
+                            { key: EVENT_PHASES.PHASE_0_CHECKIN, label: 'Phase 0: Check-In', sub: 'Attendee Pass' },
+                            { key: EVENT_PHASES.PHASE_0_5_AUDIENCE_TAP, label: 'Phase 0.5: Audience Tap', sub: 'Arc Reactor Sync' },
+                            { key: EVENT_PHASES.PHASE_1_TEAMS, label: 'Phase 1: Squad Allocation', sub: 'Team Pass' },
+                            { key: EVENT_PHASES.PHASE_2_ROUND_1, label: 'Round 1: Reverse Hackathon', sub: 'Deconstruct & Fix' },
+                            { key: EVENT_PHASES.PHASE_4_ROUND_2, label: 'Round 2: Dual Tracks', sub: '16 Qualifiers + Redemption' },
+                            { key: EVENT_PHASES.PHASE_5_ROUND_3, label: 'Round 3: Grand Final', sub: '10 Finalists on Stage' },
                         ].map(p => {
                             const isActive = eventState.phase === p.key;
                             return (
                                 <button
                                     key={p.key}
                                     onClick={() => updatePhase(p.key, p.label)}
-                                    className={`p-3 rounded-xl text-left font-mono transition-all cursor-pointer ${
+                                    className={`p-3 rounded-xl text-left font-mono transition-all cursor-pointer flex flex-col justify-between ${
                                         isActive
-                                            ? 'bg-purple-600/30 border-2 border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.4)] text-white'
+                                            ? 'bg-purple-600/30 border-2 border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.4)] text-white'
                                             : 'bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:border-white/20'
                                     }`}
                                 >
-                                    <div className="text-xs font-bold truncate">{p.label}</div>
-                                    <div className="text-[10px] text-zinc-500">{p.sub}</div>
-                                    {isActive && <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 mt-1" />}
+                                    <div>
+                                        <div className="text-xs font-bold whitespace-normal leading-tight text-white">{p.label}</div>
+                                        <div className="text-[10px] text-zinc-400 mt-1">{p.sub}</div>
+                                    </div>
+                                    {isActive && (
+                                        <div className="mt-2 flex items-center gap-1 text-[10px] text-emerald-400 font-bold">
+                                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> LIVE ON AIR
+                                        </div>
+                                    )}
                                 </button>
                             );
                         })}
                     </div>
                 </div>
 
-                {/* Dedicated Customizable Break / Intermission Box */}
-                <div className="p-5 rounded-2xl bg-red-950/20 border border-red-500/30 space-y-3">
-                    <div className="flex items-center justify-between">
-                        <div className="text-xs font-mono font-bold text-red-300 uppercase tracking-wider flex items-center gap-1.5">
-                            <Coffee size={14} className="text-red-400" /> Break / Intermission
+                {/* Customizable Break / Intermission Box */}
+                <div className="lg:col-span-4 p-5 rounded-2xl bg-red-950/20 border border-red-500/30 space-y-3 flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="text-xs font-mono font-bold text-red-300 uppercase tracking-wider flex items-center gap-1.5">
+                                <Coffee size={14} className="text-red-400" /> Break / Intermission
+                            </div>
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold ${
+                                eventState.phase === EVENT_PHASES.PHASE_3_BREAK ? 'bg-red-500/30 text-red-200 animate-pulse' : 'bg-white/5 text-zinc-400'
+                            }`}>
+                                {eventState.phase === EVENT_PHASES.PHASE_3_BREAK ? 'ON AIR' : 'IDLE'}
+                            </span>
                         </div>
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold ${
-                            eventState.phase === EVENT_PHASES.PHASE_3_BREAK ? 'bg-red-500/30 text-red-200 animate-pulse' : 'bg-white/5 text-zinc-400'
-                        }`}>
-                            {eventState.phase === EVENT_PHASES.PHASE_3_BREAK ? 'ON AIR' : 'IDLE'}
-                        </span>
-                    </div>
 
-                    <div className="space-y-2">
                         <input
                             type="text"
                             value={customBreakTitle}
                             onChange={e => setCustomBreakTitle(e.target.value)}
                             placeholder="Break Heading (e.g. Red Bull Break)"
-                            className="w-full px-3 py-1.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-red-400"
+                            className="w-full px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-red-400 mb-2"
                         />
+                    </div>
 
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono text-zinc-300">
-                                <span>Duration:</span>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="60"
-                                    value={customBreakMinutes}
-                                    onChange={e => setCustomBreakMinutes(Number(e.target.value))}
-                                    className="w-10 bg-transparent text-white font-bold text-center outline-none"
-                                />
-                                <span>m</span>
-                            </div>
-
-                            <button
-                                onClick={handleStartBreak}
-                                className="flex-1 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold cursor-pointer transition-colors flex items-center justify-center gap-1"
-                            >
-                                <Play size={12} /> Start Break
-                            </button>
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-xs font-mono text-zinc-300">
+                            <span>Duration:</span>
+                            <input
+                                type="number"
+                                min="1"
+                                max="60"
+                                value={customBreakMinutes}
+                                onChange={e => setCustomBreakMinutes(Number(e.target.value))}
+                                className="w-10 bg-transparent text-white font-bold text-center outline-none"
+                            />
+                            <span>m</span>
                         </div>
+
+                        <button
+                            onClick={handleStartBreak}
+                            className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold cursor-pointer transition-colors flex items-center justify-center gap-1 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                        >
+                            <Play size={13} /> Start Break
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {/* ── 2. EDITABLE TIMERS & SOUND EFFECTS BAR ────────────────────────── */}
+            {/* ── 2. EDITABLE TIMERS & AUDIO SFX CONTROL ────────────────────────── */}
             <div className="p-5 rounded-2xl bg-black/40 border border-white/10 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <Clock size={14} /> Stage Timer & Audio SFX Control
+                        <Clock size={14} /> 2. Stage Timers & Audio SFX Control (Live Synced to Projector)
                     </div>
 
                     {/* SFX Triggers */}
                     <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-mono text-zinc-400 mr-1">PLAY SOUND:</span>
+                        <span className="text-[10px] font-mono text-zinc-400 mr-1">SFX:</span>
                         <button
                             onClick={() => broadcastPlaySound('buzzer')}
-                            className="px-2.5 py-1 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 font-mono text-[10px] font-bold cursor-pointer border border-red-500/40"
+                            className="px-3 py-1 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 font-mono text-[10px] font-bold cursor-pointer border border-red-500/40"
                         >
                             🚨 Buzzer
                         </button>
                         <button
                             onClick={() => broadcastPlaySound('fanfare')}
-                            className="px-2.5 py-1 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 font-mono text-[10px] font-bold cursor-pointer border border-yellow-500/40"
+                            className="px-3 py-1 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 font-mono text-[10px] font-bold cursor-pointer border border-yellow-500/40"
                         >
                             🏆 Fanfare
                         </button>
                         <button
                             onClick={() => broadcastPlaySound('chime')}
-                            className="px-2.5 py-1 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-mono text-[10px] font-bold cursor-pointer border border-cyan-400/40"
+                            className="px-3 py-1 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-mono text-[10px] font-bold cursor-pointer border border-cyan-400/40"
                         >
                             🔔 Chime
                         </button>
@@ -387,85 +527,245 @@ export function EventAdmin() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Round Timer */}
-                    <div className="p-4 rounded-xl bg-black/50 border border-white/10 flex items-center justify-between gap-4">
-                        <div>
-                            <div className="text-[10px] font-mono text-zinc-400 uppercase">Round Countdown</div>
-                            <div className="text-3xl font-black font-mono text-white tracking-widest">{formatTimer(roundSeconds)}</div>
+                    {/* Editable Round Timer */}
+                    <div className="p-4 rounded-xl bg-black/50 border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="text-[10px] font-mono text-zinc-400 uppercase">Round Countdown</div>
+                                <div className="text-3xl font-black font-mono text-white tracking-widest">{formatTimer(roundSeconds)}</div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={handleToggleRoundTimer}
+                                    className={`px-4 py-2 rounded-xl font-mono text-xs font-bold cursor-pointer ${
+                                        roundRunning ? 'bg-amber-500 text-black' : 'bg-cyan-500 text-black'
+                                    }`}
+                                >
+                                    {roundRunning ? 'Pause' : 'Start'}
+                                </button>
+                                <button
+                                    onClick={() => handleAdjustRoundSeconds(300)}
+                                    className="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-300 cursor-pointer"
+                                >
+                                    +5m
+                                </button>
+                                <button
+                                    onClick={() => handleAdjustRoundSeconds(-60)}
+                                    className="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-300 cursor-pointer"
+                                >
+                                    -1m
+                                </button>
+                                <button
+                                    onClick={() => handleApplyRoundDuration(customRoundMinutes)}
+                                    className="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-400 cursor-pointer"
+                                >
+                                    Reset
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="flex items-center flex-wrap gap-1.5">
+                        {/* Direct Editable Minutes Input */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-white/10 text-xs font-mono">
+                            <span className="text-zinc-400 text-[11px]">Set Duration:</span>
+                            <input
+                                type="number"
+                                min="1"
+                                max="180"
+                                value={customRoundMinutes}
+                                onChange={e => setCustomRoundMinutes(Number(e.target.value))}
+                                className="w-16 px-2 py-1 rounded bg-black border border-white/20 text-white font-bold text-center"
+                            />
+                            <span className="text-zinc-400 text-[11px]">mins</span>
                             <button
-                                onClick={() => setRoundRunning(!roundRunning)}
-                                className="px-3 py-1.5 rounded-lg bg-cyan-500 text-black font-mono text-xs font-bold cursor-pointer"
+                                onClick={() => handleApplyRoundDuration(customRoundMinutes)}
+                                className="px-3 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-[11px] font-bold cursor-pointer"
                             >
-                                {roundRunning ? 'Pause' : 'Start'}
-                            </button>
-                            <button
-                                onClick={() => setRoundSeconds(prev => prev + 300)}
-                                className="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-300 cursor-pointer"
-                            >
-                                +5m
-                            </button>
-                            <button
-                                onClick={() => setRoundSeconds(prev => Math.max(0, prev - 60))}
-                                className="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-300 cursor-pointer"
-                            >
-                                -1m
-                            </button>
-                            <button
-                                onClick={() => { setRoundRunning(false); setRoundSeconds(customRoundMinutes * 60); }}
-                                className="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-400 cursor-pointer"
-                            >
-                                Reset
+                                Apply to Stage
                             </button>
                         </div>
                     </div>
 
-                    {/* Break Timer */}
-                    <div className="p-4 rounded-xl bg-black/50 border border-white/10 flex items-center justify-between gap-4">
-                        <div>
-                            <div className="text-[10px] font-mono text-zinc-400 uppercase">Break Countdown</div>
-                            <div className="text-3xl font-black font-mono text-yellow-300 tracking-widest">{formatTimer(breakSeconds)}</div>
+                    {/* Editable Break Timer */}
+                    <div className="p-4 rounded-xl bg-black/50 border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="text-[10px] font-mono text-zinc-400 uppercase">Break Countdown</div>
+                                <div className="text-3xl font-black font-mono text-yellow-300 tracking-widest">{formatTimer(breakSeconds)}</div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={() => setBreakRunning(!breakRunning)}
+                                    className="px-4 py-2 rounded-xl bg-red-500 text-white font-mono text-xs font-bold cursor-pointer"
+                                >
+                                    {breakRunning ? 'Pause' : 'Start'}
+                                </button>
+                                <button
+                                    onClick={() => setBreakSeconds(prev => prev + 300)}
+                                    className="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-300 cursor-pointer"
+                                >
+                                    +5m
+                                </button>
+                                <button
+                                    onClick={() => setBreakSeconds(prev => Math.max(0, prev - 60))}
+                                    className="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-300 cursor-pointer"
+                                >
+                                    -1m
+                                </button>
+                                <button
+                                    onClick={() => { setBreakRunning(false); setBreakSeconds(customBreakMinutes * 60); }}
+                                    className="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-400 cursor-pointer"
+                                >
+                                    Reset
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="flex items-center flex-wrap gap-1.5">
+                        {/* Direct Editable Break Minutes */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-white/10 text-xs font-mono">
+                            <span className="text-zinc-400 text-[11px]">Set Break:</span>
+                            <input
+                                type="number"
+                                min="1"
+                                max="60"
+                                value={customBreakMinutes}
+                                onChange={e => setCustomBreakMinutes(Number(e.target.value))}
+                                className="w-16 px-2 py-1 rounded bg-black border border-white/20 text-white font-bold text-center"
+                            />
+                            <span className="text-zinc-400 text-[11px]">mins</span>
                             <button
-                                onClick={() => setBreakRunning(!breakRunning)}
-                                className="px-3 py-1.5 rounded-lg bg-red-500 text-white font-mono text-xs font-bold cursor-pointer"
+                                onClick={() => {
+                                    setBreakSeconds(customBreakMinutes * 60);
+                                    setBreakRunning(false);
+                                    broadcastTimerUpdate({ breakDurationSec: customBreakMinutes * 60, breakTimerRunning: false });
+                                }}
+                                className="px-3 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 text-[11px] font-bold cursor-pointer"
                             >
-                                {breakRunning ? 'Pause' : 'Start'}
-                            </button>
-                            <button
-                                onClick={() => setBreakSeconds(prev => prev + 300)}
-                                className="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-300 cursor-pointer"
-                            >
-                                +5m
-                            </button>
-                            <button
-                                onClick={() => { setBreakRunning(false); setBreakSeconds(customBreakMinutes * 60); }}
-                                className="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-400 cursor-pointer"
-                            >
-                                Reset
+                                Apply to Stage
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* ── 3. SEPARATE TEAM SECTIONS FOR ROUNDS 1, 2, AND 3 ─────────────── */}
+            {/* ── 3. PRESENTATION & STAGE SCREEN CONTROLS ─────────────────────── */}
+            <div className="p-5 rounded-2xl bg-black/40 border border-indigo-500/30 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+                    <div className="text-xs font-mono font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Monitor size={14} className="text-indigo-400" /> 3. Presentation & Stage Screen Controls
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <a
+                            href="/presentation"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-3 py-1 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-400/40 text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer"
+                        >
+                            <ExternalLink size={12} /> Open Stage Projector
+                        </a>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Sponsor Ads & Partner Media */}
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                                <Video size={13} className="text-red-400" /> Sponsor Ads Overlay
+                            </span>
+                            <button
+                                onClick={handleToggleAds}
+                                className={`px-2.5 py-0.5 rounded text-[10px] font-mono font-bold cursor-pointer ${
+                                    eventState.adEnabled ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50' : 'bg-zinc-800 text-zinc-400'
+                                }`}
+                            >
+                                {eventState.adEnabled ? 'ACTIVE (ON)' : 'MUTED (OFF)'}
+                            </button>
+                        </div>
+                        <p className="text-[10px] font-mono text-zinc-400">
+                            Rotates Red Bull, GitHub, and Synapse partner cards during keynote and session screens.
+                        </p>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={adMediaUrlInput}
+                                onChange={e => setAdMediaUrlInput(e.target.value)}
+                                placeholder="Custom Video/Banner URL"
+                                className="flex-1 px-2.5 py-1 rounded-lg bg-black border border-white/10 text-[11px] font-mono text-white"
+                            />
+                            <button
+                                onClick={handleSaveAdMedia}
+                                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-mono font-bold text-white cursor-pointer"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Stage Leaderboard Redemption Overlay */}
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                                <Flame size={13} className="text-pink-400" /> Redemption Standings
+                            </span>
+                            <button
+                                onClick={handleToggleRedemptionLeaderboard}
+                                className={`px-2.5 py-0.5 rounded text-[10px] font-mono font-bold cursor-pointer ${
+                                    eventState.redemptionLeaderboardVisible ? 'bg-pink-500/30 text-pink-300 border border-pink-500/50' : 'bg-zinc-800 text-zinc-400'
+                                }`}
+                            >
+                                {eventState.redemptionLeaderboardVisible ? 'VISIBLE' : 'HIDDEN'}
+                            </button>
+                        </div>
+                        <p className="text-[10px] font-mono text-zinc-400">
+                            Shows or hides the Round 2 Track B (Redemption) live quiz scores on the stage projector.
+                        </p>
+                    </div>
+
+                    {/* Ceremonial Inauguration Redirects */}
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+                        <span className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                            <Sparkles size={13} className="text-yellow-400" /> Inauguration Dignitary Portals
+                        </span>
+                        <div className="grid grid-cols-2 gap-1.5">
+                            {[
+                                { name: 'Main Reactor', path: '/inauguration' },
+                                { name: 'Dean Key', path: '/inauguration/dean' },
+                                { name: 'HOD Key', path: '/inauguration/hod' },
+                                { name: 'Pro-VC Key', path: '/inauguration/provc' },
+                                { name: 'President Key', path: '/inauguration/president' },
+                                { name: 'Audience Tap', path: '/audience' },
+                            ].map(l => (
+                                <a
+                                    key={l.path}
+                                    href={l.path}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="p-1.5 rounded-lg bg-black/40 hover:bg-black/80 border border-white/10 text-[10px] font-mono text-zinc-300 hover:text-white flex items-center justify-between"
+                                >
+                                    <span>{l.name}</span>
+                                    <ExternalLink size={9} className="text-zinc-500" />
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── 4. SEPARATE SQUAD SECTIONS BY ROUND & TRACK ──────────────────── */}
             <div className="space-y-6">
-                {/* Search / Filter */}
+                {/* Search Bar */}
                 <div className="flex items-center justify-between gap-4">
                     <div className="text-sm font-black font-mono text-white uppercase tracking-wider flex items-center gap-2">
-                        <Users size={16} className="text-purple-400" /> Squad Rosters by Round & Track
+                        <Users size={16} className="text-purple-400" /> 4. Competition Squad Rosters & Track Governance
                     </div>
 
                     <div className="relative w-64">
                         <Search size={13} className="absolute left-3 top-2.5 text-zinc-500" />
                         <input
                             type="text"
-                            placeholder="Filter squads..."
+                            placeholder="Filter squads by code or name..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                             className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-cyan-400"
@@ -481,7 +781,7 @@ export function EventAdmin() {
                                 <Award size={14} /> ROUND 1: REVERSE HACKATHON ROSTER ({round1Pool.length} Active Squads)
                             </div>
                             <p className="text-[11px] font-mono text-zinc-400 mt-0.5">
-                                All registered squads competing in Round 1. Max Reward: +500 S-Coins (50 XP).
+                                All registered squads start here. Top 16 advance to Track A; remaining route to Track B (Redemption).
                             </p>
                         </div>
 
@@ -517,7 +817,7 @@ export function EventAdmin() {
                     )}
 
                     {/* Squads in Round 1 */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
                         {round1Pool
                             .filter(t => t.name?.toLowerCase().includes(searchQuery.toLowerCase()) || t.code?.toLowerCase().includes(searchQuery.toLowerCase()))
                             .map(team => (
@@ -537,12 +837,29 @@ export function EventAdmin() {
                                             +100
                                         </button>
                                         <button
-                                            onClick={() => handleToggleElimination(team)}
+                                            onClick={() => handleQualifyToTrackA(team.id)}
                                             className={`px-2 py-1 rounded text-[10px] font-mono font-bold cursor-pointer ${
-                                                team.is_eliminated ? 'bg-red-500/20 text-red-300' : 'bg-emerald-500/20 text-emerald-300'
+                                                team.is_qualified && !team.is_eliminated ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50' : 'bg-white/5 text-zinc-400 hover:text-white'
                                             }`}
+                                            title="Qualify to Round 2 Track A (Top 16)"
                                         >
-                                            {team.is_eliminated ? 'Redeem' : 'Qualify'}
+                                            Track A
+                                        </button>
+                                        <button
+                                            onClick={() => handleRouteToTrackB(team.id)}
+                                            className={`px-2 py-1 rounded text-[10px] font-mono font-bold cursor-pointer ${
+                                                team.is_eliminated ? 'bg-pink-500/30 text-pink-300 border border-pink-500/50' : 'bg-white/5 text-zinc-400 hover:text-white'
+                                            }`}
+                                            title="Route to Round 2 Track B (Redemption)"
+                                        >
+                                            Track B
+                                        </button>
+                                        <button
+                                            onClick={() => handleEliminateTeam(team.id)}
+                                            className="p-1.5 rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 text-[10px] font-mono font-bold cursor-pointer border border-red-500/40"
+                                            title="Eliminate Squad"
+                                        >
+                                            <Trash2 size={11} />
                                         </button>
                                     </div>
                                 </div>
@@ -555,10 +872,10 @@ export function EventAdmin() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
                         <div>
                             <div className="text-xs font-bold text-purple-300 font-mono flex items-center gap-1.5">
-                                <Award size={14} /> ROUND 2: DUAL TRACKS (Top 16 Qualifiers + Redemption Track)
+                                <Award size={14} /> ROUND 2: DUAL TRACKS (Track A: 16 Qualifiers | Track B: Redemption)
                             </div>
                             <p className="text-[11px] font-mono text-zinc-400 mt-0.5">
-                                Track A: Top 16 squads submitting proposals. Track B: Knocked-out squads reclaiming points via Redemption Quiz.
+                                Track A: 16 teams (Disqualified teams are eliminated). Track B: Remaining teams (Promoted teams go directly to Round 3).
                             </p>
                         </div>
 
@@ -594,84 +911,98 @@ export function EventAdmin() {
                     )}
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {/* Track A: Qualified Teams (Top 16) */}
+                        {/* Track A: 16 Qualifiers */}
                         <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 space-y-3">
                             <div className="flex items-center justify-between text-xs font-mono">
-                                <span className="font-bold text-emerald-300">TRACK A: QUALIFIERS ({round2QualifiedPool.length})</span>
+                                <span className="font-bold text-emerald-300">TRACK A: 16 QUALIFIERS ({round2TrackA.length})</span>
                                 <span className="text-zinc-400 text-[10px]">Proposal Track</span>
                             </div>
 
-                            <div className="space-y-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
-                                {round2QualifiedPool.length > 0 ? (
-                                    round2QualifiedPool.map(team => (
-                                        <div key={team.id} className="p-2 rounded-lg bg-black/40 border border-emerald-500/20 flex items-center justify-between text-xs">
+                            <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                                {round2TrackA.length > 0 ? (
+                                    round2TrackA.map(team => (
+                                        <div key={team.id} className="p-2.5 rounded-lg bg-black/40 border border-emerald-500/20 flex items-center justify-between text-xs">
                                             <div className="flex items-center gap-2 min-w-0">
                                                 <span>{team.badge}</span>
                                                 <div className="truncate font-bold text-white">{team.name}</div>
                                             </div>
-                                            <div className="flex items-center gap-1.5">
+                                            <div className="flex items-center gap-1.5 flex-shrink-0">
                                                 <span className="font-mono text-yellow-300 font-bold">{team.s_coins || 0} S</span>
                                                 <button
                                                     onClick={() => handleAwardPoints(team.id, 100)}
-                                                    className="px-2 py-0.5 rounded bg-yellow-500/15 text-yellow-300 text-[10px] font-mono cursor-pointer"
+                                                    className="px-2 py-1 rounded bg-yellow-500/15 text-yellow-300 text-[10px] font-mono cursor-pointer"
                                                 >
                                                     +100
                                                 </button>
                                                 <button
-                                                    onClick={() => handleToggleElimination(team)}
-                                                    className="p-1 rounded bg-red-500/20 text-red-300 text-[10px] font-mono cursor-pointer"
-                                                    title="Move to Redemption Track"
+                                                    onClick={() => handlePromoteToRound3(team.id)}
+                                                    className="px-2.5 py-1 rounded bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 text-[10px] font-mono font-bold cursor-pointer border border-yellow-500/40 flex items-center gap-1"
+                                                    title="Promote squad to Round 3 Grand Final"
                                                 >
-                                                    <ArrowDownLeft size={12} />
+                                                    <Trophy size={11} /> To R3
+                                                </button>
+                                                <button
+                                                    onClick={() => handleEliminateTeam(team.id)}
+                                                    className="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-300 text-[10px] font-mono font-bold cursor-pointer border border-red-500/40"
+                                                    title="Eliminate Squad completely"
+                                                >
+                                                    Eliminate
                                                 </button>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="text-center py-6 text-xs font-mono text-zinc-500">
-                                        No squads qualified yet. Qualify squads in Round 1 above.
+                                    <div className="text-center py-8 text-xs font-mono text-zinc-500">
+                                        No squads in Track A. Click "Track A" on squads in Round 1 above.
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Track B: Round of Redemption Teams */}
+                        {/* Track B: Round of Redemption */}
                         <div className="p-4 rounded-xl bg-pink-950/20 border border-pink-500/30 space-y-3">
                             <div className="flex items-center justify-between text-xs font-mono">
-                                <span className="font-bold text-pink-300">TRACK B: REDEMPTION ({round2RedemptionPool.length})</span>
+                                <span className="font-bold text-pink-300">TRACK B: REDEMPTION ({round2TrackB.length})</span>
                                 <span className="text-zinc-400 text-[10px]">Quiz Track</span>
                             </div>
 
-                            <div className="space-y-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
-                                {round2RedemptionPool.length > 0 ? (
-                                    round2RedemptionPool.map(team => (
-                                        <div key={team.id} className="p-2 rounded-lg bg-black/40 border border-pink-500/20 flex items-center justify-between text-xs">
+                            <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                                {round2TrackB.length > 0 ? (
+                                    round2TrackB.map(team => (
+                                        <div key={team.id} className="p-2.5 rounded-lg bg-black/40 border border-pink-500/20 flex items-center justify-between text-xs">
                                             <div className="flex items-center gap-2 min-w-0">
                                                 <span>{team.badge}</span>
                                                 <div className="truncate font-bold text-white">{team.name}</div>
                                             </div>
-                                            <div className="flex items-center gap-1.5">
+                                            <div className="flex items-center gap-1.5 flex-shrink-0">
                                                 <span className="font-mono text-pink-300 font-bold">{team.quiz_score || 0} pts</span>
                                                 <span className="font-mono text-yellow-300 font-bold">({team.s_coins || 0} S)</span>
                                                 <button
                                                     onClick={() => handleAwardPoints(team.id, 100)}
-                                                    className="px-2 py-0.5 rounded bg-yellow-500/15 text-yellow-300 text-[10px] font-mono cursor-pointer"
+                                                    className="px-2 py-1 rounded bg-yellow-500/15 text-yellow-300 text-[10px] font-mono cursor-pointer"
                                                 >
                                                     +100
                                                 </button>
                                                 <button
-                                                    onClick={() => handleToggleElimination(team)}
-                                                    className="p-1 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-mono cursor-pointer"
-                                                    title="Promote back to Qualifiers"
+                                                    onClick={() => handlePromoteToRound3(team.id)}
+                                                    className="px-2.5 py-1 rounded bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 text-[10px] font-mono font-bold cursor-pointer border border-yellow-500/40 flex items-center gap-1"
+                                                    title="Promote winning redemption squad directly to Round 3"
                                                 >
-                                                    <ArrowUpRight size={12} />
+                                                    <Trophy size={11} /> To R3
+                                                </button>
+                                                <button
+                                                    onClick={() => handleEliminateTeam(team.id)}
+                                                    className="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-300 text-[10px] font-mono font-bold cursor-pointer border border-red-500/40"
+                                                    title="Eliminate Squad"
+                                                >
+                                                    Eliminate
                                                 </button>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="text-center py-6 text-xs font-mono text-zinc-500">
-                                        No squads in redemption track.
+                                    <div className="text-center py-8 text-xs font-mono text-zinc-500">
+                                        No squads in Track B. Click "Track B" on squads in Round 1 above.
                                     </div>
                                 )}
                             </div>
@@ -679,15 +1010,15 @@ export function EventAdmin() {
                     </div>
                 </div>
 
-                {/* ── ROUND 3 SECTION (GRAND FINALISTS SHOWDOWN) ───────────────── */}
+                {/* ── ROUND 3 SECTION (10 FINALIST SQUADS ON STAGE) ─────────────── */}
                 <div className="p-5 rounded-2xl bg-black/40 border border-yellow-500/30 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
                         <div>
                             <div className="text-xs font-bold text-yellow-300 font-mono flex items-center gap-1.5">
-                                <Trophy size={14} /> ROUND 3: GRAND FINAL SHOWDOWN ({round3FinalistsPool.length} Finalists)
+                                <Trophy size={14} /> ROUND 3: GRAND FINAL SHOWDOWN ({round3Finalists.length}/10 Finalists)
                             </div>
                             <p className="text-[11px] font-mono text-zinc-400 mt-0.5">
-                                Top finalist squads defending system architecture live on the stage projector.
+                                10 finalist squads (e.g. 8 from Track A + 2 from Track B) presenting live on the stage projector.
                             </p>
                         </div>
 
@@ -722,19 +1053,80 @@ export function EventAdmin() {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                        {round3FinalistsPool.map((team, idx) => (
-                            <div key={team.id} className="p-3 rounded-xl bg-yellow-950/20 border border-yellow-500/30 text-center space-y-1">
-                                <div className="text-[10px] font-mono text-yellow-400 font-bold">FINALIST #{idx + 1}</div>
-                                <div className="text-2xl">{team.badge}</div>
-                                <div className="text-xs font-bold text-white truncate">{team.name}</div>
-                                <div className="text-xs font-mono text-yellow-300 font-black">{team.s_coins || 0} S-Coins</div>
-                            </div>
-                        ))}
-                    </div>
+                    {round3Finalists.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                            {round3Finalists.map((team, idx) => (
+                                <div key={team.id} className="p-3 rounded-xl bg-yellow-950/20 border border-yellow-500/40 text-center space-y-2 relative overflow-hidden">
+                                    <div className="text-[10px] font-mono text-yellow-400 font-bold">FINALIST #{idx + 1}</div>
+                                    <div className="text-3xl">{team.badge}</div>
+                                    <div className="text-xs font-bold text-white truncate">{team.name}</div>
+                                    <div className="text-sm font-mono text-yellow-300 font-black">{team.s_coins || 0} S-Coins</div>
+
+                                    <div className="flex items-center justify-center gap-1 pt-2 border-t border-white/10">
+                                        <button
+                                            onClick={() => handleAwardPoints(team.id, 500)}
+                                            className="px-2 py-1 rounded bg-yellow-500/20 text-yellow-300 text-[10px] font-mono font-bold cursor-pointer"
+                                        >
+                                            +500
+                                        </button>
+                                        <button
+                                            onClick={() => handleDemoteFromRound3(team.id)}
+                                            className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-zinc-400 text-[10px] font-mono cursor-pointer"
+                                            title="Demote from Round 3"
+                                        >
+                                            Demote
+                                        </button>
+                                        <button
+                                            onClick={() => handleEliminateTeam(team.id)}
+                                            className="p-1 rounded bg-red-500/20 text-red-300 text-[10px] font-mono cursor-pointer"
+                                            title="Eliminate Squad"
+                                        >
+                                            <Trash2 size={11} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-8 text-xs font-mono text-zinc-500">
+                            No squads in Round 3 yet. Click "To R3" on squads in Track A or Track B above to lock in the 10 finalists.
+                        </div>
+                    )}
                 </div>
 
-                {/* ── ALL SQUADS & AGENT ID REGISTRATION DIRECTORY ─────────────── */}
+                {/* ── DISQUALIFIED / ELIMINATED ARCHIVE (WITH RESTORE) ─────────── */}
+                <div className="p-4 rounded-2xl bg-red-950/10 border border-red-500/20">
+                    <button
+                        onClick={() => setShowDisqualifiedArchive(!showDisqualifiedArchive)}
+                        className="w-full flex items-center justify-between text-xs font-mono text-red-300 font-bold cursor-pointer"
+                    >
+                        <span className="flex items-center gap-1.5">
+                            <Trash2 size={13} className="text-red-400" /> Disqualified / Eliminated Archive ({disqualifiedPool.length} Squads)
+                        </span>
+                        {showDisqualifiedArchive ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
+
+                    {showDisqualifiedArchive && (
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                            {disqualifiedPool.map(team => (
+                                <div key={team.id} className="p-2 rounded-lg bg-black/40 border border-red-500/20 flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <span>{team.badge}</span>
+                                        <div className="truncate font-bold text-zinc-400">{team.name}</div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleQualifyToTrackA(team.id)}
+                                        className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-mono cursor-pointer flex items-center gap-1"
+                                    >
+                                        <Undo2 size={10} /> Restore
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* ── SQUAD DIRECTORY & AGENT ID REGISTRATION ──────────────────── */}
                 <div className="p-5 rounded-2xl bg-black/40 border border-white/10 space-y-4">
                     <div className="flex items-center justify-between pb-3 border-b border-white/10">
                         <div className="text-xs font-mono font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">

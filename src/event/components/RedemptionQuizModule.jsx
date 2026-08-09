@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, CheckCircle2, XCircle, Coins, Zap, Trophy, ArrowRight } from 'lucide-react';
+import { HelpCircle, CheckCircle2, XCircle, Coins, Zap, Trophy, ArrowRight, Loader2 } from 'lucide-react';
 import { addUserSCoins } from '../lib/eventState';
 
 export function RedemptionQuizModule({ user, questions = [], onFinished }) {
@@ -11,18 +11,34 @@ export function RedemptionQuizModule({ user, questions = [], onFinished }) {
     const [earnedCoins, setEarnedCoins] = useState(0);
     const [quizComplete, setQuizComplete] = useState(false);
 
+    if (!questions || questions.length === 0) {
+        return (
+            <div className="w-full max-w-xl mx-auto p-8 rounded-3xl bg-black/40 border border-pink-500/30 text-center">
+                <Loader2 size={32} className="text-pink-400 animate-spin mx-auto mb-3" />
+                <h4 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
+                    Loading Redemption Questions...
+                </h4>
+                <p className="text-xs font-mono text-zinc-400 mt-1">
+                    Connecting to live PostgreSQL question bank.
+                </p>
+            </div>
+        );
+    }
+
     const currentQ = questions[currentIndex] || questions[0];
+    const correctIdx = currentQ?.correct_index ?? currentQ?.correctIndex ?? 0;
+    const rewardAmt = currentQ?.reward_s_coins ?? currentQ?.rewardSCoins ?? 100;
 
     const handleSelect = (index) => {
         if (isAnswered) return;
         setSelectedOption(index);
         setIsAnswered(true);
 
-        const isCorrect = index === currentQ.correctIndex;
+        const isCorrect = index === correctIdx;
         if (isCorrect) {
             setScore(prev => prev + 1);
-            setEarnedCoins(prev => prev + (currentQ.rewardSCoins || 100));
-            addUserSCoins(user?.id, currentQ.rewardSCoins || 100);
+            setEarnedCoins(prev => prev + rewardAmt);
+            if (user?.id) addUserSCoins(user.id, rewardAmt);
         }
     };
 
@@ -107,7 +123,7 @@ export function RedemptionQuizModule({ user, questions = [], onFinished }) {
                         <div className="space-y-2.5 mb-6">
                             {currentQ?.options?.map((option, idx) => {
                                 const isChosen = selectedOption === idx;
-                                const isCorrect = idx === currentQ.correctIndex;
+                                const isCorrect = idx === correctIdx;
                                 let border = '1px solid rgba(255, 255, 255, 0.1)';
                                 let bg = 'rgba(255, 255, 255, 0.03)';
                                 let text = 'text-zinc-200';

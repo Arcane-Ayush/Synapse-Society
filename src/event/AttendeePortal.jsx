@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Sparkles, Zap, Lock, LogIn, Users, Award, Radio, Clock, Coffee, Play, Flame } from 'lucide-react';
+import { Shield, Sparkles, Zap, Lock, LogIn, Users, Award, Radio, Clock, Coffee, Play, Flame, Trophy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LoginModal } from '../components/LoginModal';
 import { AgentIdBadge } from './components/AgentIdBadge';
@@ -147,22 +147,42 @@ export function AttendeePortal() {
     const isDocked = eventState.phase !== EVENT_PHASES.PHASE_0_CHECKIN;
 
     return (
-        <div className="min-h-screen px-3 sm:px-4 py-8 pb-24 relative overflow-hidden">
+        <div className="min-h-screen w-full flex flex-col items-center justify-center px-3 sm:px-4 py-8 relative overflow-hidden">
             {/* Ambient Background Glow */}
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
 
-            {/* Always Rendered Agent ID: Full Card during Phase 0, Docked Top HUD during Phase 1+ */}
-            <AgentIdBadge
-                user={user}
-                profile={profile}
-                isDocked={isDocked}
-                assignedTeam={assignedTeam}
-                sCoins={sCoins}
-            />
+            {/* Docked Top HUD Badge (Fixed at top of viewport during Phase 1+) */}
+            {isDocked && (
+                <div className="fixed top-3 left-0 right-0 z-40 px-3 flex justify-center pointer-events-auto">
+                    <div className="w-full max-w-xl">
+                        <AgentIdBadge
+                            user={user}
+                            profile={profile}
+                            isDocked={true}
+                            assignedTeam={assignedTeam}
+                            sCoins={sCoins}
+                        />
+                    </div>
+                </div>
+            )}
 
-            {/* Dynamic Event Phase Body */}
-            <div className="max-w-xl mx-auto mt-6">
-                <AnimatePresence mode="wait">
+            {/* Viewport-Centered Interactive Module Container */}
+            <div className={`w-full max-w-xl flex flex-col items-center justify-center z-10 ${isDocked ? 'pt-16' : ''}`}>
+                {!isDocked && (
+                    <div className="w-full mb-4">
+                        <AgentIdBadge
+                            user={user}
+                            profile={profile}
+                            isDocked={false}
+                            assignedTeam={assignedTeam}
+                            sCoins={sCoins}
+                        />
+                    </div>
+                )}
+
+                {/* Dynamic Event Phase Body */}
+                <div className="w-full">
+                    <AnimatePresence mode="wait">
                     {/* Phase 0: Identity Check-In */}
                     {eventState.phase === EVENT_PHASES.PHASE_0_CHECKIN && (
                         <motion.div
@@ -383,6 +403,7 @@ export function AttendeePortal() {
                         </motion.div>
                     )}
                 </AnimatePresence>
+                </div>
             </div>
         </div>
     );
