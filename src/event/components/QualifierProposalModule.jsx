@@ -44,7 +44,7 @@ export function QualifierProposalModule({ user, prompt, assignedTeam, onSubmitte
                     </div>
                     <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-xs font-mono font-bold text-yellow-300">
                         <Coins size={12} className="text-yellow-400" />
-                        +{prompt?.rewardSCoins || 1000} S-Coins
+                        +{prompt?.rewardSCoins || 500} S (= {Math.floor((prompt?.rewardSCoins || 500) / 10)} XP)
                     </div>
                 </div>
 
@@ -57,8 +57,11 @@ export function QualifierProposalModule({ user, prompt, assignedTeam, onSubmitte
 
                 <div className="p-4 rounded-2xl bg-black/40 border border-white/10 mb-6">
                     <p className="text-xs text-zinc-300 leading-relaxed font-mono">
-                        {prompt?.description || 'Formulate your team proposal detailing real-world scalability, deployment cost, and benchmarks for your solution.'}
+                        {prompt?.description || 'Top 16 squads: Draft scalable cloud deployment architecture. Eliminated squads play the Redemption Quiz to reclaim points.'}
                     </p>
+                    <div className="mt-2 text-[10px] font-mono text-cyan-300">
+                        ⚡ Top finalists advance to Round 3 Grand Final. 10 S-Coins = 1 XP.
+                    </div>
                 </div>
 
                 {submitted ? (

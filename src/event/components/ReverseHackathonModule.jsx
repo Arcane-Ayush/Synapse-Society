@@ -45,15 +45,18 @@ export function ReverseHackathonModule({ user, prompt, onSubmitted }) {
                     </div>
                     <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-xs font-mono font-bold text-yellow-300">
                         <Coins size={12} className="text-yellow-400" />
-                        +{prompt?.rewardSCoins || 500} S-Coins
+                        +{prompt?.rewardSCoins || 500} S (= {Math.floor((prompt?.rewardSCoins || 500) / 10)} XP)
                     </div>
                 </div>
 
-                {/* Minimal Prompt Card */}
+                {/* Concise Challenge Card */}
                 <div className="p-4 rounded-2xl bg-black/40 border border-white/10 mb-6">
                     <p className="text-xs text-zinc-300 leading-relaxed font-mono">
-                        {prompt?.description || 'Deconstruct the obfuscated neural algorithm. Fix the logic fault and deploy your patched repository.'}
+                        {prompt?.description || 'Deconstruct the provided algorithm, isolate the latent logical defect, and submit your patched repository link.'}
                     </p>
+                    <div className="mt-2 text-[10px] font-mono text-cyan-300">
+                        ⚡ Top 16 squads advance to Round 2. 10 S-Coins = 1 XP.
+                    </div>
                 </div>
 
                 {/* Submission Form or Under Review */}

@@ -33,6 +33,7 @@ function AnimatedRoutes() {
         <Route path="/hiddenportal" element={<PageTransition><HiddenPortal /></PageTransition>} />
 
         {/* Neural Nexus Live Event Attendee Portal (Printed QR Routes) */}
+        <Route path="/ucn/app/event/launch" element={<PageTransition><AttendeePortal /></PageTransition>} />
         <Route path="/ucn/app/event/launch/state/components/exists/202608100001/users" element={<PageTransition><AttendeePortal /></PageTransition>} />
         <Route path="/ucn/app/event/launch/state/components/exists/202608100001/userslpha" element={<PageTransition><AttendeePortal /></PageTransition>} />
         <Route path="/users" element={<PageTransition><AttendeePortal /></PageTransition>} />
