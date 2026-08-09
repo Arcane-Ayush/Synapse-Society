@@ -1,13 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import { BlackHole } from "../themes/basic/BlackHole";
 import {
   ShieldCheck, Award, Sparkles, Zap, CheckCircle2, RefreshCw,
-  Crown, Star, Users, Sliders, Radio, Flame
+  Star, Users, Sliders, Radio, Flame, ChevronRight, Maximize, Minimize
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-// Role definitions
+// Role definitions (4 roles: HOD, Dean, President, Audience - 25% each)
 const ROLE_DEFINITIONS = {
   hod: {
     id: 'hod',
@@ -17,9 +20,12 @@ const ROLE_DEFINITIONS = {
     department: 'Department of Computer Science & Engineering',
     color: '#06B6D4',
     rgbColor: '6, 182, 212',
-    defaultWeight: 20,
+    defaultWeight: 25,
     icon: Star,
     badgeText: 'HOD OFFICIAL KEY',
+    headlineFirst: 'Where Ideas',
+    headlineHighlight: 'SPARK',
+    headlineLast: 'into Reality.',
   },
   dean: {
     id: 'dean',
@@ -29,21 +35,12 @@ const ROLE_DEFINITIONS = {
     department: 'Chandigarh University',
     color: '#A855F7',
     rgbColor: '168, 85, 247',
-    defaultWeight: 20,
+    defaultWeight: 25,
     icon: Award,
     badgeText: 'DEAN OFFICIAL KEY',
-  },
-  provc: {
-    id: 'provc',
-    role: 'Pro Vice Chancellor',
-    shortName: 'Pro VC',
-    title: 'Pro Vice Chancellor (Pro VC)',
-    department: 'Chandigarh University',
-    color: '#F59E0B',
-    rgbColor: '245, 158, 11',
-    defaultWeight: 20,
-    icon: Crown,
-    badgeText: 'PRO VC OFFICIAL KEY',
+    headlineFirst: 'Empowering',
+    headlineHighlight: 'FUTURE',
+    headlineLast: 'Tech Leaders.',
   },
   president: {
     id: 'president',
@@ -53,9 +50,12 @@ const ROLE_DEFINITIONS = {
     department: 'Student Executive Body',
     color: '#EC4899',
     rgbColor: '236, 72, 153',
-    defaultWeight: 20,
+    defaultWeight: 25,
     icon: Zap,
     badgeText: 'PRESIDENT KEY',
+    headlineFirst: 'Pioneering',
+    headlineHighlight: 'STUDENT',
+    headlineLast: 'Excellence.',
   },
   audience: {
     id: 'audience',
@@ -65,9 +65,12 @@ const ROLE_DEFINITIONS = {
     department: 'Chandigarh University Community',
     color: '#00F0FF',
     rgbColor: '0, 240, 255',
-    defaultWeight: 20,
+    defaultWeight: 25,
     icon: Users,
-    badgeText: 'ARC REACTOR POWER',
+    badgeText: '',
+    headlineFirst: 'Uniting',
+    headlineHighlight: 'COMMUNITY',
+    headlineLast: 'Together.',
   },
 };
 
@@ -75,16 +78,14 @@ const DEFAULT_STATE = {
   completed: {
     hod: false,
     dean: false,
-    provc: false,
     president: false,
     audience: false,
   },
   weights: {
-    hod: 20,
-    dean: 20,
-    provc: 20,
-    president: 20,
-    audience: 20,
+    hod: 25,
+    dean: 25,
+    president: 25,
+    audience: 25,
   },
   audienceHoldSeconds: 0,
 };
@@ -145,8 +146,101 @@ function playAudioSignal(type) {
   }
 }
 
+// SLIDING ACTIVATION KEY COMPONENT FOR DIGNITARIES (GPU ACCELERATED & ULTRA SMOOTH)
+function SlideToActivateButton({ role, isActivated, onActivate }) {
+  const trackRef = useRef(null);
+  const [maxDrag, setMaxDrag] = useState(240);
+  const x = useMotionValue(0);
+
+  // Smoothly transform filled progress bar width directly on GPU without React re-renders
+  const fillWidth = useTransform(x, (currentX) => `${Math.max(48, currentX + 52)}px`);
+
+  useEffect(() => {
+    const updateMaxDrag = () => {
+      if (trackRef.current) {
+        setMaxDrag(Math.max(120, trackRef.current.clientWidth - 58));
+      }
+    };
+    updateMaxDrag();
+    window.addEventListener('resize', updateMaxDrag);
+    return () => window.removeEventListener('resize', updateMaxDrag);
+  }, []);
+
+  const handleDragEnd = () => {
+    if (isActivated) return;
+    const currentX = x.get();
+    if (currentX >= maxDrag * 0.45) {
+      onActivate();
+    } else {
+      animate(x, 0, { type: 'spring', stiffness: 450, damping: 28 });
+    }
+  };
+
+  if (isActivated) {
+    return (
+      <div
+        className="w-full max-w-sm h-16 rounded-full border backdrop-blur-xl flex items-center justify-center gap-3 px-6 shadow-2xl transition-all duration-500 animate-pulse"
+        style={{
+          background: `rgba(${role?.rgbColor || '16, 185, 129'}, 0.15)`,
+          borderColor: `rgba(${role?.rgbColor || '16, 185, 129'}, 0.5)`,
+          boxShadow: `0 0 35px rgba(${role?.rgbColor || '16, 185, 129'}, 0.35)`,
+        }}
+      >
+        <CheckCircle2 size={24} style={{ color: role?.color || '#10B981' }} className="animate-bounce" />
+        <span
+          className="text-xs sm:text-sm font-black font-mono tracking-wider uppercase"
+          style={{ color: role?.color || '#10B981' }}
+        >
+          {role?.shortName} KEY ACTIVATED
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={trackRef}
+      className="w-full max-w-sm h-16 rounded-full bg-[#030308]/95 border p-1.5 relative overflow-hidden flex items-center justify-between shadow-2xl select-none touch-none"
+      style={{
+        borderColor: `rgba(${role?.rgbColor || '124, 58, 237'}, 0.4)`,
+        boxShadow: `0 0 30px rgba(${role?.rgbColor || '124, 58, 237'}, 0.25)`,
+      }}
+    >
+      {/* Filled progress bar driven directly by MotionValue (Zero React Re-renders) */}
+      <motion.div
+        className="absolute top-1.5 bottom-1.5 left-1.5 rounded-full pointer-events-none"
+        style={{
+          width: fillWidth,
+          background: `linear-gradient(90deg, rgba(${role?.rgbColor || '124, 58, 237'}, 0.4) 0%, ${role?.color || '#A855F7'} 100%)`,
+        }}
+      />
+
+      <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-mono font-bold tracking-widest text-purple-200/90 uppercase pointer-events-none pl-12 pr-4 text-center">
+        SLIDE TO ACTIVATE {role?.shortName} KEY →
+      </span>
+
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: maxDrag }}
+        dragElastic={0.02}
+        dragMomentum={false}
+        style={{ x }}
+        onDragEnd={handleDragEnd}
+        className="w-13 h-13 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing z-10 border border-white/40 shadow-xl touch-none"
+        style={{
+          x,
+          background: `linear-gradient(135deg, ${role?.color || '#A855F7'} 0%, #7C3AED 100%)`,
+          boxShadow: `0 0 25px ${role?.color || '#A855F7'}`,
+        }}
+      >
+        <ChevronRight size={22} className="text-white animate-pulse" />
+      </motion.div>
+    </div>
+  );
+}
+
 // Movie-Accurate Iron Man Arc Reactor Component
-function ArcReactor({ cps, isActivated, progress, isStageScreen }) {
+function ArcReactor({ cps, isActivated, isStageScreen }) {
   const spinDuration = isActivated
     ? 0.4
     : Math.max(0.2, 8 / Math.max(1, cps * 2.5));
@@ -157,20 +251,18 @@ function ArcReactor({ cps, isActivated, progress, isStageScreen }) {
 
   return (
     <div className={`relative ${sizeClasses} flex items-center justify-center my-4 select-none`}>
-      {/* Outer Bright Cyan Flare */}
       <div
         className="absolute inset-0 rounded-full transition-all duration-300 pointer-events-none"
         style={{
           background: isActivated
-            ? 'radial-gradient(circle, rgba(0, 240, 255, 0.8) 0%, rgba(0, 240, 255, 0.25) 60%, transparent 75%)'
-            : `radial-gradient(circle, rgba(0, 240, 255, ${Math.min(0.45, 0.1 + cps * 0.04)}) 0%, transparent 70%)`,
+            ? 'radial-gradient(circle, rgba(0, 240, 255, 0.85) 0%, rgba(168, 85, 247, 0.35) 55%, transparent 75%)'
+            : `radial-gradient(circle, rgba(168, 85, 247, ${Math.min(0.4, 0.15 + cps * 0.04)}) 0%, rgba(0, 240, 255, ${Math.min(0.35, 0.1 + cps * 0.03)}) 50%, transparent 70%)`,
           boxShadow: isActivated
-            ? '0 0 140px rgba(0, 240, 255, 1), 0 0 200px rgba(255, 255, 255, 0.95)'
-            : `0 0 ${20 + cps * 6}px rgba(0, 240, 255, 0.5)`,
+            ? '0 0 160px rgba(0, 240, 255, 1), 0 0 220px rgba(168, 85, 247, 0.95)'
+            : `0 0 ${25 + cps * 7}px rgba(168, 85, 247, 0.6)`,
         }}
       />
 
-      {/* Rotating Outer Rim */}
       <div
         className="absolute inset-0 rounded-full flex items-center justify-center pointer-events-none"
         style={{
@@ -236,10 +328,9 @@ function ArcReactor({ cps, isActivated, progress, isStageScreen }) {
         </svg>
       </div>
 
-      {/* Inner Metallic Arc Core */}
-      <div className="absolute inset-10 rounded-full bg-slate-950/95 border-4 border-slate-900 shadow-[inset_0_0_40px_#00F0FF] flex items-center justify-center overflow-hidden">
+      <div className="absolute inset-10 rounded-full bg-[#030308]/95 border-4 border-[#080812] shadow-[inset_0_0_40px_#00F0FF] flex items-center justify-center overflow-hidden">
         <svg viewBox="0 0 200 200" className="w-full h-full absolute inset-0">
-          <circle cx="100" cy="100" r="82" fill="none" stroke="#1E293B" strokeWidth="16" />
+          <circle cx="100" cy="100" r="82" fill="none" stroke="#0f172a" strokeWidth="16" />
           {Array.from({ length: 20 }).map((_, i) => {
             const angle = (i * 18 * Math.PI) / 180;
             const hx = 100 + 82 * Math.sin(angle);
@@ -247,13 +338,13 @@ function ArcReactor({ cps, isActivated, progress, isStageScreen }) {
             return <circle key={i} cx={hx} cy={hy} r="3.8" fill="#00F0FF" opacity="0.9" filter="url(#arc-glow-lg)" />;
           })}
 
-          <circle cx="100" cy="100" r="64" fill="none" stroke="#0B0F19" strokeWidth="4" />
+          <circle cx="100" cy="100" r="64" fill="none" stroke="#050811" strokeWidth="4" />
           <circle cx="100" cy="100" r="50" fill="none" stroke="#00F0FF" strokeWidth="2" opacity="0.65" />
-          <circle cx="100" cy="100" r="36" fill="none" stroke="#0B0F19" strokeWidth="4" />
+          <circle cx="100" cy="100" r="36" fill="none" stroke="#050811" strokeWidth="4" />
 
           {[0, 120, 240].map((deg, i) => (
             <g key={i} transform={`rotate(${deg} 100 100)`}>
-              <rect x="96" y="24" width="8" height="52" fill="#0B0F19" stroke="#1E293B" strokeWidth="1" />
+              <rect x="96" y="24" width="8" height="52" fill="#050811" stroke="#1E293B" strokeWidth="1" />
               <line x1="98" y1="30" x2="98" y2="70" stroke="#00F0FF" strokeWidth="1.5" opacity="0.9" />
               <line x1="102" y1="30" x2="102" y2="70" stroke="#00F0FF" strokeWidth="1.5" opacity="0.9" />
             </g>
@@ -262,18 +353,6 @@ function ArcReactor({ cps, isActivated, progress, isStageScreen }) {
           <circle cx="100" cy="100" r="28" fill="#00F0FF" opacity={isActivated ? "1" : "0.9"} filter="url(#arc-glow-lg)" />
           <circle cx="100" cy="100" r="18" fill="#FFFFFF" />
         </svg>
-
-        <div className="relative z-10 flex flex-col items-center justify-center text-center text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
-          <span className="text-[10px] sm:text-xs font-mono tracking-widest text-cyan-200 font-extrabold uppercase">
-            ARC CORE
-          </span>
-          <span
-            className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight drop-shadow-[0_0_20px_#00F0FF]"
-            style={{ fontFamily: 'Space Grotesk' }}
-          >
-            {Math.round(progress)}%
-          </span>
-        </div>
       </div>
     </div>
   );
@@ -287,7 +366,6 @@ export function Inauguration() {
 
   const getRoleFromPath = () => {
     const path = location.pathname.toLowerCase();
-    if (path.includes('provc') || path.includes('pro-vc')) return 'provc';
     if (path.includes('dean')) return 'dean';
     if (path.includes('hod')) return 'hod';
     if (path.includes('president')) return 'president';
@@ -300,9 +378,16 @@ export function Inauguration() {
   const currentRole = currentRoleKey ? ROLE_DEFINITIONS[currentRoleKey] : null;
   const isMainStageScreen = !currentRoleKey;
 
+  const STORAGE_KEY = 'synapse_inauguration_v13_void3d';
+  const CHANNEL_NAME = 'synapse_inauguration_ceremony_v13_void3d';
+  const LOCAL_BC_NAME = 'synapse_inauguration_v13_void3d_local';
+
   const [ceremonyState, setCeremonyState] = useState(() => {
     try {
-      const saved = localStorage.getItem('synapse_inauguration_v8');
+      ['synapse_inauguration_v6', 'synapse_inauguration_v7', 'synapse_inauguration_v8', 'synapse_inauguration_v9_reset', 'synapse_inauguration_v10_4roles', 'synapse_inauguration_v11_slider', 'synapse_inauguration_v12_synapsetheme'].forEach((k) => {
+        try { localStorage.removeItem(k); } catch (err) { }
+      });
+      const saved = localStorage.getItem(STORAGE_KEY);
       return saved ? JSON.parse(saved) : DEFAULT_STATE;
     } catch {
       return DEFAULT_STATE;
@@ -312,11 +397,24 @@ export function Inauguration() {
   const [showConfig, setShowConfig] = useState(false);
   const [clickTimestamps, setClickTimestamps] = useState([]);
   const [cps, setCps] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Dignitary baseline safe floor
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+      setIsFullscreen(false);
+    }
+  };
+
+  // Dignitary baseline safe floor (HOD, Dean, President = 25% each)
   const calculateDignitaryBaseline = (state) => {
     let baseline = 0;
-    ['hod', 'dean', 'provc', 'president'].forEach((key) => {
+    ['hod', 'dean', 'president'].forEach((key) => {
       if (state.completed[key]) {
         baseline += Number(state.weights[key] ?? ROLE_DEFINITIONS[key].defaultWeight);
       }
@@ -325,7 +423,7 @@ export function Inauguration() {
   };
 
   const dignitaryBaseline = calculateDignitaryBaseline(ceremonyState);
-  const audienceWeight = Number(ceremonyState.weights.audience ?? 20);
+  const audienceWeight = Number(ceremonyState.weights.audience ?? 25);
 
   // Total progress calculation
   const calculateTotalProgress = (state) => {
@@ -339,14 +437,14 @@ export function Inauguration() {
   };
 
   const totalProgress = calculateTotalProgress(ceremonyState);
-  const isFullyInaugurated = totalProgress >= 100 || (ceremonyState.completed.hod && ceremonyState.completed.dean && ceremonyState.completed.provc && ceremonyState.completed.president && ceremonyState.completed.audience);
+  const isFullyInaugurated = totalProgress >= 100 || (ceremonyState.completed.hod && ceremonyState.completed.dean && ceremonyState.completed.president && ceremonyState.completed.audience);
 
   // Broadcast state helper
   const broadcastState = (newState) => {
     setCeremonyState(newState);
     try {
-      localStorage.setItem('synapse_inauguration_v8', JSON.stringify(newState));
-    } catch (e) {}
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
+    } catch (e) { }
 
     if (channelRef.current) {
       channelRef.current.send({
@@ -357,15 +455,15 @@ export function Inauguration() {
     }
 
     try {
-      const localBc = new BroadcastChannel('synapse_inauguration_v8_local');
+      const localBc = new BroadcastChannel(LOCAL_BC_NAME);
       localBc.postMessage({ type: 'state', payload: newState });
       localBc.close();
-    } catch (e) {}
+    } catch (e) { }
   };
 
-  // Synchronized Realtime Setup (Supabase Broadcast + Local Storage + BroadcastChannel)
+  // Synchronized Realtime Setup
   useEffect(() => {
-    const channel = supabase.channel('synapse_inauguration_ceremony_v8', {
+    const channel = supabase.channel(CHANNEL_NAME, {
       config: { broadcast: { self: true } },
     });
 
@@ -376,8 +474,8 @@ export function Inauguration() {
         if (payload) {
           setCeremonyState(payload);
           try {
-            localStorage.setItem('synapse_inauguration_v8', JSON.stringify(payload));
-          } catch (e) {}
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+          } catch (e) { }
         }
       })
       .on('broadcast', { event: 'audience_click' }, () => {
@@ -391,19 +489,18 @@ export function Inauguration() {
       })
       .subscribe();
 
-    // Native Cross-Tab Storage Listener for zero delay sync
     const handleStorageChange = (e) => {
-      if (e.key === 'synapse_inauguration_v8' && e.newValue) {
+      if (e.key === STORAGE_KEY && e.newValue) {
         try {
           setCeremonyState(JSON.parse(e.newValue));
-        } catch (err) {}
+        } catch (err) { }
       }
     };
     window.addEventListener('storage', handleStorageChange);
 
     let localBc;
     try {
-      localBc = new BroadcastChannel('synapse_inauguration_v8_local');
+      localBc = new BroadcastChannel(LOCAL_BC_NAME);
       localBc.onmessage = (event) => {
         if (event.data?.type === 'state') {
           setCeremonyState(event.data.payload);
@@ -417,7 +514,7 @@ export function Inauguration() {
           });
         }
       };
-    } catch (e) {}
+    } catch (e) { }
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -426,7 +523,7 @@ export function Inauguration() {
     };
   }, []);
 
-  // CPS recalculation & hold timer loop (every 200ms) with automatic state broadcasting
+  // CPS recalculation & hold timer loop (every 200ms)
   useEffect(() => {
     const timer = setInterval(() => {
       const now = Date.now();
@@ -476,13 +573,13 @@ export function Inauguration() {
     return () => clearInterval(timer);
   }, [clickTimestamps]);
 
-  // Dignitary Key Activation
+  // Dignitary Key Activation Trigger
   const handleActivateRoleKey = () => {
     if (!currentRoleKey || currentRoleKey === 'audience' || ceremonyState.completed[currentRoleKey]) return;
 
     playAudioSignal('activate');
     if (navigator.vibrate) {
-      try { navigator.vibrate([100, 50, 200]); } catch (e) {}
+      try { navigator.vibrate([100, 50, 200]); } catch (e) { }
     }
 
     const newState = {
@@ -505,7 +602,7 @@ export function Inauguration() {
 
     playAudioSignal('click');
     if (navigator.vibrate) {
-      try { navigator.vibrate(30); } catch (e) {}
+      try { navigator.vibrate(30); } catch (e) { }
     }
 
     setClickTimestamps((prev) => {
@@ -524,10 +621,10 @@ export function Inauguration() {
     }
 
     try {
-      const localBc = new BroadcastChannel('synapse_inauguration_v8_local');
+      const localBc = new BroadcastChannel(LOCAL_BC_NAME);
       localBc.postMessage({ type: 'click' });
       localBc.close();
-    } catch (err) {}
+    } catch (err) { }
   };
 
   const handleWeightChange = (roleId, value) => {
@@ -547,7 +644,6 @@ export function Inauguration() {
       completed: {
         hod: false,
         dean: false,
-        provc: false,
         president: false,
         audience: false,
       },
@@ -557,47 +653,45 @@ export function Inauguration() {
     broadcastState(resetState);
   };
 
-  // MAIN STAGE WIDESCREEN DISPLAY (NO CONTAINER BOXES, PURE BORDERLESS STAGE INTERFACE)
+  // MAIN STAGE WIDESCREEN DISPLAY WITH 3D BLACK HOLE VOID THEME
   if (isMainStageScreen) {
     return (
-      <div className="min-h-screen w-full flex flex-col justify-between items-center px-6 py-8 relative overflow-hidden text-white select-none">
-        {/* Stage Atmospheric Background Elements */}
-        <div
-          className="absolute inset-0 pointer-events-none transition-all duration-1000"
-          style={{
-            background: isFullyInaugurated
-              ? 'radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.3) 0%, rgba(124, 58, 237, 0.2) 50%, rgba(7, 7, 14, 0.98) 100%)'
-              : 'radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.15) 0%, rgba(7, 7, 14, 0.98) 80%)',
-          }}
-        />
-
+      <div className="fixed inset-0 z-50 w-screen h-screen overflow-hidden flex flex-col justify-between items-center px-6 py-5 bg-[#020205] text-white select-none">
         {/* Laser Grid Accent Line */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_20px_#00F0FF]" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-600 to-transparent shadow-[0_0_15px_#7C3AED] z-10" />
 
         {/* Stage Header */}
-        <div className="w-full max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4 z-10 pt-2 border-b border-white/10 pb-4">
+        <div className="w-full max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4 z-10 pt-1 border-b border-purple-900/20 pb-3">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center shadow-[0_0_20px_rgba(0,240,255,0.3)]">
-              <Sparkles size={24} className="text-cyan-400 animate-pulse" />
+            <div className="w-12 h-12 rounded-2xl bg-black/60 border border-purple-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(124,58,237,0.2)]">
+              <Sparkles size={24} className="text-purple-400 animate-pulse" />
             </div>
             <div className="text-left">
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white" style={{ fontFamily: 'Space Grotesk' }}>
                 SYNAPSE SOCIETY
               </h1>
-              <p className="text-xs font-mono text-cyan-300 tracking-wider">
-                OFFICIAL INAUGURATION CEREMONY • CHANDIGARH UNIVERSITY
+              <p className="text-xs font-mono text-purple-400/80 tracking-wider">
+                STUDENT-RUN TECH COLLECTIVE • CHANDIGARH UNIVERSITY
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/10 border border-cyan-400/20 text-xs font-mono">
-              <Radio size={14} className="text-cyan-400 animate-pulse" />
-              <span className="text-cyan-200 font-bold">STAGE DISPLAY • REALTIME SYNC</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 border border-purple-500/30 text-xs font-mono">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-purple-200 font-bold uppercase tracking-wider">• STAGE SYSTEM • REALTIME SYNC</span>
             </div>
             <button
+              onClick={toggleFullscreen}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 border border-purple-500/20 text-purple-300 hover:text-purple-200 text-xs font-mono font-bold transition-colors cursor-pointer hover:border-purple-500/40"
+              title="Toggle Fullscreen"
+            >
+              {isFullscreen ? <Minimize size={13} /> : <Maximize size={13} />}
+              <span>{isFullscreen ? 'EXIT FULL' : 'FULLSCREEN'}</span>
+            </button>
+            <button
               onClick={() => setShowConfig(!showConfig)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-cyan-400 hover:text-cyan-300 text-xs font-mono font-bold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 border border-purple-500/20 text-purple-300 hover:text-purple-200 text-xs font-mono font-bold transition-colors cursor-pointer hover:border-purple-500/40"
             >
               <Sliders size={13} />
               <span>{showConfig ? 'HIDE CONFIG' : 'EDIT %'}</span>
@@ -612,25 +706,25 @@ export function Inauguration() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="w-full max-w-4xl bg-black/90 border border-cyan-500/40 rounded-2xl p-5 my-4 backdrop-blur-2xl space-y-4 text-left z-20 shadow-2xl"
+              className="w-full max-w-4xl bg-[#040409]/95 border border-purple-500/30 rounded-2xl p-5 my-4 backdrop-blur-2xl space-y-4 text-left z-20 shadow-[0_10px_30px_rgba(0,0,0,0.8)]"
             >
-              <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                <span className="text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider">
+              <div className="flex justify-between items-center border-b border-purple-900/30 pb-2">
+                <span className="text-xs font-mono font-bold text-purple-300 uppercase tracking-wider">
                   ⚙️ STAGE CONTROL: EDITABLE ROLE WEIGHTS (%)
                 </span>
                 <button
                   onClick={handleResetCeremony}
-                  className="px-3 py-1.5 rounded-lg bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-mono font-bold hover:bg-red-500/30 cursor-pointer flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg bg-red-950/40 border border-red-500/30 text-red-400 text-xs font-mono font-bold hover:bg-red-900/50 cursor-pointer flex items-center gap-1.5 transition-colors"
                 >
                   <RefreshCw size={12} /> RESET CEREMONY
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs font-mono">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
                 {Object.values(ROLE_DEFINITIONS).map((role) => (
                   <div
                     key={role.id}
-                    className="flex flex-col p-2.5 rounded-xl bg-white/5 border border-white/10 space-y-1"
+                    className="flex flex-col p-2.5 rounded-xl bg-black/50 border border-purple-900/30 space-y-1"
                   >
                     <span className="text-gray-300 font-bold">{role.shortName}:</span>
                     <div className="flex items-center gap-1">
@@ -640,7 +734,7 @@ export function Inauguration() {
                         max="100"
                         value={ceremonyState.weights[role.id] ?? role.defaultWeight}
                         onChange={(e) => handleWeightChange(role.id, e.target.value)}
-                        className="w-16 bg-black/80 border border-cyan-400/40 rounded px-2 py-1 text-white font-bold text-center focus:outline-none focus:border-cyan-400"
+                        className="w-16 bg-black border border-purple-500/40 rounded px-2 py-1 text-white font-bold text-center focus:outline-none focus:border-purple-400"
                       />
                       <span className="text-gray-400">%</span>
                     </div>
@@ -651,25 +745,82 @@ export function Inauguration() {
           )}
         </AnimatePresence>
 
-        {/* Center Stage Arc Reactor Core Display (BORDERLESS) */}
-        <div className="my-auto flex flex-col items-center justify-center z-10">
-          <ArcReactor
-            cps={cps}
-            isActivated={ceremonyState.completed.audience || isFullyInaugurated}
-            progress={totalProgress}
-            isStageScreen={true}
-          />
+        {/* Center Stage Headline & Arc Reactor Display with Cyberpunk Percentage Readout */}
+        <div className="my-auto flex flex-col items-center justify-center z-10 text-center w-full max-w-6xl space-y-4 px-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/60 border border-purple-500/30 text-xs font-mono tracking-wider text-purple-300 uppercase mb-2 shadow-[0_0_15px_rgba(124,58,237,0.15)]">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>STUDENT-RUN TECH COLLECTIVE • CHANDIGARH UNIVERSITY</span>
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center justify-center gap-12 sm:gap-20 md:gap-24 lg:gap-36 my-2 w-full">
+            {/* Shifted Arc Reactor with 3D Black Hole centered directly behind it */}
+            <div className="flex-shrink-0 relative md:-ml-12 lg:-ml-20 transition-all duration-300 flex items-center justify-center">
+              {/* 3D BlackHole Canvas centered exactly behind Arc Reactor */}
+              <div className="absolute -inset-20 sm:-inset-28 lg:-inset-36 pointer-events-none z-0 opacity-80 flex items-center justify-center">
+                <Canvas camera={{ position: [0, 2.5, 6], fov: 60 }}>
+                  <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
+                  <BlackHole scale={1.15} position={[0, 0, 0]} />
+                </Canvas>
+              </div>
+
+              <div className="relative z-10">
+                <ArcReactor
+                  cps={cps}
+                  isActivated={ceremonyState.completed.audience || isFullyInaugurated}
+                  isStageScreen={true}
+                />
+              </div>
+            </div>
+
+            {/* Cyberpunk Percentage Readout Panel on the Right */}
+            <div className="flex flex-col items-center md:items-start text-center md:text-left z-10 space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-cyan-950/50 border border-cyan-500/40 text-[11px] font-mono tracking-widest text-cyan-300 uppercase shadow-[0_0_15px_rgba(0,240,255,0.25)]">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                <span>[ ARC_CORE // POWER_OUTPUT ]</span>
+              </div>
+
+              {/* Giant Cyberpunk Percentage Display */}
+              <div className="relative flex items-baseline justify-center md:justify-start gap-2 my-1 select-none">
+                <span
+                  className="text-7xl sm:text-8xl lg:text-9xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-cyan-400 to-purple-400 drop-shadow-[0_0_35px_rgba(0,240,255,0.85)]"
+                  style={{ fontFamily: "'Orbitron', sans-serif", letterSpacing: '-0.02em' }}
+                >
+                  {Math.round(totalProgress)}
+                </span>
+                <span
+                  className="text-4xl sm:text-5xl lg:text-6xl font-black text-cyan-400 drop-shadow-[0_0_20px_rgba(0,240,255,0.8)]"
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
+                >
+                  %
+                </span>
+              </div>
+
+              {/* Cyber Telemetry Metrics */}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1">
+                <div className="px-3 py-1 rounded-lg bg-black/70 border border-purple-500/30 text-xs font-mono text-purple-200 flex items-center gap-2 shadow-[0_0_10px_rgba(124,58,237,0.15)]">
+                  <span className="text-gray-400 font-medium">STATUS:</span>
+                  <span className={isFullyInaugurated ? "text-emerald-400 font-extrabold tracking-wider" : "text-cyan-300 font-extrabold tracking-wider animate-pulse"}>
+                    {isFullyInaugurated ? "100% ONLINE" : "CHARGING ARCHITECTURE"}
+                  </span>
+                </div>
+                <div className="px-3 py-1 rounded-lg bg-black/70 border border-purple-500/30 text-xs font-mono text-purple-200 flex items-center gap-2 shadow-[0_0_10px_rgba(124,58,237,0.15)]">
+                  <span className="text-gray-400 font-medium">SPEED:</span>
+                  <span className="text-cyan-400 font-extrabold">{cps.toFixed(1)} CPS</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {isFullyInaugurated && (
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="mt-4 px-8 py-4 rounded-3xl bg-cyan-500/10 border border-cyan-400/40 backdrop-blur-2xl shadow-[0_0_60px_rgba(0,240,255,0.4)] text-center space-y-1"
+              className="mt-2 px-8 py-4 rounded-3xl bg-[#090514]/90 border border-purple-500/40 backdrop-blur-2xl shadow-[0_0_60px_rgba(124,58,237,0.3)] text-center space-y-1"
             >
-              <h2 className="text-2xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-purple-300 tracking-tight" style={{ fontFamily: 'Space Grotesk' }}>
+              <h2 className="text-2xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-cyan-300 tracking-tight" style={{ fontFamily: 'Space Grotesk' }}>
                 SYNAPSE SOCIETY IS OFFICIALLY LIVE! 🎉
               </h2>
-              <p className="text-xs font-mono text-emerald-400 font-bold tracking-widest uppercase">
+              <p className="text-xs sm:text-sm font-mono text-emerald-400 font-bold tracking-widest uppercase">
                 ALL CEREMONIAL KEYS ACTIVATED • SYSTEM OPERATIONAL
               </p>
             </motion.div>
@@ -677,46 +828,44 @@ export function Inauguration() {
         </div>
 
         {/* Widescreen Bottom Panel */}
-        <div className="w-full max-w-7xl z-10 space-y-6 pt-4 border-t border-white/10">
+        <div className="w-full max-w-7xl z-10 space-y-6 pt-4 border-t border-purple-900/20">
           {/* Main Stage Progress Bar */}
           <div className="w-full space-y-2">
             <div className="flex justify-between items-center text-xs font-mono text-gray-300">
-              <span className="flex items-center gap-1.5 text-cyan-300">
-                <ShieldCheck size={14} className="text-cyan-400" /> SAFE FLOOR: {dignitaryBaseline}%
+              <span className="flex items-center gap-1.5 text-purple-300">
+                <ShieldCheck size={14} className="text-purple-400" /> SAFE FLOOR: {dignitaryBaseline}%
               </span>
-              <span className="text-cyan-300 font-bold flex items-center gap-2">
+              <span className="text-purple-300 font-bold flex items-center gap-2">
                 {ceremonyState.completed.audience || isFullyInaugurated ? (
                   <span className="text-emerald-400 flex items-center gap-1 font-extrabold">✓ ARC REACTOR FULLY ACTIVATED</span>
                 ) : (
-                  <span className="text-cyan-400 flex items-center gap-1.5 font-extrabold">
-                    <Flame size={14} className="animate-pulse text-cyan-300" /> CROWD REALTIME SPEED REACTION
+                  <span className="text-purple-300 flex items-center gap-1.5 font-extrabold">
+                    <Flame size={14} className="animate-pulse text-purple-400" /> CROWD REALTIME SPEED REACTION
                   </span>
                 )}
               </span>
             </div>
 
-            <div className="w-full h-6 bg-white/5 rounded-full overflow-hidden border border-cyan-500/40 p-0.5 relative shadow-[0_0_30px_rgba(0,240,255,0.15)]">
-              {/* Dignitary Safe Floor Marker */}
+            <div className="w-full h-6 bg-black/80 rounded-full overflow-hidden border border-purple-500/30 p-0.5 relative shadow-[0_0_25px_rgba(124,58,237,0.15)]">
               <div
-                className="absolute top-0 bottom-0 w-1.5 bg-cyan-400 z-30 shadow-[0_0_15px_#00F0FF]"
+                className="absolute top-0 bottom-0 w-1.5 bg-purple-400 z-30 shadow-[0_0_15px_#A855F7]"
                 style={{ left: `${dignitaryBaseline}%` }}
                 title={`Dignitary Baseline Safe Floor: ${dignitaryBaseline}%`}
               />
 
-              {/* Progress Bar Fill */}
               <motion.div
                 className="h-full rounded-full transition-all duration-300"
                 style={{
                   width: `${totalProgress}%`,
-                  background: 'linear-gradient(90deg, #06B6D4 0%, #00F0FF 50%, #10B981 100%)',
-                  boxShadow: '0 0 30px rgba(0, 240, 255, 0.9)',
+                  background: 'linear-gradient(90deg, #6D28D9 0%, #00F0FF 50%, #10B981 100%)',
+                  boxShadow: '0 0 25px rgba(109, 40, 217, 0.8)',
                 }}
               />
             </div>
           </div>
 
-          {/* Widescreen 5-Column Role Node Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 text-center">
+          {/* Widescreen 4-Column Role Node Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-center">
             {Object.values(ROLE_DEFINITIONS).map((role) => {
               const isDone = ceremonyState.completed[role.id];
               const weightVal = ceremonyState.weights[role.id] ?? role.defaultWeight;
@@ -724,17 +873,16 @@ export function Inauguration() {
               return (
                 <div
                   key={role.id}
-                  className={`flex flex-col items-center justify-between p-3 sm:p-4 rounded-2xl border transition-all duration-300 ${
-                    isDone
-                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.25)]'
-                      : 'bg-white/5 border-white/10 text-gray-400'
-                  }`}
+                  className={`flex flex-col items-center justify-between p-3 sm:p-4 rounded-2xl border transition-all duration-300 ${isDone
+                      ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.2)]'
+                      : 'bg-black/60 border-purple-900/30 text-gray-400 hover:border-purple-500/40 hover:bg-black/80'
+                    }`}
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <IconComp size={16} style={{ color: role.color }} />
                     <span className="text-xs font-black font-mono text-white">{role.shortName}</span>
                   </div>
-                  <div className="text-[10px] font-mono text-gray-400 mb-2">
+                  <div className="text-[10px] font-mono text-purple-300/60 mb-2">
                     Weight: +{weightVal}%
                   </div>
                   <div>
@@ -743,7 +891,7 @@ export function Inauguration() {
                         <CheckCircle2 size={14} className="animate-pulse" /> ACTIVATED
                       </span>
                     ) : (
-                      <span className="text-[11px] font-mono text-gray-500">
+                      <span className="text-[11px] font-mono text-purple-400/40 font-bold">
                         PENDING
                       </span>
                     )}
@@ -752,214 +900,131 @@ export function Inauguration() {
               );
             })}
           </div>
+
+          {/* Footer tagline */}
+          <div className="text-center text-[10px] font-mono tracking-widest text-purple-400/40 uppercase">
+            • BUILD • LEARN • ELEVATE •
+          </div>
         </div>
       </div>
     );
   }
 
-  // MOBILE PORTALS FOR DIGNITARIES & AUDIENCE (KEEPS GLASSMORPHIC CARD STYLE)
+  // MOBILE-FOCUSED PORTALS FOR DIGNITARIES (HOD, DEAN, PRESIDENT) & AUDIENCE
   return (
-    <div className="min-h-[calc(100dvh-5rem)] flex flex-col justify-between items-center px-4 py-6 relative overflow-hidden">
-      {/* Dynamic Background Glow */}
+    <div className="min-h-[100dvh] w-full flex flex-col justify-between items-center px-4 sm:px-6 py-6 sm:py-8 relative overflow-hidden bg-[#020205] text-white select-none">
+      {/* 3D BlackHole Void Canvas Background for Dignitaries */}
+      {currentRoleKey !== 'audience' && (
+        <div className="absolute inset-0 pointer-events-none z-0 opacity-65">
+          <Canvas camera={{ position: [0, 2.5, 6], fov: 60 }}>
+            <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
+            <BlackHole scale={1.0} position={[0, 0.2, 0]} />
+          </Canvas>
+        </div>
+      )}
+
+      {/* Ambient background glow orbs */}
       <div
-        className="absolute inset-0 pointer-events-none transition-all duration-1000"
+        className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[380px] sm:w-[480px] h-[380px] sm:h-[480px] rounded-full pointer-events-none transition-all duration-1000 z-0"
         style={{
-          background: `radial-gradient(circle at 50% 35%, rgba(${currentRole?.rgbColor || '0, 240, 255'}, ${
-            ceremonyState.completed[currentRoleKey] ? 0.35 : 0.18
+          background: `radial-gradient(circle, rgba(${currentRole?.rgbColor || '124, 58, 237'}, ${
+            ceremonyState.completed[currentRoleKey] ? 0.22 : 0.12
           }) 0%, transparent 70%)`,
         }}
       />
 
-      <div className="w-full max-w-xl mx-auto relative z-10 flex flex-col items-center flex-grow justify-center">
-        {/* Real-time Status Header */}
-        <div className="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl mb-4 text-xs font-mono">
-          <div className="flex items-center gap-2">
-            <Radio size={14} className="text-cyan-400 animate-pulse" />
-            <span className="text-gray-300">REALTIME NETWORK: CONNECTED</span>
-          </div>
+      <div className="w-full max-w-sm sm:max-w-md mx-auto relative z-10 flex flex-col items-center flex-grow justify-between text-center my-auto px-1 space-y-6">
+        {/* Top Monospace Tag Badge */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 border border-purple-500/30 text-[10px] font-mono tracking-wider text-purple-300 uppercase shadow-[0_0_15px_rgba(124,58,237,0.15)]">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>SYNAPSE • CHANDIGARH UNIV</span>
+          <span className="text-purple-400/40">|</span>
+          <span className="text-emerald-400 font-bold">• ACTIVE</span>
         </div>
 
-        {/* Mobile Header Progress Card */}
-        <div className="w-full bg-black/60 border border-cyan-500/30 rounded-[2.5rem] p-6 backdrop-blur-2xl shadow-[0_0_80px_rgba(0,240,255,0.25)] mb-6 text-center relative overflow-hidden flex flex-col items-center">
-          <div className="relative w-40 h-40 flex items-center justify-center my-2">
-            <div
-              className="w-36 h-36 rounded-full flex flex-col items-center justify-center text-white relative shadow-2xl overflow-hidden border border-white/20"
-              style={{
-                background: 'radial-gradient(circle, rgba(124, 58, 237, 0.4) 0%, rgba(7, 7, 14, 0.9) 80%)',
-                boxShadow: '0 0 45px rgba(124, 58, 237, 0.5)',
-              }}
-            >
-              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-300">TOTAL PROGRESS</span>
-              <span
-                className="text-3xl sm:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-300 to-pink-400"
-                style={{ fontFamily: 'Space Grotesk' }}
-              >
-                {Math.round(totalProgress)}%
-              </span>
-            </div>
+        {/* Role Badge (renders only if badgeText exists) */}
+        {currentRole?.badgeText && (
+          <div className="px-4 py-1.5 rounded-xl bg-black/70 border border-purple-500/30 text-xs font-mono font-bold text-purple-300 uppercase tracking-widest">
+            {currentRole.badgeText}
           </div>
-
-          <div className="w-full mt-4 space-y-1.5">
-            <div className="flex justify-between items-center text-xs font-mono text-gray-300">
-              <span className="flex items-center gap-1">
-                <ShieldCheck size={13} className="text-cyan-400" /> SAFE FLOOR: {dignitaryBaseline}%
-              </span>
-              <span className="text-cyan-400 font-bold">
-                {ceremonyState.completed.audience || isFullyInaugurated ? (
-                  <span className="text-emerald-400 flex items-center gap-1">✓ ACTIVATED</span>
-                ) : (
-                  <span className="text-cyan-300 flex items-center gap-1">
-                    <Flame size={12} className="animate-pulse" /> CHARGING CORE
-                  </span>
-                )}
-              </span>
-            </div>
-
-            <div className="w-full h-5 bg-white/10 rounded-full overflow-hidden border border-cyan-500/30 p-0.5 relative">
-              <div
-                className="absolute top-0 bottom-0 w-1 bg-cyan-400 z-30 shadow-[0_0_10px_#00F0FF]"
-                style={{ left: `${dignitaryBaseline}%` }}
-              />
-              <motion.div
-                className="h-full rounded-full transition-all duration-300"
-                style={{
-                  width: `${totalProgress}%`,
-                  background: 'linear-gradient(90deg, #06B6D4 0%, #00F0FF 50%, #10B981 100%)',
-                  boxShadow: '0 0 25px rgba(0, 240, 255, 0.8)',
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-5 gap-1.5 mt-5 pt-3 border-t border-white/10 w-full text-center">
-            {Object.values(ROLE_DEFINITIONS).map((role) => {
-              const isDone = ceremonyState.completed[role.id];
-              const weightVal = ceremonyState.weights[role.id] ?? role.defaultWeight;
-              return (
-                <div
-                  key={role.id}
-                  className={`flex flex-col items-center p-1.5 rounded-xl border transition-all duration-300 ${
-                    isDone
-                      ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
-                      : 'bg-white/5 border-white/10 text-gray-400'
-                  }`}
-                >
-                  <span className="text-[10px] font-extrabold font-mono">{role.shortName}</span>
-                  <span className="text-[9px] font-mono text-gray-400">{weightVal}%</span>
-                  <div className="mt-1">
-                    {isDone ? (
-                      <CheckCircle2 size={12} className="text-emerald-400 animate-pulse" />
-                    ) : (
-                      <div className="w-2.5 h-2.5 rounded-full border border-gray-500" />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ROLE SPECIFIC MOBILE PORTAL */}
-        {currentRoleKey === 'audience' ? (
-          /* AUDIENCE MOBILE SPAM PORTAL */
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full rounded-[2.5rem] border border-cyan-400/40 bg-black/65 backdrop-blur-2xl p-6 shadow-[0_0_80px_rgba(0,240,255,0.2)] text-center flex flex-col items-center relative overflow-hidden"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] mb-3 border border-cyan-400/40 bg-cyan-500/10 text-cyan-300 font-mono">
-              <Users size={12} />
-              <span>SYNAPSE ARC REACTOR ACTIVATION</span>
-            </div>
-
-            <h2 className="text-xl sm:text-2xl font-black text-white mb-1" style={{ fontFamily: 'Space Grotesk' }}>
-              SPAM CLICK TOGETHER! ⚡
-            </h2>
-            <p className="text-xs text-gray-300 mb-4" style={{ fontFamily: 'Inter' }}>
-              Tap rapidly to accelerate and ignite the Arc Reactor core!
-            </p>
-
-            <div className="relative my-2">
-              <button
-                onClick={handleAudienceClick}
-                disabled={ceremonyState.completed.audience}
-                className="w-36 h-36 sm:w-44 sm:h-44 rounded-full flex flex-col items-center justify-center text-white font-black cursor-pointer transition-all duration-150 active:scale-95 shadow-2xl relative overflow-hidden border-2 border-cyan-300/60 group"
-                style={{
-                  fontFamily: 'Space Grotesk',
-                  background: 'linear-gradient(135deg, #00F0FF 0%, #0284C7 50%, #0369A1 100%)',
-                  boxShadow: '0 0 55px rgba(0, 240, 255, 0.75)',
-                }}
-              >
-                <Flame size={36} className="mb-1 text-cyan-100 animate-bounce" />
-                <span className="text-xs sm:text-sm tracking-wider uppercase font-black">
-                  {ceremonyState.completed.audience ? 'CORE ACTIVATED! ⚡' : 'TAP TO CHARGE ARC REACTOR'}
-                </span>
-              </button>
-            </div>
-          </motion.div>
-        ) : (
-          /* DIGNITARY MOBILE PORTAL (HOD, Dean, Pro VC, President) */
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full rounded-[2.5rem] border border-white/15 bg-black/50 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_0_80px_rgba(0,0,0,0.8)] relative overflow-hidden text-center flex flex-col items-center"
-            style={{
-              borderColor: `rgba(${currentRole.rgbColor}, 0.4)`,
-              boxShadow: `0 0 60px rgba(${currentRole.rgbColor}, 0.18)`,
-            }}
-          >
-            <div
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] mb-4 border"
-              style={{
-                borderColor: `rgba(${currentRole.rgbColor}, 0.5)`,
-                background: `rgba(${currentRole.rgbColor}, 0.12)`,
-                color: currentRole.color,
-                fontFamily: 'Space Mono',
-              }}
-            >
-              <Sparkles size={12} />
-              <span>{currentRole.badgeText}</span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white mb-1" style={{ fontFamily: 'Space Grotesk' }}>
-              {currentRole.title}
-            </h1>
-            <p className="text-xs sm:text-sm font-medium text-gray-300 mb-6" style={{ fontFamily: 'Inter' }}>
-              {currentRole.department}
-            </p>
-
-            <div className="w-full flex flex-col items-center my-2">
-              {!ceremonyState.completed[currentRoleKey] ? (
-                <button
-                  onClick={handleActivateRoleKey}
-                  className="w-32 h-32 rounded-full flex flex-col items-center justify-center text-white font-black cursor-pointer transition-all duration-300 active:scale-95 shadow-2xl relative overflow-hidden border border-white/30"
-                  style={{
-                    fontFamily: 'Space Grotesk',
-                    background: `linear-gradient(135deg, ${currentRole.color}, #1E1B4B)`,
-                    boxShadow: `0 0 45px rgba(${currentRole.rgbColor}, 0.6)`,
-                  }}
-                >
-                  <Zap size={32} className="mb-1 text-white" />
-                  <span className="text-[11px] tracking-wider uppercase font-black text-center px-2 leading-tight">
-                    ACTIVATE KEY (+{ceremonyState.weights[currentRoleKey]}%)
-                  </span>
-                </button>
-              ) : (
-                <div className="flex flex-col items-center gap-2 py-2">
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center shadow-xl"
-                    style={{ background: `linear-gradient(135deg, ${currentRole.color}, #10B981)` }}
-                  >
-                    <CheckCircle2 size={36} className="text-white animate-bounce" />
-                  </div>
-                  <h2 className="text-base font-black text-emerald-400 font-mono">
-                    {currentRole.shortName.toUpperCase()} KEY ACTIVATED!
-                  </h2>
-                </div>
-              )}
-            </div>
-          </motion.div>
         )}
+
+        {/* Hero Headline */}
+        <h1
+          className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight"
+          style={{ fontFamily: 'Space Grotesk' }}
+        >
+          {currentRole?.headlineFirst || 'Where Ideas'}{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 font-black">
+            {currentRole?.headlineHighlight || 'SPARK'}
+          </span>{' '}
+          {currentRole?.headlineLast || 'into Reality.'}
+        </h1>
+
+        <p className="text-xs text-purple-200/70 font-medium max-w-xs leading-relaxed" style={{ fontFamily: 'Inter' }}>
+          {currentRoleKey === 'audience' ? (
+            <>
+              Synapse Society{' '}
+              <span
+                className="text-sm font-black text-cyan-300 drop-shadow-[0_0_12px_#00F0FF] uppercase tracking-wider inline-block mx-0.5"
+                style={{ fontFamily: "'Orbitron', sans-serif" }}
+              >
+                AGENT
+              </span>
+            </>
+          ) : (
+            currentRole?.title
+          )}{' '}
+          — Official launch authorization.
+        </p>
+
+        {/* DIGNITARIES GET SLIDING ACTIVATION KEY; AUDIENCE GETS SPAM TAP BUTTON */}
+        {currentRoleKey === 'audience' ? (
+          /* AUDIENCE ONLY: ROUND SPAM TAP BUTTON WITH BLACK HOLE CENTERED DIRECTLY BEHIND IT */
+          <div className="w-full flex flex-col items-center justify-center my-4 relative">
+            <div className="absolute -inset-24 sm:-inset-32 pointer-events-none z-0 opacity-80 flex items-center justify-center">
+              <Canvas camera={{ position: [0, 2.5, 6], fov: 60 }}>
+                <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
+                <BlackHole scale={1.15} position={[0, 0, 0]} />
+              </Canvas>
+            </div>
+
+            <button
+              onClick={handleAudienceClick}
+              disabled={ceremonyState.completed.audience}
+              className="relative z-10 w-44 h-44 rounded-full flex flex-col items-center justify-center text-white font-black cursor-pointer transition-all duration-150 active:scale-95 shadow-2xl overflow-hidden border-2 border-purple-300/70 group"
+              style={{
+                fontFamily: 'Space Grotesk',
+                background: ceremonyState.completed.audience
+                  ? 'linear-gradient(135deg, #059669 0%, #10B981 50%, #064E3B 100%)'
+                  : 'linear-gradient(135deg, #7C3AED 0%, #A855F7 50%, #D946EF 100%)',
+                boxShadow: ceremonyState.completed.audience
+                  ? '0 0 60px rgba(16, 185, 129, 0.8), inset 0 0 25px rgba(16, 185, 129, 0.4)'
+                  : '0 0 60px rgba(168, 85, 247, 0.85), inset 0 0 25px rgba(217, 70, 239, 0.4)',
+              }}
+            >
+              <Flame size={38} className="mb-1.5 text-purple-100 animate-bounce" />
+              <span className="text-xs tracking-wider uppercase font-black text-center px-3 leading-tight">
+                {ceremonyState.completed.audience ? 'CORE ACTIVATED! ⚡' : 'TAP TO CHARGE ARC REACTOR'}
+              </span>
+            </button>
+          </div>
+        ) : (
+          /* DIGNITARIES ONLY: MOBILE SLIDE-TO-ACTIVATE KEY */
+          <div className="w-full flex flex-col items-center my-2">
+            <SlideToActivateButton
+              role={currentRole}
+              weight={ceremonyState.weights[currentRoleKey] ?? currentRole.defaultWeight}
+              isActivated={ceremonyState.completed[currentRoleKey]}
+              onActivate={handleActivateRoleKey}
+            />
+          </div>
+        )}
+
+        {/* Footer Tagline */}
+        <div className="text-[9px] font-mono tracking-widest text-purple-400/40 uppercase pb-2">
+          • BUILD • LEARN • ELEVATE •
+        </div>
       </div>
     </div>
   );

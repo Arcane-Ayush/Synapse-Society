@@ -35,7 +35,6 @@ function AnimatedRoutes() {
         <Route path="/inauguration/:dignitary" element={<PageTransition><Inauguration /></PageTransition>} />
         <Route path="/hod" element={<PageTransition><Inauguration /></PageTransition>} />
         <Route path="/dean" element={<PageTransition><Inauguration /></PageTransition>} />
-        <Route path="/provc" element={<PageTransition><Inauguration /></PageTransition>} />
         <Route path="/president" element={<PageTransition><Inauguration /></PageTransition>} />
         <Route path="/audience" element={<PageTransition><Inauguration /></PageTransition>} />
         <Route path="/synapse/admin/portal/2026/inauguration/:dignitary" element={<PageTransition><Inauguration /></PageTransition>} />
