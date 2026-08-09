@@ -55,7 +55,7 @@ export function Navbar() {
                 className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-4"
             >
                 <div
-                    className="w-full max-w-7xl flex items-center justify-between px-4 py-2.5 rounded-2xl transition-all duration-300"
+                    className="w-full max-w-7xl flex items-center justify-between px-4 py-2.5 rounded-2xl transition-all duration-300 relative"
                     style={{
                         background: scrolled
                             ? 'rgba(var(--bg-glass-rgb), 0.92)'
@@ -91,9 +91,9 @@ export function Navbar() {
                             <div
                                 className="absolute bottom-0 right-0 w-3 h-3 rounded-full"
                                 style={{
-                                    background: '#10B981', // Emerald green
+                                    background: isAuthenticated ? '#10B981' : '#6B7280',
                                     border: '2px solid rgba(var(--bg-glass-rgb), 0.92)',
-                                    boxShadow: '0 0 8px rgba(16,185,129,0.5)'
+                                    boxShadow: isAuthenticated ? '0 0 8px rgba(16,185,129,0.5)' : 'none'
                                 }}
                             />
                         </div>
@@ -154,7 +154,7 @@ export function Navbar() {
                                 </Link>
                                 <button
                                     onClick={handleSignOut}
-                                    className="p-2 transition-all duration-200 hover:opacity-80"
+                                    className="p-2 transition-all duration-200 hover:opacity-80 cursor-pointer"
                                     title="Sign Out"
                                     style={{
                                         clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',

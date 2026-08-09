@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { SynapseCard } from "../components/SynapseCard";
-import { Zap, Target, Users, Trophy, Lock, Calendar, ChevronRight, QrCode, Plus, Shield, CheckCircle2, AlertCircle, Sparkles, Camera, CameraOff, X } from "lucide-react";
+import { Zap, Target, Users, Trophy, Lock, Calendar, ChevronRight, QrCode, Plus, Shield, CheckCircle2, AlertCircle, Sparkles, Camera, CameraOff, X, LogIn, KeyRound, PlusCircle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { LoginModal } from "../components/LoginModal";
+import { AdminQRGeneratorModal } from "../components/AdminQRGeneratorModal";
+import { QRScannerModal } from "../components/QRScannerModal";
 import { Html5Qrcode } from "html5-qrcode";
 
 const TABS = [
@@ -41,9 +43,37 @@ const TABS = [
 // ── Cards Tab ─────────────────────────────────────────────────────
 function CardsTab({ setSelectedCard, membershipCards, eventCards }) {
     const { checkUnlockStatus } = useAuth();
-    
     return (
         <div>
+            {/* User XP Profile Banner (If Logged In) */}
+            {isAuthenticated && user && (
+                <div className="mb-8 p-6 rounded-2xl border border-purple-500/30 flex flex-col md:flex-row items-center justify-between gap-4"
+                     style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(217,70,239,0.08))', backdropFilter: 'blur(12px)' }}>
+                    <div className="flex items-center gap-4">
+                        <img src={user.avatar} alt={user.name} className="w-14 h-14 rounded-full border-2 border-purple-400/50 shadow-lg shadow-purple-500/20 object-cover" />
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-xl font-bold text-white" style={{ fontFamily: 'Space Grotesk' }}>{user.name}</h3>
+                                <span className="text-xs font-mono px-2 py-0.5 rounded bg-purple-900/60 text-purple-300 border border-purple-500/30">
+                                    @{user.handle}
+                                </span>
+                            </div>
+                            <p className="text-xs text-purple-300/70 font-mono mt-1">ROLE: {user.role} • DOMAIN: {user.domain}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-6">
+                        <div className="text-center px-4 py-2 rounded-xl bg-purple-950/40 border border-purple-500/20">
+                            <span className="block text-[10px] font-mono text-purple-400/70 tracking-widest">LEVEL</span>
+                            <span className="text-xl font-black text-white" style={{ fontFamily: 'Space Grotesk' }}>LVL {user.level}</span>
+                        </div>
+                        <div className="text-center px-4 py-2 rounded-xl bg-purple-950/40 border border-purple-500/20">
+                            <span className="block text-[10px] font-mono text-amber-400/70 tracking-widest">XP BALANCE</span>
+                            <span className="text-xl font-black text-amber-400" style={{ fontFamily: 'Space Grotesk' }}>{user.xp} XP</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Season badge */}
             <div className="flex items-center gap-4 mb-12">
                 <div
@@ -92,8 +122,8 @@ function CardsTab({ setSelectedCard, membershipCards, eventCards }) {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                                onClick={() => isUnlocked && setSelectedCard({ ...card, unlocked: true })}
-                                className={isUnlocked ? "cursor-pointer transition-transform hover:scale-105" : ""}
+                                onClick={() => onCardClick(card)}
+                                className="cursor-pointer transition-transform hover:scale-105"
                             >
                                 <SynapseCard card={card} size="sm" />
                             </motion.div>
@@ -115,7 +145,7 @@ function CardsTab({ setSelectedCard, membershipCards, eventCards }) {
                             clipPath: 'polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%)',
                         }}
                     >
-                        LIMITED
+                        EXCLUSIVE REWARDS
                     </span>
                 </div>
                 <p className="text-sm mb-8" style={{ color: 'rgba(var(--text-secondary-rgb), 0.4)', fontFamily: 'Inter' }}>
@@ -573,9 +603,8 @@ function MissionsTab({ missions = [], userMissions = [], user, refreshMissions, 
     };
 
     return (
-        <div>
-            {/* Header */}
-            <div className="flex items-center justify-between mb-10">
+        <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
                 <div>
                     <h3 className="text-lg font-bold mb-1" style={{ fontFamily: 'Space Grotesk' }}>Active Quests</h3>
                     <p className="text-sm" style={{ color: 'rgba(var(--text-secondary-rgb), 0.45)', fontFamily: 'Inter' }}>
@@ -1022,17 +1051,15 @@ function FactionsTab({ teams = [], userTeam = null, user, isLead, hackathonRegis
         }
         setActionLoading(false);
     };
-
     return (
-        <div>
-            <div className="flex items-center justify-between mb-8">
+        <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
                 <div>
                     <h3 className="text-lg font-bold mb-1" style={{ fontFamily: 'Space Grotesk' }}>Synapse Factions</h3>
                     <p className="text-sm" style={{ color: 'rgba(var(--text-secondary-rgb), 0.45)', fontFamily: 'Inter' }}>
                         Compete as a faction. Top teams earn exclusive event cards and XP multipliers.
                     </p>
                 </div>
-                <div className="text-2xl">⚔️</div>
             </div>
 
             {/* Faction Action Area */}
@@ -1851,8 +1878,10 @@ function QRVaultTab({ onOpenLogin }) {
 export function Nexus() {
     const [activeTab, setActiveTab] = useState('cards');
     const [selectedCard, setSelectedCard] = useState(null);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
+    const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
-    const { isAuthenticated, user, isLead } = useAuth();
+    const { isAuthenticated, user, isLead, isAdmin } = useAuth();
     
     // DB Data State
     const [membershipCards, setMembershipCards] = useState([]);
@@ -1978,57 +2007,32 @@ export function Nexus() {
         );
     }
 
+    const handleItemInteract = () => {
+        if (!isAuthenticated) {
+            openAuthModal();
+        }
+    };
+
+    const handleCardClick = (card) => {
+        if (!isAuthenticated) {
+            openAuthModal();
+        } else {
+            setSelectedCard(card);
+        }
+    };
+
     return (
         <div className="min-h-screen px-4 py-16">
             <div className="max-w-6xl mx-auto relative z-10">
-
-                {/* Unauthenticated Banner Notification */}
-                {!isAuthenticated && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4"
-                        style={{
-                            background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.15), rgba(236,72,153,0.15))',
-                            border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)',
-                            boxShadow: '0 0 20px rgba(var(--synapse-violet-rgb), 0.15)',
-                        }}
-                    >
-                        <div className="flex items-center gap-3">
-                            <Sparkles className="text-amber-400 animate-pulse flex-shrink-0" size={20} />
-                            <div>
-                                <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Space Grotesk' }}>
-                                    Member Vault Preview
-                                </h4>
-                                <p className="text-xs" style={{ color: 'rgba(var(--text-secondary-rgb), 0.7)', fontFamily: 'Inter' }}>
-                                    Sign in to claim your Level 0 Access Pass, earn XP, and unlock exclusive event cards!
-                                </p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => setIsLoginOpen(true)}
-                            className="px-5 py-2 rounded-xl text-xs font-black tracking-wider uppercase transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
-                            style={{
-                                fontFamily: 'Space Grotesk',
-                                background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
-                                color: 'var(--text-primary)',
-                                boxShadow: '0 0 15px rgba(var(--synapse-violet-rgb), 0.3)',
-                            }}
-                        >
-                            Sign In / Join
-                        </button>
-                    </motion.div>
-                )}
-
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.7 }}
-                    className="mb-12"
+                    className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6"
                 >
-                    <div className="section-label mb-3">The Hub</div>
-                    <div className="flex items-end gap-4">
+                    <div>
+                        <div className="section-label mb-3">The Hub</div>
                         <h1
                             className="text-5xl md:text-7xl font-black tracking-tight"
                             style={{ fontFamily: 'Space Grotesk' }}
@@ -2043,11 +2047,33 @@ export function Nexus() {
                                 NEXUS
                             </span>
                         </h1>
-                        <div className="hidden md:block flex-1 h-[1px] mb-3" style={{ background: 'linear-gradient(90deg, rgba(var(--synapse-violet-rgb), 0.3), transparent)' }} />
+                        <p className="text-base mt-2 max-w-xl" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)', fontFamily: 'Inter' }}>
+                            Your card collection. Active quests. Faction standings. This is where Synapse Society comes alive.
+                        </p>
                     </div>
-                    <p className="text-base mt-4 max-w-xl" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)', fontFamily: 'Inter' }}>
-                        Your card collection. Active quests. Faction standings. This is where Synapse Society comes alive.
-                    </p>
+
+                    {/* QR Action Buttons */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        <button
+                            onClick={() => setIsScannerOpen(true)}
+                            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 flex items-center gap-2 transition-all transform hover:scale-105 cursor-pointer"
+                            style={{ fontFamily: 'Space Grotesk' }}
+                        >
+                            <QrCode className="w-4 h-4 text-purple-200" />
+                            SCAN SYNAPSE QR
+                        </button>
+
+                        {isAdmin && (
+                            <button
+                                onClick={() => setIsGeneratorOpen(true)}
+                                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 transition-all transform hover:scale-105 cursor-pointer"
+                                style={{ fontFamily: 'Space Grotesk' }}
+                            >
+                                <PlusCircle className="w-4 h-4" />
+                                GENERATE QR (ADMIN)
+                            </button>
+                        )}
+                    </div>
                 </motion.div>
 
                 {/* Tab Bar — responsive grid on mobile (no scroll), flex on desktop */}
@@ -2110,36 +2136,11 @@ export function Nexus() {
                 </AnimatePresence>
             </div>
 
-            {/* Card Overlay */}
-            {typeof document !== 'undefined' && createPortal(
-                <AnimatePresence>
-                    {selectedCard && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setSelectedCard(null)}
-                            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 cursor-pointer"
-                            style={{ background: 'rgba(var(--bg-glass-rgb), 0.92)', backdropFilter: 'blur(8px)' }}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                                animate={{ scale: 1, opacity: 1, y: 0 }}
-                                exit={{ scale: 0.8, opacity: 0, y: 20 }}
-                                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                                onClick={e => e.stopPropagation()}
-                                className="pointer-events-auto cursor-default relative"
-                            >
-                                <SynapseCard card={selectedCard} size="lg" />
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>,
-                document.body
-            )}
-
-            {/* Login Modal */}
+            {/* Modals */}
             <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+            <QRScannerModal isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} onOpenLogin={() => setIsLoginOpen(true)} />
+            <AdminQRGeneratorModal isOpen={isGeneratorOpen} onClose={() => setIsGeneratorOpen(false)} />
         </div>
     );
 }
+
