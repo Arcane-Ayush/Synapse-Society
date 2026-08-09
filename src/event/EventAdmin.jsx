@@ -19,7 +19,8 @@ import {
     assignMemberToTeamByAgentId,
     assignMultipleMembersToTeam,
     createEventTeamInDb,
-    toggleTeamActiveStatus
+    toggleTeamActiveStatus,
+    updateTeamAssignedApp
 } from './lib/eventState';
 import { playEventSound, broadcastPlaySound } from './lib/soundSystem';
 import { getTeamNumberBadge } from './lib/eventTeamsData';
@@ -210,6 +211,15 @@ export function EventAdmin() {
             roundTimerDurationSec: next,
             roundTimerRunning: roundRunning
         });
+    };
+
+    const ROUND2_APPS = ['Instagram', 'Snapchat', 'Spotify', 'Netflix', 'LinkedIn', 'Zomato', 'Pinterest', 'Nykaa'];
+
+    const handleAssignAppToTeam = async (teamId, appName) => {
+        await updateTeamAssignedApp(teamId, appName);
+        loadTeams();
+        setAwardMessage(`Assigned ${appName || 'None'} to team.`);
+        setTimeout(() => setAwardMessage(null), 2000);
     };
 
     const handleToggleRoundVisibility = async () => {
@@ -1193,8 +1203,20 @@ export function EventAdmin() {
                                                 <div className="text-[10px] text-zinc-400">{team.code}</div>
                                             </div>
                                         </div>
-                                        <div className="text-xs font-bold text-yellow-300 flex-shrink-0">
-                                            {team.s_coins || 0} S
+                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                            <select
+                                                value={(team.motto || '').replace('Domain: ', '').replace('App: ', '')}
+                                                onChange={e => handleAssignAppToTeam(team.id, e.target.value ? `Domain: ${e.target.value}` : '')}
+                                                className="px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-[10px] font-bold outline-none cursor-pointer"
+                                            >
+                                                <option value="">Domain...</option>
+                                                {['Healthcare', 'Transport', 'Agriculture', 'Education', 'Cybersecurity', 'Waste Management', 'Tourism', 'Public Safety'].map(d => (
+                                                    <option key={d} value={d}>{d}</option>
+                                                ))}
+                                            </select>
+                                            <div className="text-xs font-bold text-yellow-300">
+                                                {team.s_coins || 0} S
+                                            </div>
                                         </div>
                                     </div>
 
@@ -1259,7 +1281,19 @@ export function EventAdmin() {
                                             <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-[10px] font-mono font-bold">#{getTeamNumberBadge(team)}</span>
                                             <div className="text-xs font-bold text-white truncate">{team.name}</div>
                                         </div>
-                                        <span className="text-xs font-bold text-yellow-300">{team.s_coins || 0} S</span>
+                                        <div className="flex items-center gap-2">
+                                            <select
+                                                value={(team.motto || '').replace('App: ', '')}
+                                                onChange={e => handleAssignAppToTeam(team.id, e.target.value)}
+                                                className="px-1.5 py-0.5 rounded bg-purple-950/80 border border-purple-500/40 text-purple-300 text-[10px] font-bold outline-none cursor-pointer"
+                                            >
+                                                <option value="">Assign App...</option>
+                                                {ROUND2_APPS.map(app => (
+                                                    <option key={app} value={app}>{app}</option>
+                                                ))}
+                                            </select>
+                                            <span className="text-xs font-bold text-yellow-300">{team.s_coins || 0} S</span>
+                                        </div>
                                     </div>
 
                                     <div className="flex items-center gap-1.5 pt-1 border-t border-white/10">

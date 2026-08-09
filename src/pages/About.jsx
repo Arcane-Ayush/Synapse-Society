@@ -330,7 +330,6 @@ export function About() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-transparent to-transparent opacity-80" />
                   <div className="absolute bottom-2 left-2 right-2">
                     <div className="text-xl font-extrabold text-white" style={{ fontFamily: 'Space Grotesk' }}>Ayush Pandey</div>
-                    <div className="font-mono text-xs text-pink-300 font-bold">UID: 25LBCS1314</div>
                   </div>
                 </div>
 
@@ -345,7 +344,7 @@ export function About() {
               </div>
             </motion.div>
 
-            {/* Ankan Bhattacharjee - Tech Department SYN-CARD */}
+            {/* Krish Mishra - Tech Department SYN-CARD */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -364,14 +363,13 @@ export function About() {
 
                 <div className="relative w-full h-56 rounded-xl overflow-hidden mb-4 border border-cyan-500/40 bg-purple-950 shadow-lg">
                   <img
-                    src="/leadership/ankan-bhattacharjee.jpg"
-                    alt="Ankan Bhattacharjee - Tech Department"
+                    src="/leadership/krish-mishra.jpg"
+                    alt="Krish Mishra - Tech Department"
                     className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-transparent to-transparent opacity-80" />
                   <div className="absolute bottom-2 left-2 right-2">
-                    <div className="text-xl font-extrabold text-white" style={{ fontFamily: 'Space Grotesk' }}>Ankan Bhattacharjee</div>
-                    <div className="font-mono text-xs text-cyan-300 font-bold">UID: 25LBCS3067</div>
+                    <div className="text-xl font-extrabold text-white" style={{ fontFamily: 'Space Grotesk' }}>Krish Mishra</div>
                   </div>
                 </div>
 
@@ -412,7 +410,6 @@ export function About() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-transparent to-transparent opacity-80" />
                   <div className="absolute bottom-2 left-2 right-2">
                     <div className="text-xl font-extrabold text-white" style={{ fontFamily: 'Space Grotesk' }}>Ishaan Sharma</div>
-                    <div className="font-mono text-xs text-purple-300 font-bold">UID: 25LBCS3111</div>
                   </div>
                 </div>
 

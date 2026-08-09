@@ -564,3 +564,27 @@ export async function addUserSCoins(userId, amount) {
         });
     } catch (e) {}
 }
+
+/**
+ * Assign Round 2 App to a team in database.
+ */
+export async function updateTeamAssignedApp(teamId, appName) {
+    try {
+        const { data, error } = await supabase
+            .from('event_teams')
+            .update({
+                motto: appName ? `App: ${appName}` : '',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', teamId)
+            .select();
+
+        if (!error) {
+            broadcastEventStateUpdate({ type: 'team_app_assigned', teamId, appName });
+        }
+        return { data, error };
+    } catch (err) {
+        console.error('Error assigning app to team:', err);
+        return { error: err };
+    }
+}
