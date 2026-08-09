@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Radio, Trophy, Zap, Presentation, Activity, Maximize } from 'lucide-react';
-import { StageKeynoteDeck } from './components/StageKeynoteDeck';
+import { PresentationDeck } from './presentation/PresentationDeck';
 import { StageSessionView } from './components/StageSessionView';
 import { DEFAULT_EVENT_STATE, subscribeToEventState } from './lib/eventState';
 
@@ -25,23 +25,23 @@ export function StagePresentation() {
     };
 
     return (
-        <div className="min-h-screen w-full bg-[#07070E] text-white flex flex-col justify-between p-6 sm:p-10 select-none relative overflow-hidden">
+        <div className="min-h-screen w-full bg-[#07070E] text-white flex flex-col justify-between p-4 sm:p-8 select-none relative overflow-hidden">
             {/* Ambient Background Grid */}
             <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(#00F0FF_1px,transparent_1px)] [background-size:32px_32px]" />
             <div className="absolute -top-40 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none" />
 
             {/* Top Stage Bar */}
-            <div className="flex items-center justify-between z-20 pb-4 border-b border-white/10">
+            <div className="flex items-center justify-between z-20 pb-3 border-b border-white/10">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center">
-                        <Sparkles size={20} className="text-cyan-400" />
+                    <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center">
+                        <Sparkles size={18} className="text-cyan-400" />
                     </div>
                     <div>
-                        <h1 className="text-lg font-black tracking-tight" style={{ fontFamily: 'Space Grotesk' }}>
-                            SYNAPSE SOCIETY • NEURAL NEXUS
+                        <h1 className="text-base sm:text-lg font-black tracking-tight" style={{ fontFamily: 'Space Grotesk' }}>
+                            SYNAPSE SOCIETY • NEURAL NEXUS 2026
                         </h1>
-                        <p className="text-[10px] font-mono text-cyan-300 tracking-widest uppercase">
+                        <p className="text-[9px] sm:text-[10px] font-mono text-cyan-300 tracking-widest uppercase">
                             MAIN AUDITORIUM PROJECTOR STAGE • CHANDIGARH UNIVERSITY
                         </p>
                     </div>
@@ -57,7 +57,7 @@ export function StagePresentation() {
                                 : 'bg-white/5 text-zinc-400 hover:text-white'
                         }`}
                     >
-                        <Presentation size={14} /> Presentation
+                        <Presentation size={14} /> Keynote Deck
                     </button>
 
                     <button
@@ -68,7 +68,7 @@ export function StagePresentation() {
                                 : 'bg-white/5 text-zinc-400 hover:text-white'
                         }`}
                     >
-                        <Trophy size={14} /> Session
+                        <Trophy size={14} /> Arena Session
                     </button>
 
                     <button
@@ -82,7 +82,7 @@ export function StagePresentation() {
             </div>
 
             {/* Stage Center Display */}
-            <div className="my-auto py-6 z-10 w-full">
+            <div className="my-auto py-4 z-10 w-full flex-1 flex flex-col justify-center">
                 <AnimatePresence mode="wait">
                     {viewMode === 'presentation' ? (
                         <motion.div
@@ -91,8 +91,9 @@ export function StagePresentation() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.3 }}
+                            className="w-full"
                         >
-                            <StageKeynoteDeck currentPhase={eventState.phase} />
+                            <PresentationDeck onSwitchToSession={() => setViewMode('session')} />
                         </motion.div>
                     ) : (
                         <motion.div
@@ -101,6 +102,7 @@ export function StagePresentation() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.3 }}
+                            className="w-full"
                         >
                             <StageSessionView eventState={eventState} />
                         </motion.div>
