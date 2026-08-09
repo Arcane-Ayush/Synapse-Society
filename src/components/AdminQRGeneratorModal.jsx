@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeCanvas } from 'qrcode.react';
 import { X, Shield, Download, Copy, Check, Sparkles, QrCode, Award, Zap, Lock } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { encryptPayload } from '../utils/cryptoUtils';
 
 export function AdminQRGeneratorModal({ isOpen, onClose }) {

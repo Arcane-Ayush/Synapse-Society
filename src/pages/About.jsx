@@ -1,6 +1,63 @@
 import { motion } from "framer-motion";
-import { teamMembers } from "../data/mockData";
 import { Github, Linkedin, Brain } from "lucide-react";
+
+const teamMembers = {
+    faculty: [
+        {
+            id: "hod",
+            name: "Dr. [Name]",
+            role: "Head of Department",
+            department: "Computer Science & Engineering",
+            image: null,
+            quote: "Innovation begins where curiosity meets discipline.",
+            type: "hod",
+        }
+    ],
+    leadership: [
+        {
+            id: "president",
+            name: "[President Name]",
+            role: "Club President",
+            image: null,
+            quote: "Building the future, one synapse at a time.",
+            social: { linkedin: "#", github: "#" },
+        },
+        {
+            id: "vc",
+            name: "[Vice President Name]",
+            role: "Vice President",
+            image: null,
+            quote: "Leadership is about lifting others as you rise.",
+            social: { linkedin: "#", github: "#" },
+        },
+        {
+            id: "gensec",
+            name: "[General Secretary]",
+            role: "General Secretary",
+            image: null,
+            quote: "Execution is the bridge between vision and reality.",
+            social: { linkedin: "#", github: "#" },
+        },
+        {
+            id: "treasurer",
+            name: "[Treasurer Name]",
+            role: "Treasurer",
+            image: null,
+            quote: "Every rupee invested in learning compounds infinitely.",
+            social: { linkedin: "#", github: "#" },
+        },
+    ],
+    coreMembers: [
+        { id: "media", name: "[Media Head]", role: "Media Head", dept: "Media & Communications", icon: "⚲", color: "var(--synapse-violet-light)" },
+        { id: "tech", name: "[Tech Head]", role: "Tech Head", dept: "Technology & Development", icon: "⌘", color: "#6366F1" },
+        { id: "content", name: "[Content Head]", role: "Content Head", dept: "Content & Copywriting", icon: "▤", color: "#8B5CF6" },
+        { id: "design", name: "[Design Head]", role: "Design Head", dept: "Design & Creative", icon: "◧", color: "var(--synapse-pink)" },
+        { id: "pr", name: "[PR Head]", role: "PR Head", dept: "Public Relations", icon: "⋈", color: "var(--synapse-violet)" },
+        { id: "events", name: "[Events Head]", role: "Event Management Head", dept: "Events & Logistics", icon: "⍋", color: "#9333EA" },
+        { id: "anchoring", name: "[Anchoring Head]", role: "Anchoring Head", dept: "Anchoring & Hosting", icon: "⍾", color: "#C026D3" },
+        { id: "learning", name: "[Learning Head]", role: "Learning Head", dept: "Learning & Development", icon: "⎈", color: "#7E22CE" },
+    ]
+};
 
 function HodCard({ member }) {
     return (
@@ -13,30 +70,30 @@ function HodCard({ member }) {
             {/* Glow bg */}
             <div
                 className="absolute -inset-8 rounded-3xl pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse, rgba(124,58,237,0.12) 0%, transparent 70%)' }}
+                style={{ background: 'radial-gradient(ellipse, rgba(var(--synapse-violet-rgb), 0.12) 0%, transparent 70%)' }}
             />
 
             <div
                 className="relative rounded-2xl p-8 md:p-10 flex flex-col md:flex-row gap-8 items-center"
                 style={{
-                    background: 'rgba(12,12,20,0.9)',
-                    border: '1px solid rgba(124,58,237,0.25)',
-                    boxShadow: '0 0 40px rgba(124,58,237,0.1)',
+                    background: 'rgba(var(--bg-glass-rgb), 0.9)',
+                    border: '1px solid rgba(var(--synapse-violet-rgb), 0.25)',
+                    boxShadow: '0 0 40px rgba(var(--synapse-violet-rgb), 0.1)',
                 }}
             >
                 {/* Avatar */}
                 <div
                     className="w-28 h-28 rounded-2xl flex-shrink-0 flex items-center justify-center text-5xl relative"
                     style={{
-                        background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(168,85,247,0.15))',
-                        border: '2px solid rgba(168,85,247,0.3)',
-                        boxShadow: '0 0 24px rgba(124,58,237,0.3)',
+                        background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.3), rgba(var(--synapse-violet-light-rgb), 0.15))',
+                        border: '2px solid rgba(var(--synapse-violet-light-rgb), 0.3)',
+                        boxShadow: '0 0 24px rgba(var(--synapse-violet-rgb), 0.3)',
                     }}
                 >
                     {member.image ? (
                         <img src={member.image} alt={member.name} className="w-full h-full object-cover rounded-2xl" />
                     ) : (
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#A855F7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--synapse-violet-light)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"></path>
                             <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"></path>
                             <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"></path>
@@ -50,7 +107,7 @@ function HodCard({ member }) {
                     <div
                         className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-widest"
                         style={{
-                            background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                            background: 'linear-gradient(135deg, var(--synapse-violet), var(--synapse-violet-light))',
                             color: 'white',
                         }}
                     >
@@ -63,16 +120,16 @@ function HodCard({ member }) {
                     <h3 className="text-2xl md:text-3xl font-black mb-1" style={{ fontFamily: 'Space Grotesk' }}>
                         {member.name}
                     </h3>
-                    <p className="text-sm font-semibold mb-1" style={{ color: '#A855F7' }}>{member.role}</p>
-                    <p className="text-xs mb-4" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Space Mono' }}>
+                    <p className="text-sm font-semibold mb-1" style={{ color: 'var(--synapse-violet-light)' }}>{member.role}</p>
+                    <p className="text-xs mb-4" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)', fontFamily: 'Space Mono' }}>
                         {member.department}
                     </p>
                     {member.quote && (
                         <blockquote
                             className="text-sm italic leading-relaxed border-l-2 pl-4"
                             style={{
-                                color: 'rgba(196,181,253,0.6)',
-                                borderColor: 'rgba(124,58,237,0.4)',
+                                color: 'rgba(var(--text-secondary-rgb), 0.6)',
+                                borderColor: 'rgba(var(--synapse-violet-rgb), 0.4)',
                                 fontFamily: 'Inter',
                             }}
                         >
@@ -94,15 +151,15 @@ function LeaderCard({ member, index }) {
             whileHover={{ y: -6 }}
             className="relative rounded-2xl p-6 group transition-all duration-300"
             style={{
-                background: 'rgba(12,12,20,0.8)',
-                border: '1px solid rgba(124,58,237,0.12)',
+                background: 'rgba(var(--bg-glass-rgb), 0.8)',
+                border: '1px solid rgba(var(--synapse-violet-rgb), 0.12)',
             }}
             onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)';
-                e.currentTarget.style.boxShadow = '0 8px 40px rgba(124,58,237,0.15)';
+                e.currentTarget.style.borderColor = 'rgba(var(--synapse-violet-light-rgb), 0.3)';
+                e.currentTarget.style.boxShadow = '0 8px 40px rgba(var(--synapse-violet-rgb), 0.15)';
             }}
             onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'rgba(124,58,237,0.12)';
+                e.currentTarget.style.borderColor = 'rgba(var(--synapse-violet-rgb), 0.12)';
                 e.currentTarget.style.boxShadow = 'none';
             }}
         >
@@ -110,8 +167,8 @@ function LeaderCard({ member, index }) {
             <div
                 className="w-20 h-20 rounded-xl mb-4 flex items-center justify-center mx-auto text-3xl"
                 style={{
-                    background: 'linear-gradient(135deg, rgba(124,58,237,0.2), rgba(168,85,247,0.1))',
-                    border: '1px solid rgba(124,58,237,0.2)',
+                    background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.2), rgba(var(--synapse-violet-light-rgb), 0.1))',
+                    border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)',
                 }}
             >
                 {member.image ? (
@@ -123,11 +180,11 @@ function LeaderCard({ member, index }) {
 
             <div className="text-center">
                 <h4 className="font-bold text-base mb-1" style={{ fontFamily: 'Space Grotesk' }}>{member.name}</h4>
-                <p className="text-xs font-semibold mb-3" style={{ color: '#A855F7', fontFamily: 'Space Mono' }}>
+                <p className="text-xs font-semibold mb-3" style={{ color: 'var(--synapse-violet-light)', fontFamily: 'Space Mono' }}>
                     {member.role}
                 </p>
                 {member.quote && (
-                    <p className="text-xs leading-relaxed mb-4" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter', fontStyle: 'italic' }}>
+                    <p className="text-xs leading-relaxed mb-4" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)', fontFamily: 'Inter', fontStyle: 'italic' }}>
                         "{member.quote}"
                     </p>
                 )}
@@ -137,9 +194,9 @@ function LeaderCard({ member, index }) {
                         {member.social.linkedin && (
                             <a href={member.social.linkedin} target="_blank" rel="noopener noreferrer"
                                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200"
-                               style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', color: '#A855F7' }}
-                               onMouseEnter={e => e.currentTarget.style.background = 'rgba(124,58,237,0.25)'}
-                               onMouseLeave={e => e.currentTarget.style.background = 'rgba(124,58,237,0.1)'}
+                               style={{ background: 'rgba(var(--synapse-violet-rgb), 0.1)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)', color: 'var(--synapse-violet-light)' }}
+                               onMouseEnter={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-rgb), 0.25)'}
+                               onMouseLeave={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-rgb), 0.1)'}
                             >
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
@@ -151,9 +208,9 @@ function LeaderCard({ member, index }) {
                         {member.social.github && (
                             <a href={member.social.github} target="_blank" rel="noopener noreferrer"
                                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200"
-                               style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', color: '#A855F7' }}
-                               onMouseEnter={e => e.currentTarget.style.background = 'rgba(124,58,237,0.25)'}
-                               onMouseLeave={e => e.currentTarget.style.background = 'rgba(124,58,237,0.1)'}
+                               style={{ background: 'rgba(var(--synapse-violet-rgb), 0.1)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)', color: 'var(--synapse-violet-light)' }}
+                               onMouseEnter={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-rgb), 0.25)'}
+                               onMouseLeave={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-rgb), 0.1)'}
                             >
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
@@ -177,15 +234,15 @@ function CoreMemberCard({ member, index }) {
             whileHover={{ y: -4 }}
             className="rounded-xl p-5 text-center group transition-all duration-200"
             style={{
-                background: 'rgba(12,12,20,0.7)',
-                border: '1px solid rgba(124,58,237,0.1)',
+                background: 'rgba(var(--bg-glass-rgb), 0.7)',
+                border: '1px solid rgba(var(--synapse-violet-rgb), 0.1)',
             }}
             onMouseEnter={e => {
                 e.currentTarget.style.borderColor = `${member.color}40`;
                 e.currentTarget.style.boxShadow = `0 8px 30px ${member.color}15`;
             }}
             onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'rgba(124,58,237,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(var(--synapse-violet-rgb), 0.1)';
                 e.currentTarget.style.boxShadow = 'none';
             }}
         >
@@ -199,7 +256,7 @@ function CoreMemberCard({ member, index }) {
             <p className="text-xs font-semibold mb-1" style={{ color: member.color, fontFamily: 'Space Mono' }}>
                 {member.role}
             </p>
-            <p className="text-[10px]" style={{ color: 'rgba(196,181,253,0.35)' }}>{member.dept}</p>
+            <p className="text-[10px]" style={{ color: 'rgba(var(--text-secondary-rgb), 0.35)' }}>{member.dept}</p>
         </motion.div>
     );
 }
@@ -224,7 +281,7 @@ export function About() {
                             The{' '}
                             <span
                                 style={{
-                                    background: 'linear-gradient(135deg, #A855F7, #E879F9)',
+                                    background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
                                 }}
@@ -233,9 +290,9 @@ export function About() {
                             </span>{' '}
                             Behind Synapse
                         </h1>
-                        <div className="hidden md:block flex-1 h-[1px] mb-4" style={{ background: 'linear-gradient(90deg, rgba(124,58,237,0.3), transparent)' }} />
+                        <div className="hidden md:block flex-1 h-[1px] mb-4" style={{ background: 'linear-gradient(90deg, rgba(var(--synapse-violet-rgb), 0.3), transparent)' }} />
                     </div>
-                    <p className="text-base mt-4 max-w-2xl leading-relaxed" style={{ color: 'rgba(196,181,253,0.55)', fontFamily: 'Inter' }}>
+                    <p className="text-base mt-4 max-w-2xl leading-relaxed" style={{ color: 'rgba(var(--text-secondary-rgb), 0.55)', fontFamily: 'Inter' }}>
                         A collective of passionate students and supportive faculty, building the future of tech education — one idea at a time.
                     </p>
                 </motion.div>
@@ -292,8 +349,8 @@ export function About() {
                     transition={{ duration: 0.4 }}
                     className="relative rounded-3xl p-10 md:p-14 text-center overflow-hidden"
                     style={{
-                        background: 'rgba(12,12,20,0.8)',
-                        border: '1px solid rgba(124,58,237,0.15)',
+                        background: 'rgba(var(--bg-glass-rgb), 0.8)',
+                        border: '1px solid rgba(var(--synapse-violet-rgb), 0.15)',
                     }}
                 >
                     {/* Glow */}
@@ -302,7 +359,7 @@ export function About() {
                         style={{
                             width: 500,
                             height: 300,
-                            background: 'radial-gradient(ellipse, rgba(124,58,237,0.12) 0%, transparent 70%)',
+                            background: 'radial-gradient(ellipse, rgba(var(--synapse-violet-rgb), 0.12) 0%, transparent 70%)',
                         }}
                     />
 
@@ -310,12 +367,12 @@ export function About() {
                         <div className="section-label mb-6">Our Vision</div>
                         <blockquote
                             className="text-2xl md:text-3xl font-bold leading-relaxed mb-6"
-                            style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}
+                            style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}
                         >
                             "To build a community where every student can{" "}
                             <span
                                 style={{
-                                    background: 'linear-gradient(135deg, #A855F7, #E879F9)',
+                                    background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
                                 }}
@@ -324,7 +381,7 @@ export function About() {
                             </span>{" "}
                             to meaningful impact."
                         </blockquote>
-                        <p className="text-sm" style={{ color: 'rgba(196,181,253,0.4)', fontFamily: 'Space Mono' }}>
+                        <p className="text-sm" style={{ color: 'rgba(var(--text-secondary-rgb), 0.4)', fontFamily: 'Space Mono' }}>
                             — Synapse Society, Season 1
                         </p>
                     </div>

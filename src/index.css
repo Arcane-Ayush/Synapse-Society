@@ -10,32 +10,76 @@
     --bg-base: #020202;
     --bg-card: #08080C;
     --bg-card-hover: #0C0C14;
+    --bg-glass-rgb: 8, 8, 12;
     --bg-glass: rgba(8, 8, 12, 0.7);
 
     /* Purple spectrum */
     --synapse-purple-deep: #3B0764;
     --synapse-purple: #6B21A8;
     --synapse-violet: #7C3AED;
+    --synapse-violet-rgb: 124, 58, 237;
     --synapse-violet-light: #A855F7;
+    --synapse-violet-light-rgb: 168, 85, 247;
     --synapse-pink: #D946EF;
+    --synapse-pink-rgb: 217, 70, 239;
     --synapse-pink-light: #E879F9;
+    --synapse-pink-light-rgb: 232, 121, 249;
 
     /* Glow helpers */
-    --glow-sm: 0 0 12px rgba(124,58,237,0.4);
-    --glow-md: 0 0 24px rgba(124,58,237,0.5);
-    --glow-lg: 0 0 48px rgba(124,58,237,0.35);
-    --glow-pink: 0 0 20px rgba(217,70,239,0.4);
+    --glow-sm: 0 0 12px rgba(var(--synapse-violet-rgb), 0.4);
+    --glow-md: 0 0 24px rgba(var(--synapse-violet-rgb), 0.5);
+    --glow-lg: 0 0 48px rgba(var(--synapse-violet-rgb), 0.35);
+    --glow-pink: 0 0 20px rgba(var(--synapse-pink-rgb), 0.4);
 
     /* Text */
     --text-primary: #F5F3FF;
     --text-secondary: #C4B5FD;
+    --text-secondary-rgb: 196, 181, 253;
     --text-muted: #64748B;
     --text-dim: #334155;
 
     /* Borders */
-    --border-subtle: rgba(124,58,237,0.15);
-    --border-accent: rgba(124,58,237,0.4);
-    --border-bright: rgba(168,85,247,0.6);
+    --border-subtle: rgba(var(--synapse-violet-rgb), 0.22);
+    --border-card: rgba(var(--synapse-violet-rgb), 0.18);
+    --border-accent: rgba(var(--synapse-violet-rgb), 0.45);
+    --border-bright: rgba(var(--synapse-violet-light-rgb), 0.65);
+    --shadow-color: rgba(var(--synapse-violet-rgb), 0.15);
+  }
+
+  [data-theme="orange"] {
+    --bg-base: #FFF7ED; /* orange-50 */
+    --bg-card: #FFEDD5; /* orange-100 */
+    --bg-card-hover: #FED7AA; /* orange-200 */
+    --bg-glass-rgb: 255, 237, 213;
+    --bg-glass: rgba(255, 237, 213, 0.7);
+
+    --synapse-purple-deep: #7C2D12;
+    --synapse-purple: #C2410C;
+    --synapse-violet: #EA580C; /* orange-600 */
+    --synapse-violet-rgb: 234, 88, 12;
+    --synapse-violet-light: #F97316; /* orange-500 */
+    --synapse-violet-light-rgb: 249, 115, 22;
+    --synapse-pink: #FDBA74; /* orange-300 */
+    --synapse-pink-rgb: 253, 186, 116;
+    --synapse-pink-light: #FFEDD5; /* orange-100 */
+    --synapse-pink-light-rgb: 255, 237, 213;
+
+    --glow-sm: 0 0 12px rgba(var(--synapse-violet-rgb), 0.3);
+    --glow-md: 0 0 24px rgba(var(--synapse-violet-rgb), 0.4);
+    --glow-lg: 0 0 48px rgba(var(--synapse-violet-rgb), 0.25);
+    --glow-pink: 0 0 20px rgba(var(--synapse-pink-rgb), 0.3);
+
+    --text-primary: #431407; /* orange-950 */
+    --text-secondary: #9A3412; /* orange-800 */
+    --text-secondary-rgb: 154, 52, 18;
+    --text-muted: #C2410C; /* orange-700 */
+    --text-dim: #F97316; /* orange-500 */
+
+    --border-subtle: rgba(var(--synapse-violet-rgb), 0.25);
+    --border-card: rgba(var(--synapse-violet-rgb), 0.22);
+    --border-accent: rgba(var(--synapse-violet-rgb), 0.55);
+    --border-bright: rgba(var(--synapse-violet-light-rgb), 0.75);
+    --shadow-color: rgba(var(--synapse-violet-rgb), 0.15);
 
     /* Tailwind compat vars */
     --background: 250 100% 2%;
@@ -72,8 +116,8 @@
     @apply antialiased;
     overflow-x: hidden;
 
-    /* Sleek minimal dot cursor */
-    cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='4' fill='%23A855F7' fill-opacity='1'/%3E%3Ccircle cx='12' cy='12' r='8' stroke='%23A855F7' stroke-width='1' stroke-opacity='0.4'/%3E%3C/svg%3E") 12 12, auto;
+    /* Precision Cyber Pointer (Dark Nebula default) */
+    cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 2L20 11L12 13L9 21L3 2Z' fill='%23A855F7' stroke='%23C084FC' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='3' cy='2' r='1.5' fill='%23FFFFFF'/%3E%3C/svg%3E") 3 2, auto;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -289,7 +333,7 @@
     font-size: 0.62rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(168, 85, 247, 0.45);
+    color: var(--text-muted);
     writing-mode: horizontal-tb;
   }
 
@@ -298,7 +342,7 @@
     font-size: 0.58rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(124, 58, 237, 0.35);
+    color: var(--text-muted);
     writing-mode: vertical-rl;
     text-orientation: mixed;
   }
@@ -370,15 +414,16 @@
 
   /* === QUEST BOARD CARD (Sakura QuestBoard style) === */
   .quest-card {
-    background: rgba(12, 12, 22, 0.9);
-    border: 1px solid rgba(124,58,237,0.12);
+    background: rgba(var(--bg-glass-rgb), 0.85);
+    border: 1px solid var(--border-subtle);
     border-radius: 20px;
     transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 2px 12px rgba(var(--synapse-violet-rgb), 0.06);
   }
 
   .quest-card:hover {
-    border-color: rgba(124,58,237,0.35);
-    box-shadow: 0 12px 40px rgba(124,58,237,0.12), 0 0 0 1px rgba(124,58,237,0.08);
+    border-color: var(--border-accent);
+    box-shadow: 0 12px 40px var(--shadow-color), 0 0 0 1px var(--border-accent);
     transform: translateY(-4px);
   }
 
@@ -479,3 +524,29 @@
   50% { clip-path: polygon(12px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%); }
   75% { clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%); }
 }
+/* === Theme-Aware Precision Cyber Cursors === */
+/* Dark Nebula Default & Hover */
+body {
+  cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 2L20 11L12 13L9 21L3 2Z' fill='%23A855F7' stroke='%23C084FC' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='3' cy='2' r='1.5' fill='%23FFFFFF'/%3E%3C/svg%3E") 3 2, auto;
+}
+
+a, button, [role="button"], input, select, textarea, .cursor-pointer {
+  cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 2L20 11L12 13L9 21L3 2Z' fill='%23EC4899' stroke='%23F472B6' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='13' r='2.5' fill='%23F472B6' opacity='0.7'/%3E%3Ccircle cx='3' cy='2' r='1.5' fill='%23FFFFFF'/%3E%3C/svg%3E") 3 2, pointer !important;
+}
+
+/* Solar Flare Default & Hover */
+[data-theme="orange"] body,
+[data-theme="orange"] {
+  cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 2L20 11L12 13L9 21L3 2Z' fill='%23EA580C' stroke='%23FB923C' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='3' cy='2' r='1.5' fill='%23431407'/%3E%3C/svg%3E") 3 2, auto;
+}
+
+[data-theme="orange"] a,
+[data-theme="orange"] button,
+[data-theme="orange"] [role="button"],
+[data-theme="orange"] input,
+[data-theme="orange"] select,
+[data-theme="orange"] textarea,
+[data-theme="orange"] .cursor-pointer {
+  cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 2L20 11L12 13L9 21L3 2Z' fill='%23C2410C' stroke='%23F97316' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='13' r='2.5' fill='%23F97316' opacity='0.7'/%3E%3Ccircle cx='3' cy='2' r='1.5' fill='%23FFF7ED'/%3E%3C/svg%3E") 3 2, pointer !important;
+}
+

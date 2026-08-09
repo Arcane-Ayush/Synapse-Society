@@ -1,7 +1,19 @@
+import { useLocation } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
 import { CircuitBackground } from "../components/CircuitBackground";
+import { ScrollToTop } from "../components/ScrollToTop";
 
 export function Layout({ children }) {
+    const location = useLocation();
+    const path = location.pathname.toLowerCase();
+    const isInauguration =
+        path.includes('/inauguration') ||
+        path.includes('/hod') ||
+        path.includes('/dean') ||
+        path.includes('/provc') ||
+        path.includes('/president') ||
+        path.includes('/audience');
+
     return (
         <div className="min-h-screen text-foreground flex flex-col relative overflow-x-hidden"
              style={{ background: 'var(--bg-base)' }}>
@@ -10,14 +22,16 @@ export function Layout({ children }) {
 
             {/* Global ambient glow orbs */}
             <div className="fixed top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full pointer-events-none"
-                 style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)', zIndex: 0 }} />
+                 style={{ background: 'radial-gradient(circle, rgba(var(--synapse-violet-rgb), 0.08) 0%, transparent 70%)', zIndex: 0 }} />
             <div className="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full pointer-events-none"
-                 style={{ background: 'radial-gradient(circle, rgba(217,70,239,0.06) 0%, transparent 70%)', zIndex: 0 }} />
+                 style={{ background: 'radial-gradient(circle, rgba(var(--synapse-pink-rgb), 0.06) 0%, transparent 70%)', zIndex: 0 }} />
 
-            <Navbar />
-            <main className="flex-grow pt-20 relative" style={{ zIndex: 2 }}>
+            {!isInauguration && <Navbar />}
+            <main className={`flex-grow ${isInauguration ? 'pt-4' : 'pt-20'} relative`} style={{ zIndex: 2 }}>
                 {children}
             </main>
+
+            <ScrollToTop />
 
             {/* Footer */}
             <footer className="relative py-8 px-6" style={{ zIndex: 2, borderTop: '1px solid var(--border-subtle)' }}>

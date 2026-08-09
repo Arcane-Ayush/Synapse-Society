@@ -22,4 +22,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-*.json
+
+#env files
+
+.env
+*.env
+.env*
+
+#test files
+test*
+src/test-import.js
+
+
+# to ignore python files
+*.py
+
+
+backendPlan.md

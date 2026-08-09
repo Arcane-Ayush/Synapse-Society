@@ -1,13 +1,14 @@
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState } from "react";
-import { Zap, ExternalLink, Award } from "lucide-react";
-import { membershipCards } from "../data/mockData";
+import { Zap, ExternalLink, Award, User, Sparkles } from "lucide-react";
 import { SynapseCard } from "../components/SynapseCard";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { BlackHole } from "../themes/basic/BlackHole";
+import { useAuth } from "../contexts/AuthContext";
+import { LoginModal } from "../components/LoginModal";
 
 // ── Animated counter hook ──────────────────────────────────────────
 function useCounter(target, duration = 2000) {
@@ -41,14 +42,14 @@ function StatCard({ value, label, suffix = "+" }) {
                 className="text-4xl md:text-5xl font-black mb-1"
                 style={{
                     fontFamily: 'Space Grotesk',
-                    background: 'linear-gradient(135deg, #A855F7, #E879F9)',
+                    background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                 }}
             >
                 {count}{suffix}
             </div>
-            <div className="text-[10px] font-mono tracking-widest" style={{ color: 'rgba(196,181,253,0.45)', textTransform: 'uppercase' }}>
+            <div className="text-[10px] font-mono tracking-widest" style={{ color: 'rgba(var(--text-secondary-rgb), 0.45)', textTransform: 'uppercase' }}>
                 {label}
             </div>
         </div>
@@ -65,13 +66,13 @@ function PillarCard({ icon, title, desc, color, delay }) {
             viewport={{ once: true }}
             whileHover={{ y: -6 }}
             className="relative rounded-2xl p-7 group overflow-hidden"
-            style={{ background: 'rgba(12,12,20,0.85)', border: `1px solid rgba(124,58,237,0.12)` }}
+            style={{ background: 'rgba(var(--bg-glass-rgb), 0.85)', border: `1px solid rgba(var(--synapse-violet-rgb), 0.12)` }}
             onMouseEnter={e => {
                 e.currentTarget.style.borderColor = `${color}40`;
                 e.currentTarget.style.boxShadow = `0 12px 40px ${color}15`;
             }}
             onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'rgba(124,58,237,0.12)';
+                e.currentTarget.style.borderColor = 'rgba(var(--synapse-violet-rgb), 0.12)';
                 e.currentTarget.style.boxShadow = 'none';
             }}
         >
@@ -94,7 +95,7 @@ function PillarCard({ icon, title, desc, color, delay }) {
                 {title[0]}
             </div>
             <h3 className="text-xl font-bold mb-3" style={{ fontFamily: 'Space Grotesk' }}>{title}</h3>
-            <p className="text-sm leading-relaxed" style={{ color: 'rgba(196,181,253,0.55)', fontFamily: 'Inter' }}>{desc}</p>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(var(--text-secondary-rgb), 0.55)', fontFamily: 'Inter' }}>{desc}</p>
 
             {/* Bottom type annotation */}
             <div className="mt-6 tech-annotation" style={{ color: `${color}60` }}>
@@ -123,8 +124,8 @@ function EcosystemCard({ title, desc, url, icon, color, delay, isInternal = fals
                 {...linkProps}
                 className="flex flex-col gap-4 p-6 rounded-2xl transition-all duration-300 block"
                 style={{
-                    background: 'rgba(12,12,20,0.8)',
-                    border: '1px solid rgba(124,58,237,0.12)',
+                    background: 'rgba(var(--bg-glass-rgb), 0.8)',
+                    border: '1px solid rgba(var(--synapse-violet-rgb), 0.12)',
                     textDecoration: 'none',
                 }}
                 onMouseEnter={e => {
@@ -133,7 +134,7 @@ function EcosystemCard({ title, desc, url, icon, color, delay, isInternal = fals
                     e.currentTarget.style.transform = 'translateY(-4px)';
                 }}
                 onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = 'rgba(124,58,237,0.12)';
+                    e.currentTarget.style.borderColor = 'rgba(var(--synapse-violet-rgb), 0.12)';
                     e.currentTarget.style.boxShadow = 'none';
                     e.currentTarget.style.transform = 'translateY(0)';
                 }}
@@ -141,7 +142,7 @@ function EcosystemCard({ title, desc, url, icon, color, delay, isInternal = fals
                 <div className="flex items-start justify-between">
                     <div
                         className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                        style={{ background: `${color}12`, border: `1px solid ${color}22` }}
+                        style={{ background: `${color}12`, border: `1px solid ${color}22`, color: color }}
                     >
                         {icon}
                     </div>
@@ -153,8 +154,8 @@ function EcosystemCard({ title, desc, url, icon, color, delay, isInternal = fals
                     </span>
                 </div>
                 <div>
-                    <h4 className="font-bold text-base mb-1.5" style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}>{title}</h4>
-                    <p className="text-sm" style={{ color: 'rgba(196,181,253,0.5)', fontFamily: 'Inter', lineHeight: 1.6 }}>{desc}</p>
+                    <h4 className="font-bold text-base mb-1.5" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>{title}</h4>
+                    <p className="text-sm" style={{ color: 'rgba(var(--text-secondary-rgb), 0.5)', fontFamily: 'Inter', lineHeight: 1.6 }}>{desc}</p>
                 </div>
             </Tag>
         </motion.div>
@@ -164,11 +165,31 @@ function EcosystemCard({ title, desc, url, icon, color, delay, isInternal = fals
 // ══════════════════════════════════════════════════════════════════
 export function Home() {
     const heroRef = useRef(null);
+    const navigate = useNavigate();
+    const { isAuthenticated, checkUnlockStatus } = useAuth();
     const { scrollYProgress } = useScroll({ target: heroRef });
     const heroY = useTransform(scrollYProgress, [0, 1], [0, -80]);
 
-    const previewCards = [membershipCards[0], membershipCards[2], membershipCards[5]];
+    const [previewCards, setPreviewCards] = useState([]);
     const [selectedCard, setSelectedCard] = useState(null);
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
+
+    useEffect(() => {
+        import("../lib/auth").then(({ getAllCards }) => {
+            getAllCards().then(res => {
+                if (res.data && res.data.length > 0) {
+                    const cards = res.data;
+                    setPreviewCards([
+                        cards[0],
+                        cards[Math.floor(cards.length / 2)] || cards[0],
+                        cards[cards.length - 1] || cards[0]
+                    ]);
+                } else {
+                    setPreviewCards([]);
+                }
+            });
+        });
+    }, []);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -187,7 +208,7 @@ export function Home() {
             {/* ═══════════════════════ HERO ═══════════════════════ */}
             <section
                 ref={heroRef}
-                className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-4 md:pt-10 overflow-hidden bg-black"
+                className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-4 md:pt-10 overflow-hidden bg-[var(--bg-base)]"
             >
                 {/* 3D BlackHole Background */}
                 <div className="absolute inset-0 z-0">
@@ -209,13 +230,13 @@ export function Home() {
                         className="flex items-center justify-between mb-10"
                     >
                         <div className="flex items-center gap-3">
-                            <span className="tech-annotation" style={{ color: '#E9D5FF', fontWeight: 600 }}>Student-Run Tech Collective</span>
-                            <div className="w-8 h-[1px]" style={{ background: 'rgba(168,85,247,0.6)' }} />
-                            <span className="tech-annotation" style={{ color: '#C4B5FD', fontWeight: 600 }}>Chandigarh University</span>
+                            <span className="tech-annotation" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Student-Run Tech Collective</span>
+                            <div className="w-8 h-[1px]" style={{ background: 'var(--border-bright)' }} />
+                            <span className="tech-annotation" style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Chandigarh University</span>
                         </div>
                         <div className="hidden md:flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" style={{ boxShadow: '0 0 8px rgba(52,211,153,0.8)' }} />
-                            <span className="tech-annotation" style={{ color: '#C4B5FD', fontWeight: 600 }}>Season 1 · Active</span>
+                            <span className="tech-annotation" style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Season 1 · Active</span>
                         </div>
                     </motion.div>
 
@@ -236,13 +257,13 @@ export function Home() {
                                 ].map((s, i) => (
                                     <div key={s.label} className="flex items-center gap-3">
                                         {i > 0 && (
-                                            <div className="w-[1px] h-6" style={{ background: 'rgba(124,58,237,0.25)' }} />
+                                            <div className="w-[1px] h-6" style={{ background: 'var(--border-accent)' }} />
                                         )}
                                         <div>
-                                            <div className="text-sm font-black" style={{ fontFamily: 'Space Grotesk', color: '#A855F7' }}>
+                                            <div className="text-sm font-black" style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}>
                                                 {s.val}
                                             </div>
-                                            <div className="text-[9px] font-mono tracking-widest" style={{ color: 'rgba(196,181,253,0.35)', textTransform: 'uppercase' }}>
+                                            <div className="text-[9px] font-mono tracking-widest" style={{ color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                                                 {s.label}
                                             </div>
                                         </div>
@@ -258,22 +279,22 @@ export function Home() {
                                 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.92] mb-6"
                                 style={{ fontFamily: 'Space Grotesk' }}
                             >
-                                <span style={{ color: '#F5F3FF' }}>Where Ideas</span>
+                                <span style={{ color: 'var(--text-primary)' }}>Where Ideas</span>
                                 <br />
                                 <span
                                     style={{
-                                        background: 'linear-gradient(135deg, #A855F7 0%, #E879F9 40%, #818CF8 80%)',
+                                        background: 'linear-gradient(135deg, var(--synapse-violet-light) 0%, var(--synapse-pink-light) 40%, #818CF8 80%)',
                                         WebkitBackgroundClip: 'text',
                                         WebkitTextFillColor: 'transparent',
                                         backgroundSize: '200% 200%',
                                         animation: 'gradient-x 4s linear infinite',
                                     }}
                                 >
-                                    Spark
+                                    SPARK
                                 </span>
-                                <span style={{ color: '#F5F3FF' }}> Into</span>
+                                <span style={{ color: 'var(--text-primary)' }}> into</span>
                                 <br />
-                                <span style={{ color: '#F5F3FF' }}>Reality.</span>
+                                <span style={{ color: 'var(--text-primary)' }}>Reality.</span>
                             </motion.h1>
 
                             <motion.p
@@ -287,23 +308,40 @@ export function Home() {
                                 Build real projects. Learn together. Grow your network. Shape the future.
                             </motion.p>
 
-                            {/* CTA buttons — slanted cyber style */}
+                            {/* CTA buttons — glowing cyber style */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.7, delay: 0.6 }}
                                 className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start"
                             >
-                                <a
-                                    href="https://synapse-form.vercel.app"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="btn-cyber"
-                                >
-                                    <Zap size={14} />
-                                    Join Synapse
-                                    <span className="arrow">↗</span>
-                                </a>
+                                {isAuthenticated ? (
+                                    <Link
+                                        to="/profile"
+                                        className="btn-cyber flex items-center gap-2 group relative overflow-hidden"
+                                        style={{
+                                            boxShadow: '0 0 25px rgba(var(--synapse-violet-light-rgb), 0.5), 0 0 50px rgba(var(--synapse-violet-rgb), 0.3)',
+                                            border: '1px solid rgba(255,255,255,0.3)',
+                                        }}
+                                    >
+                                        <User size={15} className="text-purple-300" />
+                                        <span>VIEW PROFILE</span>
+                                        <span className="arrow transition-transform group-hover:translate-x-1">→</span>
+                                    </Link>
+                                ) : (
+                                    <button
+                                        onClick={() => setIsLoginOpen(true)}
+                                        className="btn-cyber flex items-center gap-2 group cursor-pointer relative overflow-hidden"
+                                        style={{
+                                            boxShadow: '0 0 30px rgba(var(--synapse-violet-light-rgb), 0.6), 0 0 60px rgba(var(--synapse-violet-rgb), 0.35)',
+                                            border: '1px solid rgba(255,255,255,0.35)',
+                                        }}
+                                    >
+                                        <Sparkles size={15} className="animate-pulse text-amber-300" />
+                                        <span>JOIN SYNAPSE</span>
+                                        <span className="arrow transition-transform group-hover:translate-x-1">↗</span>
+                                    </button>
+                                )}
                                 <Link to="/nexus" className="btn-cyber-outline">
                                     Explore Nexus
                                     <span className="arrow">→</span>
@@ -315,10 +353,10 @@ export function Home() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 1, delay: 1.2 }}
-                                className="mt-8 hidden md:flex items-center gap-3"
+                                className="flex items-center gap-4 pt-4 mt-8" style={{ borderTop: '1px solid var(--border-subtle)' }}
                             >
-                                <div className="w-4 h-[1px]" style={{ background: 'rgba(168,85,247,0.6)' }} />
-                                <span className="tech-annotation" style={{ color: '#E9D5FF' }}>Build · Learn · Elevate</span>
+                                <div className="w-6 h-[1px]" style={{ background: 'var(--border-accent)' }} />
+                                <span className="tech-annotation" style={{ color: 'var(--text-muted)' }}>Build · Learn · Elevate</span>
                             </motion.div>
                         </div>
 
@@ -348,15 +386,15 @@ export function Home() {
 
                             {/* Floating logo */}
                             <div
-                                className="relative z-10 animate-float"
+                                className="relative z-10 animate-float translate-x-4 md:translate-x-12"
                                 style={{
-                                    filter: 'drop-shadow(0 0 40px rgba(124,58,237,0.6)) drop-shadow(0 0 80px rgba(168,85,247,0.25))',
+                                    filter: 'drop-shadow(0 0 40px rgba(var(--synapse-violet-rgb), 0.6)) drop-shadow(0 0 80px rgba(var(--synapse-violet-light-rgb), 0.25))',
                                 }}
                             >
                                 <img
-                                    src="/dark_synapse.png"
-                                    alt="Synapse Society"
-                                    className="w-full max-w-[260px] md:max-w-[340px]"
+                                    src="/Synapse-Society-Dark.png"
+                                    alt="Synapse Society Emblem"
+                                    className="w-full max-w-[300px] md:max-w-[420px]"
                                 />
                             </div>
 
@@ -370,7 +408,7 @@ export function Home() {
                                         width: 280,
                                         height: 280,
                                         borderRadius: '50%',
-                                        background: 'radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%)',
+                                        background: 'radial-gradient(circle, rgba(var(--synapse-violet-rgb), 0.18) 0%, transparent 70%)',
                                     }}
                                 />
                             </div>
@@ -385,8 +423,8 @@ export function Home() {
                     transition={{ delay: 2.2, duration: 1 }}
                     className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
                 >
-                    <span className="section-label" style={{ color: 'rgba(168,85,247,0.35)' }}>scroll</span>
-                    <div className="w-[1px] h-8" style={{ background: 'linear-gradient(to bottom, rgba(168,85,247,0.35), transparent)' }} />
+                    <span className="section-label" style={{ color: 'rgba(var(--synapse-violet-light-rgb), 0.35)' }}>scroll</span>
+                    <div className="w-[1px] h-8" style={{ background: 'linear-gradient(to bottom, rgba(var(--synapse-violet-light-rgb), 0.35), transparent)' }} />
                 </motion.div>
             </section>
 
@@ -405,7 +443,7 @@ export function Home() {
                             <h2 className="text-4xl md:text-5xl font-black tracking-tight" style={{ fontFamily: 'Space Grotesk' }}>
                                 The Synapse{' '}
                                 <span style={{
-                                    background: 'linear-gradient(135deg, #A855F7, #E879F9)',
+                                    background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
                                 }}>
@@ -413,7 +451,7 @@ export function Home() {
                                 </span>
                             </h2>
                             {/* Decorative line */}
-                            <div className="hidden md:block flex-1 h-[1px] mb-2" style={{ background: 'linear-gradient(90deg, rgba(124,58,237,0.3), transparent)' }} />
+                            <div className="hidden md:block flex-1 h-[1px] mb-2" style={{ background: 'linear-gradient(90deg, rgba(var(--synapse-violet-rgb), 0.3), transparent)' }} />
                         </div>
                     </motion.div>
 
@@ -438,7 +476,7 @@ export function Home() {
                             }
                             title="Build"
                             desc="Turn ideas into reality. Ship real projects, hack at hackathons, contribute to open source. Your builds make an impact."
-                            color="#A855F7"
+                            color="var(--synapse-violet-light)"
                             delay={0.1}
                         />
                         <PillarCard
@@ -450,7 +488,7 @@ export function Home() {
                             }
                             title="Connect"
                             desc="A network that elevates everyone. Lead teams, mentor peers, and forge connections that outlast university."
-                            color="#D946EF"
+                            color="var(--synapse-pink)"
                             delay={0.2}
                         />
                     </div>
@@ -460,9 +498,9 @@ export function Home() {
             {/* ═══════════════ CARD PREVIEW ═══════════════ */}
             <section
                 className="py-24 px-4 relative overflow-hidden"
-                style={{ background: 'rgba(124,58,237,0.025)', borderTop: '1px solid rgba(124,58,237,0.07)', borderBottom: '1px solid rgba(124,58,237,0.07)' }}
+                style={{ background: 'rgba(var(--synapse-violet-rgb), 0.025)', borderTop: '1px solid rgba(var(--synapse-violet-rgb), 0.07)', borderBottom: '1px solid rgba(var(--synapse-violet-rgb), 0.07)' }}
             >
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ width: 600, height: 400, background: 'radial-gradient(ellipse, rgba(124,58,237,0.09) 0%, transparent 70%)' }} />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ width: 600, height: 400, background: 'radial-gradient(ellipse, rgba(var(--synapse-violet-rgb), 0.09) 0%, transparent 70%)' }} />
 
                 <div className="max-w-7xl mx-auto relative z-10">
                     <motion.div
@@ -477,36 +515,37 @@ export function Home() {
                             <h2 className="text-4xl md:text-5xl font-black tracking-tight" style={{ fontFamily: 'Space Grotesk' }}>
                                 Earn Your{' '}
                                 <span style={{
-                                    background: 'linear-gradient(135deg, #A855F7, #E879F9)',
+                                    background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
                                 }}>
                                     Legend
                                 </span>
                             </h2>
-                            <div className="hidden md:block flex-1 h-[1px] mb-2" style={{ background: 'linear-gradient(90deg, rgba(124,58,237,0.3), transparent)' }} />
+                            <div className="hidden md:block flex-1 h-[1px] mb-2" style={{ background: 'linear-gradient(90deg, rgba(var(--synapse-violet-rgb), 0.3), transparent)' }} />
                         </div>
-                        <p className="text-base mt-4 max-w-xl" style={{ color: 'rgba(196,181,253,0.55)', fontFamily: 'Inter', lineHeight: 1.7 }}>
+                        <p className="text-base mt-4 max-w-xl" style={{ color: 'rgba(var(--text-secondary-rgb), 0.55)', fontFamily: 'Inter', lineHeight: 1.7 }}>
                             Every member starts with an Access Pass. Attend workshops, build projects, and lead teams to unlock higher-tier cards — each with unique character art, unique ID, and real physical hard copies.
                         </p>
                     </motion.div>
 
                     <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 mb-12">
                         {previewCards.map((card, i) => {
-                            const isUnlocked = i === 0;
+                            const isClickable = checkUnlockStatus(card);
                             return (
-                            <motion.div
-                                key={card.id}
-                                initial={{ opacity: 0, y: 40, rotate: (i - 1) * 6 }}
-                                whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-                                transition={{ duration: 0.7, delay: i * 0.15, ease: [0.23, 1, 0.32, 1] }}
-                                viewport={{ once: true }}
-                                onClick={() => isUnlocked && setSelectedCard({ ...card, unlocked: true })}
-                                className={isUnlocked ? "cursor-pointer transition-transform hover:scale-105" : ""}
-                            >
-                                <SynapseCard card={{ ...card, unlocked: isUnlocked }} size="md" />
-                            </motion.div>
-                        )})}
+                                <motion.div
+                                    key={`${card.id}-${i}`}
+                                    initial={{ opacity: 0, y: 40, rotate: (i - 1) * 6 }}
+                                    whileInView={{ opacity: 1, y: 0, rotate: 0 }}
+                                    transition={{ duration: 0.7, delay: i * 0.15, ease: [0.23, 1, 0.32, 1] }}
+                                    viewport={{ once: true }}
+                                    onClick={() => isClickable && setSelectedCard({ ...card, unlocked: true })}
+                                    className={isClickable ? "cursor-pointer transition-transform hover:scale-105" : ""}
+                                >
+                                    <SynapseCard card={{ ...card, unlocked: isClickable }} size="md" />
+                                </motion.div>
+                            )
+                        })}
                     </div>
 
                     <div className="flex justify-center">
@@ -534,14 +573,14 @@ export function Home() {
                             <h2 className="text-4xl md:text-5xl font-black tracking-tight" style={{ fontFamily: 'Space Grotesk' }}>
                                 Our{' '}
                                 <span style={{
-                                    background: 'linear-gradient(135deg, #A855F7, #E879F9)',
+                                    background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
                                 }}>
                                     Ecosystem
                                 </span>
                             </h2>
-                            <div className="hidden md:block flex-1 h-[1px] mb-2" style={{ background: 'linear-gradient(90deg, rgba(124,58,237,0.3), transparent)' }} />
+                            <div className="hidden md:block flex-1 h-[1px] mb-2" style={{ background: 'linear-gradient(90deg, rgba(var(--synapse-violet-rgb), 0.3), transparent)' }} />
                         </div>
                     </motion.div>
 
@@ -551,7 +590,7 @@ export function Home() {
                             desc="The central platform for all things Synapse — resources, events, and community tools."
                             url="https://the-synapse-hub.vercel.app"
                             icon="⎈"
-                            color="#A855F7"
+                            color="var(--synapse-violet-light)"
                             delay={0}
                         />
                         <EcosystemCard
@@ -559,7 +598,7 @@ export function Home() {
                             desc="Ready to connect your neurons? Sign up and get your Synapse Access Pass."
                             url="https://synapse-form.vercel.app"
                             icon="⚲"
-                            color="#D946EF"
+                            color="var(--synapse-pink)"
                             delay={0.1}
                         />
                         <EcosystemCard
@@ -578,14 +617,14 @@ export function Home() {
             {/* ═══════════════ STATS BAR ═══════════════ */}
             <section
                 className="py-20 px-4"
-                style={{ background: 'rgba(12,12,20,0.6)', borderTop: '1px solid rgba(124,58,237,0.07)' }}
+                style={{ background: 'rgba(var(--bg-glass-rgb), 0.6)', borderTop: '1px solid rgba(var(--synapse-violet-rgb), 0.07)' }}
             >
                 <div className="max-w-4xl mx-auto">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
                         <StatCard value={150} label="Members" />
-                        <StatCard value={8} label="Projects" />
-                        <StatCard value={12} label="Events" />
-                        <StatCard value={3} label="Hackathons" />
+                        <StatCard value={5} label="Projects" />
+                        <StatCard value={8} label="Events" />
+                        <StatCard value={3} label="Workshops" />
                     </div>
                 </div>
             </section>
@@ -600,7 +639,7 @@ export function Home() {
                             exit={{ opacity: 0 }}
                             onClick={() => setSelectedCard(null)}
                             className="fixed inset-0 z-[9999] flex items-center justify-center p-4 cursor-pointer"
-                            style={{ background: 'rgba(5,5,8,0.92)', backdropFilter: 'blur(8px)' }}
+                            style={{ background: 'rgba(var(--bg-glass-rgb), 0.92)', backdropFilter: 'blur(8px)' }}
                         >
                             <motion.div
                                 initial={{ scale: 0.8, opacity: 0, y: 20 }}
@@ -617,6 +656,14 @@ export function Home() {
                 </AnimatePresence>,
                 document.body
             )}
+            {/* Login Modal */}
+            <LoginModal
+                isOpen={isLoginOpen}
+                onClose={() => setIsLoginOpen(false)}
+                initialMode="signup"
+                titleOverride="Join Synapse Society"
+                subtitleOverride="Create an account or sign in to complete your club registration form."
+            />
         </div>
     );
 }

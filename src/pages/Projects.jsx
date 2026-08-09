@@ -1,13 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { projects } from "../data/mockData";
-import { ChevronLeft, ChevronRight, Github, ExternalLink } from "lucide-react";
+import { ChevronLeft, ChevronRight, Github, ExternalLink, Loader } from "lucide-react";
 
 // Reskinned ArcadeDeck in Synapse purple aesthetic
 function SynapseDeck({ projects }) {
     const [activeIndex, setActiveIndex] = useState(0);
     const [page, setPage] = useState(0);
     const PAGE_SIZE = 5;
+
+    if (!projects || projects.length === 0) {
+        return (
+            <div className="relative w-full max-w-6xl flex items-center justify-center" style={{ height: 'clamp(400px, 60vh, 520px)' }}>
+                <p className="text-purple-400 font-mono tracking-widest uppercase text-sm">No projects found.</p>
+            </div>
+        );
+    }
 
     const totalPages = Math.ceil(projects.length / PAGE_SIZE);
     const currentProjects = projects.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -25,9 +32,9 @@ function SynapseDeck({ projects }) {
             <div
                 className="absolute inset-0 rounded-2xl overflow-hidden"
                 style={{
-                    background: 'rgba(8,8,14,0.95)',
-                    border: '1px solid rgba(124,58,237,0.25)',
-                    boxShadow: '0 0 60px rgba(124,58,237,0.1)',
+                    background: 'rgba(var(--bg-glass-rgb), 0.95)',
+                    border: '1px solid rgba(var(--synapse-violet-rgb), 0.25)',
+                    boxShadow: '0 0 60px rgba(var(--synapse-violet-rgb), 0.1)',
                 }}
             >
                 {/* Prev button */}
@@ -36,12 +43,12 @@ function SynapseDeck({ projects }) {
                     disabled={page === 0}
                     className="absolute left-0 right-0 top-0 h-10 md:h-auto md:bottom-0 md:w-12 z-20 flex items-center justify-center transition-all duration-200 disabled:opacity-0 disabled:pointer-events-none"
                     style={{
-                        background: 'rgba(124,58,237,0.05)',
-                        borderBottom: '1px solid rgba(124,58,237,0.1)', // for mobile
-                        color: '#A855F7',
+                        background: 'rgba(var(--synapse-violet-rgb), 0.05)',
+                        borderBottom: '1px solid rgba(var(--synapse-violet-rgb), 0.1)', // for mobile
+                        color: 'var(--synapse-violet-light)',
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(124,58,237,0.15)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(124,58,237,0.05)'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-rgb), 0.15)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-rgb), 0.05)'}
                 >
                     {/* Rotate icon on mobile */}
                     <ChevronLeft size={24} className="md:block hidden" />
@@ -59,9 +66,9 @@ function SynapseDeck({ projects }) {
                                 className="relative h-full transition-all duration-500 ease-in-out cursor-pointer overflow-hidden rounded-xl group"
                                 style={{
                                     flex: isActive ? '3' : '1',
-                                    background: 'rgba(12,12,20,0.9)',
-                                    border: `1px solid ${isActive ? 'rgba(168,85,247,0.4)' : 'rgba(124,58,237,0.1)'}`,
-                                    boxShadow: isActive ? '0 0 30px rgba(124,58,237,0.2)' : 'none',
+                                    background: 'rgba(var(--bg-glass-rgb), 0.9)',
+                                    border: `1px solid ${isActive ? 'rgba(var(--synapse-violet-light-rgb), 0.4)' : 'rgba(var(--synapse-violet-rgb), 0.1)'}`,
+                                    boxShadow: isActive ? '0 0 30px rgba(var(--synapse-violet-rgb), 0.2)' : 'none',
                                 }}
                                 onClick={() => setActiveIndex(index)}
                                 onMouseEnter={() => setActiveIndex(index)}
@@ -74,7 +81,7 @@ function SynapseDeck({ projects }) {
                                     <div
                                         className="text-[10px] md:text-xs font-mono tracking-widest uppercase transition-colors whitespace-nowrap"
                                         style={{ 
-                                            color: isActive ? '#D8B4FE' : 'rgba(168,85,247,0.75)',
+                                            color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
                                             writingMode: 'horizontal-tb'
                                         }}
                                     >
@@ -89,21 +96,39 @@ function SynapseDeck({ projects }) {
                                     style={{ opacity: isActive ? 1 : 0, transform: isActive ? 'translateY(0)' : 'translateY(12px)' }}
                                 >
                                     {/* ID */}
-                                    <div className="font-mono text-[10px] mb-2 pb-1" style={{ color: '#D8B4FE', borderBottom: '1px solid rgba(168,85,247,0.3)' }}>
+                                    <div className="font-mono text-[10px] mb-2 pb-1" style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border-subtle)' }}>
                                         SYN.{String((page * PAGE_SIZE) + index + 1).padStart(3, '0')}
                                     </div>
 
                                     {/* Image */}
-                                    <div className="relative w-full mb-3 rounded-lg overflow-hidden" style={{ height: '45%' }}>
-                                        <img
-                                            src={project.image}
-                                            alt={project.title}
-                                            className="w-full h-full object-cover"
-                                            style={{ filter: 'saturate(0.9) brightness(0.9)' }}
-                                        />
+                                    <div 
+                                        className={`relative w-full mb-3 rounded-lg overflow-hidden bg-purple-950/30 h-[100px] md:h-[45%] shrink-0 ${(project.demoUrl || project.demo_url || project.githubUrl || project.github_url) ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
+                                        onClick={(e) => {
+                                            const url = project.demoUrl || project.demo_url || project.githubUrl || project.github_url;
+                                            if (url) {
+                                                e.stopPropagation();
+                                                window.open(url, '_blank', 'noopener,noreferrer');
+                                            }
+                                        }}
+                                    >
                                         <div
-                                            className="absolute inset-0"
-                                            style={{ background: 'linear-gradient(to top, rgba(8,8,14,0.9), transparent 60%)' }}
+                                            className="absolute inset-0 flex items-center justify-center"
+                                            style={{ background: 'linear-gradient(135deg, rgba(var(--synapse-violet-rgb), 0.25), rgba(236,72,153,0.15))' }}
+                                        >
+                                            <span className="font-mono text-[10px] text-purple-300/50 uppercase tracking-widest">{project.title}</span>
+                                        </div>
+                                        {project.image || project.image_url ? (
+                                            <img
+                                                src={project.image || project.image_url}
+                                                alt={project.title}
+                                                onError={(e) => { e.currentTarget.style.opacity = '0'; }}
+                                                className="relative z-10 w-full h-full object-cover transition-opacity duration-300"
+                                                style={{ filter: 'saturate(0.9) brightness(0.9)' }}
+                                            />
+                                        ) : null}
+                                        <div
+                                            className="absolute inset-0 z-20"
+                                            style={{ background: 'linear-gradient(to top, rgba(var(--bg-glass-rgb), 0.9), transparent 60%)' }}
                                         />
                                         {/* Scan lines */}
                                         <div
@@ -116,13 +141,13 @@ function SynapseDeck({ projects }) {
 
                                     <h3
                                         className="font-bold text-base mb-1 truncate"
-                                        style={{ fontFamily: 'Space Grotesk', color: '#F5F3FF' }}
+                                        style={{ fontFamily: 'Space Grotesk', color: 'var(--text-primary)' }}
                                     >
                                         {project.title}
                                     </h3>
                                     <p
                                         className="text-[11px] leading-relaxed mb-3 line-clamp-3"
-                                        style={{ color: 'rgba(216,180,254,0.85)', fontFamily: 'Inter' }}
+                                        style={{ color: 'var(--text-muted)', fontFamily: 'Inter' }}
                                     >
                                         {project.description}
                                     </p>
@@ -134,9 +159,9 @@ function SynapseDeck({ projects }) {
                                                 key={tag}
                                                 className="text-[9px] font-mono px-1.5 py-0.5 rounded"
                                                 style={{
-                                                    background: 'rgba(168,85,247,0.15)',
-                                                    color: '#E9D5FF',
-                                                    border: '1px solid rgba(168,85,247,0.3)',
+                                                    background: 'rgba(var(--synapse-violet-light-rgb), 0.15)',
+                                                    color: 'var(--text-primary)',
+                                                    border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)',
                                                 }}
                                             >
                                                 {tag}
@@ -146,30 +171,30 @@ function SynapseDeck({ projects }) {
 
                                     {/* Links */}
                                     <div className="flex gap-2">
-                                        {project.githubUrl && (
+                                        {(project.githubUrl || project.github_url) && (
                                             <a
-                                                href={project.githubUrl}
+                                                href={project.githubUrl || project.github_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 onClick={e => e.stopPropagation()}
                                                 className="flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded-lg transition-all duration-200"
-                                                style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', color: '#D8B4FE' }}
-                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(124,58,237,0.35)'}
-                                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(124,58,237,0.15)'}
+                                                style={{ background: 'rgba(var(--synapse-violet-rgb), 0.15)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.3)', color: 'var(--text-primary)' }}
+                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-rgb), 0.35)'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-rgb), 0.15)'}
                                             >
                                                 <Github size={10} /> GitHub
                                             </a>
                                         )}
-                                        {project.demoUrl && (
+                                        {(project.demoUrl || project.demo_url) && (
                                             <a
-                                                href={project.demoUrl}
+                                                href={project.demoUrl || project.demo_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 onClick={e => e.stopPropagation()}
                                                 className="flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded-lg transition-all duration-200"
-                                                style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)', color: '#E9D5FF' }}
-                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(168,85,247,0.3)'}
-                                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(168,85,247,0.15)'}
+                                                style={{ background: 'rgba(var(--synapse-violet-light-rgb), 0.15)', border: '1px solid rgba(var(--synapse-violet-light-rgb), 0.3)', color: 'var(--text-primary)' }}
+                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-light-rgb), 0.3)'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-light-rgb), 0.15)'}
                                             >
                                                 <ExternalLink size={10} /> Demo
                                             </a>
@@ -178,8 +203,8 @@ function SynapseDeck({ projects }) {
                                 </div>
 
                                 {/* Corner accents */}
-                                <div className="absolute top-2 right-2 w-2 h-2 rounded-sm" style={{ background: isActive ? '#A855F7' : 'rgba(124,58,237,0.2)' }} />
-                                <div className="absolute bottom-2 left-2 w-2 h-2 rounded-sm" style={{ background: isActive ? '#7C3AED' : 'rgba(124,58,237,0.2)' }} />
+                                <div className="absolute top-2 right-2 w-2 h-2 rounded-sm" style={{ background: isActive ? 'var(--synapse-violet-light)' : 'rgba(var(--synapse-violet-rgb), 0.2)' }} />
+                                <div className="absolute bottom-2 left-2 w-2 h-2 rounded-sm" style={{ background: isActive ? 'var(--synapse-violet)' : 'rgba(var(--synapse-violet-rgb), 0.2)' }} />
                             </div>
                         );
                     })}
@@ -191,12 +216,12 @@ function SynapseDeck({ projects }) {
                     disabled={page === totalPages - 1}
                     className="absolute left-0 right-0 bottom-0 h-10 md:h-auto md:top-0 md:left-auto md:w-12 z-20 flex items-center justify-center transition-all duration-200 disabled:opacity-0 disabled:pointer-events-none"
                     style={{
-                        background: 'rgba(124,58,237,0.05)',
-                        borderTop: '1px solid rgba(124,58,237,0.1)', // for mobile
-                        color: '#A855F7',
+                        background: 'rgba(var(--synapse-violet-rgb), 0.05)',
+                        borderTop: '1px solid rgba(var(--synapse-violet-rgb), 0.1)', // for mobile
+                        color: 'var(--synapse-violet-light)',
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(124,58,237,0.15)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(124,58,237,0.05)'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-rgb), 0.15)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(var(--synapse-violet-rgb), 0.05)'}
                 >
                     <ChevronRight size={24} className="md:block hidden" />
                     <ChevronRight size={24} className="md:hidden rotate-90" />
@@ -207,15 +232,15 @@ function SynapseDeck({ projects }) {
             <div
                 className="absolute -bottom-10 left-0 right-0 h-9 rounded-b-xl flex items-center justify-between px-5"
                 style={{
-                    background: 'rgba(8,8,14,0.9)',
-                    border: '1px solid rgba(124,58,237,0.15)',
+                    background: 'rgba(var(--bg-glass-rgb), 0.9)',
+                    border: '1px solid rgba(var(--synapse-violet-rgb), 0.15)',
                     borderTop: 'none',
                 }}
             >
-                <span className="font-mono text-[10px]" style={{ color: 'rgba(168,85,247,0.5)' }}>
+                <span className="font-mono text-[10px]" style={{ color: 'rgba(var(--synapse-violet-light-rgb), 0.5)' }}>
                     PAGE {page + 1} / {totalPages}
                 </span>
-                <span className="font-mono text-[10px]" style={{ color: 'rgba(168,85,247,0.3)' }}>
+                <span className="font-mono text-[10px]" style={{ color: 'rgba(var(--synapse-violet-light-rgb), 0.3)' }}>
                     {projects.length} PROJECTS
                 </span>
             </div>
@@ -224,6 +249,18 @@ function SynapseDeck({ projects }) {
 }
 
 export function Projects() {
+    const [dbProjects, setDbProjects] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        import("../lib/auth").then(({ getProjects }) => {
+            getProjects().then(res => {
+                setDbProjects(res.data || []);
+                setLoading(false);
+            });
+        });
+    }, []);
+
     return (
         <div className="min-h-screen flex flex-col px-4 py-16">
             <motion.div
@@ -240,7 +277,7 @@ export function Projects() {
                     Project{" "}
                     <span
                         style={{
-                            background: 'linear-gradient(135deg, #A855F7, #E879F9)',
+                            background: 'linear-gradient(135deg, var(--synapse-violet-light), var(--synapse-pink-light))',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
                         }}
@@ -248,13 +285,20 @@ export function Projects() {
                         Forge
                     </span>
                 </h1>
-                <p className="text-base max-w-xl mx-auto" style={{ color: 'rgba(196,181,253,0.55)', fontFamily: 'Inter' }}>
+                <p className="text-base max-w-xl mx-auto" style={{ color: 'rgba(var(--text-secondary-rgb), 0.55)', fontFamily: 'Inter' }}>
                     Real projects built by Synapse Society members. Hover to explore, click to expand.
                 </p>
             </motion.div>
 
             <div className="flex-1 flex items-start justify-center pb-16">
-                <SynapseDeck projects={projects} />
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-purple-400">
+                        <Loader className="animate-spin mb-4" size={32} />
+                        <p className="font-mono text-sm tracking-widest uppercase">Loading Projects...</p>
+                    </div>
+                ) : (
+                    <SynapseDeck projects={dbProjects} />
+                )}
             </div>
         </div>
     );

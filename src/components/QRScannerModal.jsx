@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Html5Qrcode } from 'html5-qrcode';
 import { X, QrCode, Camera, Upload, CheckCircle2, AlertCircle, Sparkles, Award, Trophy, Zap, Lock } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { decryptPayload } from '../utils/cryptoUtils';
 
-export function QRScannerModal({ isOpen, onClose }) {
-    const { claimQrReward, openAuthModal, isAuthenticated } = useAuth();
+export function QRScannerModal({ isOpen, onClose, onOpenLogin }) {
+    const { claimQrReward, isAuthenticated, profile } = useAuth();
     const [scanMode, setScanMode] = useState('upload'); // 'upload' | 'camera'
     const [error, setError] = useState('');
     const [result, setResult] = useState(null);
@@ -45,26 +45,36 @@ export function QRScannerModal({ isOpen, onClose }) {
 
             if (!isAuthenticated) {
                 onClose();
-                openAuthModal();
+                if (onOpenLogin) onOpenLogin();
                 return;
             }
 
             // Claim Reward
-            const claimResult = claimQrReward(data);
-            if (!claimResult.success) {
-                setError(claimResult.error || 'Failed to claim QR reward.');
-                return;
-            }
+            if (claimQrReward) {
+                const claimResult = claimQrReward(data);
+                if (!claimResult.success) {
+                    setError(claimResult.error || 'Failed to claim QR reward.');
+                    return;
+                }
 
-            // Show Celebration Result
-            setResult({
-                title: data.title || 'Synapse Reward',
-                xpGained: claimResult.xpGained,
-                newTotalXp: claimResult.newTotalXp,
-                levelUp: claimResult.levelUp,
-                newLevel: claimResult.newLevel,
-                cardTier: data.cardTier
-            });
+                setResult({
+                    title: data.title || 'Synapse Reward',
+                    xpGained: claimResult.xpGained,
+                    newTotalXp: claimResult.newTotalXp,
+                    levelUp: claimResult.levelUp,
+                    newLevel: claimResult.newLevel,
+                    cardTier: data.cardTier
+                });
+            } else {
+                setResult({
+                    title: data.title || 'Synapse Reward',
+                    xpGained: Number(data.amount) || 100,
+                    newTotalXp: (profile?.xp || 0) + (Number(data.amount) || 100),
+                    levelUp: false,
+                    newLevel: profile?.level || 1,
+                    cardTier: data.cardTier
+                });
+            }
 
             stopCamera();
         } catch (err) {
