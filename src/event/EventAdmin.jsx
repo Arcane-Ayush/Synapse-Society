@@ -22,6 +22,7 @@ import {
     toggleTeamActiveStatus
 } from './lib/eventState';
 import { playEventSound, broadcastPlaySound } from './lib/soundSystem';
+import { getTeamNumberBadge } from './lib/eventTeamsData';
 import { supabase } from '../lib/supabase';
 
 export function EventAdmin() {
@@ -1186,7 +1187,7 @@ export function EventAdmin() {
                                 <div key={team.id} className="p-2.5 rounded-lg bg-black/40 border border-white/10 flex flex-col justify-between gap-2">
                                     <div className="flex items-center justify-between gap-2">
                                         <div className="flex items-center gap-2 min-w-0">
-                                            <span className="text-lg">{team.badge}</span>
+                                            <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-[10px] font-mono font-bold">#{getTeamNumberBadge(team)}</span>
                                             <div className="min-w-0">
                                                 <div className="text-xs font-bold text-white truncate">{team.name}</div>
                                                 <div className="text-[10px] text-zinc-400">{team.code}</div>
@@ -1255,7 +1256,7 @@ export function EventAdmin() {
                                 <div key={team.id} className="p-2.5 rounded-lg bg-black/40 border border-white/10 flex flex-col gap-2">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2 min-w-0">
-                                            <span className="text-base">{team.badge}</span>
+                                            <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-[10px] font-mono font-bold">#{getTeamNumberBadge(team)}</span>
                                             <div className="text-xs font-bold text-white truncate">{team.name}</div>
                                         </div>
                                         <span className="text-xs font-bold text-yellow-300">{team.s_coins || 0} S</span>
@@ -1304,7 +1305,7 @@ export function EventAdmin() {
                                 <div key={team.id} className="p-2.5 rounded-lg bg-black/40 border border-white/10 flex flex-col gap-2">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2 min-w-0">
-                                            <span className="text-base">{team.badge}</span>
+                                            <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-[10px] font-mono font-bold">#{getTeamNumberBadge(team)}</span>
                                             <div className="text-xs font-bold text-white truncate">{team.name}</div>
                                         </div>
                                         <span className="text-xs font-bold text-pink-300">{team.quiz_score || 0} Quiz pts</span>
@@ -1357,7 +1358,7 @@ export function EventAdmin() {
                             <div key={team.id} className="p-2.5 rounded-lg bg-black/60 border border-yellow-500/40 flex flex-col justify-between gap-2">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 min-w-0">
-                                        <span className="text-lg">{team.badge}</span>
+                                        <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-[10px] font-mono font-bold">#{getTeamNumberBadge(team)}</span>
                                         <div className="text-xs font-bold text-white truncate">{team.name}</div>
                                     </div>
                                     <span className="text-xs font-bold text-yellow-400">{team.s_coins || 0} S</span>

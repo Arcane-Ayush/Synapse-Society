@@ -31,3 +31,15 @@ export async function getTeamByCode(code) {
         return null;
     }
 }
+
+/**
+ * Returns a sleek 2-digit number badge for a team (e.g. "01", "07", "40") instead of emoji icons.
+ */
+export function getTeamNumberBadge(team) {
+    if (!team) return '01';
+    const match = (team.code || team.name || '').match(/\d+/);
+    if (match) {
+        return String(match[0]).padStart(2, '0');
+    }
+    return String(team.id || '01').padStart(2, '0');
+}

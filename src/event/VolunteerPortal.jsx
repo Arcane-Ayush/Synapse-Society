@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Shield, UserPlus, Search, CheckCircle2, Plus, Sparkles,
-    Trash2, ExternalLink, ArrowRight, XCircle, ChevronLeft, Check
+    Trash2, ExternalLink, ArrowRight, XCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -11,6 +11,7 @@ import {
     createEventTeamInDb
 } from './lib/eventState';
 import { playEventSound } from './lib/soundSystem';
+import { getTeamNumberBadge } from './lib/eventTeamsData';
 import { supabase } from '../lib/supabase';
 
 export function VolunteerPortal() {
@@ -60,7 +61,7 @@ export function VolunteerPortal() {
 
     const hasAccess = isAuthenticated && (isVolunteer || isLead);
 
-    // Add members using space / comma separated IDs (e.g. "42 81 243 51")
+    // Add members using space / comma separated IDs
     const handleAddMembers = async (e) => {
         e.preventDefault();
         if (!selectedTeamId || !agentIdsInput.trim()) return;
@@ -71,9 +72,9 @@ export function VolunteerPortal() {
             playEventSound('thock');
             loadTeams();
             const addedList = (res.added || []).map(m => m.agentNo).join(', ');
-            setStatusMessage(`✓ Added ${res.count || 1} member(s): [${addedList || agentIdsInput}]`);
+            setStatusMessage(`Added ${res.count || 1} member(s): [${addedList || agentIdsInput}]`);
             setAgentIdsInput('');
-            setTimeout(() => setStatusMessage(null), 3500);
+            setTimeout(() => setStatusMessage(null), 3000);
         } else {
             setStatusMessage(`Error adding members. Please verify IDs.`);
             setTimeout(() => setStatusMessage(null), 3000);
@@ -183,7 +184,7 @@ export function VolunteerPortal() {
                         onClick={() => setIsCreateModalOpen(true)}
                         className="px-2.5 py-1 rounded-md bg-cyan-500 hover:bg-cyan-400 text-black font-bold flex items-center gap-1 cursor-pointer"
                     >
-                        <Plus size={13} /> + Add Team
+                        <Plus size={13} /> Add Team
                     </button>
                     {isLead && (
                         <a
@@ -204,7 +205,7 @@ export function VolunteerPortal() {
                 </div>
             )}
 
-            {/* Mobile Tab Switcher */}
+            {/* Mobile Tab Switcher (Clean, Uncluttered) */}
             <div className="flex lg:hidden rounded-lg bg-black/60 border border-white/10 p-1">
                 <button
                     onClick={() => setMobileTab('list')}
@@ -212,7 +213,7 @@ export function VolunteerPortal() {
                         mobileTab === 'list' ? 'bg-cyan-500 text-black' : 'text-zinc-400'
                     }`}
                 >
-                    1. Select Team ({filteredTeams.length})
+                    Select Team
                 </button>
                 <button
                     onClick={() => setMobileTab('detail')}
@@ -220,7 +221,7 @@ export function VolunteerPortal() {
                         mobileTab === 'detail' ? 'bg-cyan-500 text-black' : 'text-zinc-400'
                     }`}
                 >
-                    2. Add Members ({selectedTeam ? selectedTeam.name : 'None'})
+                    Add Members
                 </button>
             </div>
 
@@ -262,7 +263,7 @@ export function VolunteerPortal() {
                                     }`}
                                 >
                                     <div className="flex items-center gap-2 min-w-0">
-                                        <span className="text-lg">{t.badge}</span>
+                                        <span className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-xs font-mono font-bold">#{getTeamNumberBadge(t)}</span>
                                         <div className="min-w-0">
                                             <div className="text-xs font-bold truncate">{t.name}</div>
                                             <div className="text-[10px] text-zinc-400">{t.code}</div>
@@ -298,10 +299,10 @@ export function VolunteerPortal() {
                             >
                                 <div className="flex items-center gap-2.5">
                                     <div
-                                        className="w-10 h-10 rounded flex items-center justify-center text-xl"
+                                        className="w-10 h-10 rounded flex items-center justify-center text-sm font-mono font-bold text-cyan-300"
                                         style={{ background: `${selectedTeam.color || '#00F0FF'}25`, border: `1px solid ${selectedTeam.color || '#00F0FF'}50` }}
                                     >
-                                        {selectedTeam.badge}
+                                        #{getTeamNumberBadge(selectedTeam)}
                                     </div>
                                     <div>
                                         <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: selectedTeam.color }}>
@@ -319,13 +320,12 @@ export function VolunteerPortal() {
                                 </div>
                             </div>
 
-                            {/* Batch Member Registration Input Form (Space-Separated IDs) */}
+                            {/* Clean Add Members Box */}
                             <div className="p-3.5 rounded-lg bg-black/60 border border-cyan-500/30 space-y-2.5">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-bold text-cyan-300 uppercase flex items-center gap-1">
                                         <UserPlus size={13} /> Add Members by Agent IDs
                                     </span>
-                                    <span className="text-[10px] text-zinc-400">Separate with spaces</span>
                                 </div>
 
                                 <form onSubmit={handleAddMembers} className="space-y-2">
@@ -338,16 +338,13 @@ export function VolunteerPortal() {
                                             onChange={e => setAgentIdsInput(e.target.value)}
                                             className="w-full px-3 py-2 rounded-md bg-black border border-white/20 text-xs text-white font-mono focus:border-cyan-400 outline-none"
                                         />
-                                        <p className="text-[10px] text-zinc-400 mt-1">
-                                            Type or scan multiple IDs with spaces: <strong className="text-cyan-300">42 81 243 51</strong>
-                                        </p>
                                     </div>
 
                                     <button
                                         type="submit"
                                         className="w-full py-2 rounded-md bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs cursor-pointer shadow-[0_0_12px_rgba(0,240,255,0.4)]"
                                     >
-                                        + Add Members to {selectedTeam.name}
+                                        + Add Members
                                     </button>
                                 </form>
                             </div>

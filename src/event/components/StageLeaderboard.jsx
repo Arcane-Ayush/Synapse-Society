@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Medal, Sparkles, Coins, Flame, Shield, Users, Zap, CheckCircle2, HelpCircle } from 'lucide-react';
 import { fetchEventTeamsFromDb } from '../lib/eventState';
+import { getTeamNumberBadge } from '../lib/eventTeamsData';
 import { supabase } from '../../lib/supabase';
 
 export function StageLeaderboard({ currentPhase = 'phase_2_round_1' }) {
@@ -154,7 +155,7 @@ export function StageLeaderboard({ currentPhase = 'phase_2_round_1' }) {
                                     boxShadow: '0 0 25px rgba(192,192,192,0.15)'
                                 }}
                             >
-                                <span className="text-3xl sm:text-4xl">{activeRanked[1].badge}</span>
+                                <span className="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-xs font-bold">#{getTeamNumberBadge(activeRanked[1])}</span>
                                 <div className="text-[10px] font-mono font-bold text-zinc-300 mt-1">#2 RANK</div>
                                 <h4 className="text-xs sm:text-sm font-black text-white truncate" style={{ fontFamily: 'Space Grotesk' }}>
                                     {activeRanked[1].name}
@@ -180,7 +181,7 @@ export function StageLeaderboard({ currentPhase = 'phase_2_round_1' }) {
                                 <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-yellow-400 text-black font-mono text-[8px] font-black uppercase">
                                     TOP SQUAD
                                 </div>
-                                <span className="text-4xl sm:text-5xl">{activeRanked[0].badge}</span>
+                                <span className="px-3 py-1 rounded-md bg-yellow-400/20 text-yellow-300 font-mono text-sm font-black border border-yellow-400/40">#{getTeamNumberBadge(activeRanked[0])}</span>
                                 <div className="text-[11px] font-mono font-bold text-yellow-400 mt-1">🏆 #1 LEADER</div>
                                 <h3 className="text-sm sm:text-base font-black text-white truncate" style={{ fontFamily: 'Space Grotesk' }}>
                                     {activeRanked[0].name}
@@ -204,7 +205,7 @@ export function StageLeaderboard({ currentPhase = 'phase_2_round_1' }) {
                                     boxShadow: '0 0 25px rgba(205,127,50,0.15)'
                                 }}
                             >
-                                <span className="text-3xl sm:text-4xl">{activeRanked[2].badge}</span>
+                                <span className="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-xs font-bold">#{getTeamNumberBadge(activeRanked[2])}</span>
                                 <div className="text-[10px] font-mono font-bold text-amber-500 mt-1">#3 RANK</div>
                                 <h4 className="text-xs sm:text-sm font-black text-white truncate" style={{ fontFamily: 'Space Grotesk' }}>
                                     {activeRanked[2].name}
@@ -227,7 +228,7 @@ export function StageLeaderboard({ currentPhase = 'phase_2_round_1' }) {
                                     <span className="w-5 font-mono text-xs font-bold text-zinc-500 text-center">
                                         #{idx + 4}
                                     </span>
-                                    <span className="text-lg">{t.badge}</span>
+                                    <span className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-xs font-mono font-bold">#{getTeamNumberBadge(t)}</span>
                                     <div className="min-w-0">
                                         <div className="text-xs font-bold text-white truncate" style={{ fontFamily: 'Space Grotesk' }}>
                                             {t.name}
