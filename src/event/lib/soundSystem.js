@@ -55,6 +55,29 @@ export function playEventSound(type = 'buzzer') {
             gain.connect(ctx.destination);
             osc.start(now);
             osc.stop(now + 0.35);
+        } else if (type === 'thock') {
+            // Dull mechanical keyboard switch "thock" for slide key presses
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(130, now);
+            osc.frequency.exponentialRampToValueAtTime(45, now + 0.06);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(280, now);
+            filter.frequency.exponentialRampToValueAtTime(100, now + 0.06);
+
+            gain.gain.setValueAtTime(0.28, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.07);
         } else if (type === 'tick') {
             // Countdown tick
             const osc = ctx.createOscillator();

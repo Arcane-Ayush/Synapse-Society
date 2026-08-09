@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ChevronLeft, ChevronRight, Maximize, Minimize,
-    Grid, Play, Sparkles, Trophy, Radio, ArrowRight
+    Grid, Play, Sparkles, Trophy, Radio, Presentation
 } from 'lucide-react';
 import { playEventSound } from '../lib/soundSystem';
+import { PresentationCircuitCanvas } from './components/PresentationCircuitCanvas';
 
 import { Slide01Welcome } from './slides/Slide01Welcome';
 import { Slide02AboutSociety } from './slides/Slide02AboutSociety';
@@ -25,7 +26,9 @@ import { Slide15GrandFinale } from './slides/Slide15GrandFinale';
 export function PresentationDeck({ onSwitchToSession }) {
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
+    const isWheelingRef = useRef(false);
+    const wheelTimerRef = useRef(null);
 
     const slides = [
         { id: 0, title: 'Welcome to Synapse', component: Slide01Welcome },
@@ -47,21 +50,29 @@ export function PresentationDeck({ onSwitchToSession }) {
 
     const totalSlides = slides.length;
 
-    const goToSlide = (idx) => {
+    const goToSlide = (idx, isKey = false) => {
         const target = Math.max(0, Math.min(totalSlides - 1, idx));
+        if (target === currentSlideIndex) return;
+        setDirection(target > currentSlideIndex ? 1 : -1);
         setCurrentSlideIndex(target);
-        playEventSound('chime');
-    };
-
-    const nextSlide = () => {
-        if (currentSlideIndex < totalSlides - 1) {
-            goToSlide(currentSlideIndex + 1);
+        if (isKey) {
+            playEventSound('thock');
         }
     };
 
-    const prevSlide = () => {
+    const nextSlide = (isKey = false) => {
+        if (currentSlideIndex < totalSlides - 1) {
+            setDirection(1);
+            setCurrentSlideIndex(prev => prev + 1);
+            if (isKey) playEventSound('thock');
+        }
+    };
+
+    const prevSlide = (isKey = false) => {
         if (currentSlideIndex > 0) {
-            goToSlide(currentSlideIndex - 1);
+            setDirection(-1);
+            setCurrentSlideIndex(prev => prev - 1);
+            if (isKey) playEventSound('thock');
         }
     };
 
@@ -72,12 +83,10 @@ export function PresentationDeck({ onSwitchToSession }) {
 
             if (['ArrowRight', 'ArrowDown', 'Space', 'PageDown'].includes(e.code)) {
                 e.preventDefault();
-                nextSlide();
+                nextSlide(true);
             } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.code)) {
                 e.preventDefault();
-                prevSlide();
-            } else if (e.code === 'KeyF') {
-                toggleFullscreen();
+                prevSlide(true);
             } else if (e.code === 'KeyS' && onSwitchToSession) {
                 onSwitchToSession();
             }
@@ -87,54 +96,92 @@ export function PresentationDeck({ onSwitchToSession }) {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [currentSlideIndex]);
 
-    const toggleFullscreen = () => {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+    // Natural Mouse Wheel / Trackpad Swipe Gesture (Debounced)
+    const handleWheel = (e) => {
+        if (isWheelingRef.current) return;
+        if (Math.abs(e.deltaY) < 35) return;
+
+        isWheelingRef.current = true;
+        if (e.deltaY > 0) {
+            nextSlide(true);
         } else {
-            document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+            prevSlide(true);
         }
+
+        clearTimeout(wheelTimerRef.current);
+        wheelTimerRef.current = setTimeout(() => {
+            isWheelingRef.current = false;
+        }, 400);
     };
 
     const CurrentSlideComp = slides[currentSlideIndex].component;
 
+    // Slide transition animation variants
+    const slideVariants = {
+        enter: (dir) => ({
+            y: dir > 0 ? 30 : -30,
+            opacity: 0,
+            scale: 0.98,
+        }),
+        center: {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            transition: {
+                y: { type: 'spring', stiffness: 300, damping: 30 },
+                opacity: { duration: 0.25 },
+                scale: { duration: 0.25 }
+            }
+        },
+        exit: (dir) => ({
+            y: dir > 0 ? -30 : 30,
+            opacity: 0,
+            scale: 0.98,
+            transition: {
+                duration: 0.2
+            }
+        })
+    };
+
     return (
-        <div className="w-full relative select-none flex flex-col justify-between">
+        <div
+            onWheel={handleWheel}
+            className="w-full h-full flex flex-col justify-between select-none relative"
+        >
+            {/* Live Interactive Circuit Canvas Background */}
+            <PresentationCircuitCanvas />
+
             {/* Top Keynote Controls HUD */}
-            <div className="flex items-center justify-between z-30 pb-3 mb-2 border-b border-white/10">
+            <div className="flex items-center justify-between z-30 pb-2 border-b border-white/10 relative">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-                        className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-mono text-zinc-300 border border-white/10 flex items-center gap-1.5 cursor-pointer"
+                        className="px-3 py-1 rounded-xl bg-black/60 hover:bg-white/10 text-xs font-mono text-zinc-300 border border-white/10 flex items-center gap-1.5 cursor-pointer backdrop-blur-xl shadow-lg"
                     >
                         <Grid size={13} />
                         <span>Slides ({currentSlideIndex + 1}/{totalSlides})</span>
                     </button>
-                    <span className="text-xs font-mono text-cyan-300 font-bold hidden sm:inline">
+                    <span className="text-xs font-mono text-cyan-300 font-bold hidden sm:inline drop-shadow-[0_0_10px_rgba(0,240,255,0.4)]">
                         {slides[currentSlideIndex].title}
                     </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                     <button
                         disabled={currentSlideIndex === 0}
-                        onClick={prevSlide}
-                        className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 text-zinc-300 cursor-pointer"
+                        onClick={() => prevSlide(true)}
+                        className="p-1.5 rounded-xl bg-black/60 hover:bg-white/10 disabled:opacity-30 text-zinc-300 cursor-pointer border border-white/10 backdrop-blur-xl"
+                        title="Previous Slide (Up/Left)"
                     >
-                        <ChevronLeft size={16} />
+                        <ChevronLeft size={15} />
                     </button>
                     <button
                         disabled={currentSlideIndex === totalSlides - 1}
-                        onClick={nextSlide}
-                        className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 text-zinc-300 cursor-pointer"
+                        onClick={() => nextSlide(true)}
+                        className="p-1.5 rounded-xl bg-black/60 hover:bg-white/10 disabled:opacity-30 text-zinc-300 cursor-pointer border border-white/10 backdrop-blur-xl"
+                        title="Next Slide (Down/Right/Space)"
                     >
-                        <ChevronRight size={16} />
-                    </button>
-                    <button
-                        onClick={toggleFullscreen}
-                        className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 cursor-pointer ml-1"
-                        title="Toggle Fullscreen (F)"
-                    >
-                        {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+                        <ChevronRight size={15} />
                     </button>
                 </div>
             </div>
@@ -152,7 +199,7 @@ export function PresentationDeck({ onSwitchToSession }) {
                             <button
                                 key={s.id}
                                 onClick={() => {
-                                    goToSlide(idx);
+                                    goToSlide(idx, true);
                                     setIsDrawerOpen(false);
                                 }}
                                 className={`p-2.5 rounded-xl text-left font-mono text-xs cursor-pointer transition-all ${
@@ -169,18 +216,20 @@ export function PresentationDeck({ onSwitchToSession }) {
                 )}
             </AnimatePresence>
 
-            {/* Active Slide Display */}
-            <div className="w-full my-auto py-2 z-10">
-                <AnimatePresence mode="wait">
+            {/* Center Stage: Single Active Slide (Lag-Free 60fps) */}
+            <div className="w-full my-auto py-2 z-10 flex items-center justify-center min-h-[60vh]">
+                <AnimatePresence custom={direction} mode="wait">
                     <motion.div
                         key={currentSlideIndex}
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -15 }}
-                        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                        custom={direction}
+                        variants={slideVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        className="w-full flex items-center justify-center"
                     >
                         <CurrentSlideComp
-                            onNext={nextSlide}
+                            onNext={() => nextSlide(true)}
                             onSwitchToSession={onSwitchToSession}
                         />
                     </motion.div>
@@ -188,12 +237,12 @@ export function PresentationDeck({ onSwitchToSession }) {
             </div>
 
             {/* Bottom Progress Bar */}
-            <div className="w-full pt-4 z-20">
+            <div className="w-full pt-2 z-20">
                 <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
                     <motion.div
                         className="h-full bg-gradient-to-r from-purple-500 via-indigo-400 to-cyan-400"
                         animate={{ width: `${((currentSlideIndex + 1) / totalSlides) * 100}%` }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.25 }}
                     />
                 </div>
             </div>
