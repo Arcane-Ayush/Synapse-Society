@@ -656,9 +656,9 @@ export function EventAdmin() {
                             { key: EVENT_PHASES.PHASE_0_CHECKIN, label: 'Phase 0: Check-In', sub: 'Attendee Pass' },
                             { key: EVENT_PHASES.PHASE_0_5_AUDIENCE_TAP, label: 'Phase 0.5: Audience Tap', sub: 'Arc Reactor Sync' },
                             { key: EVENT_PHASES.PHASE_1_TEAMS, label: 'Phase 1: Team Allocation', sub: 'Team Pass' },
-                            { key: EVENT_PHASES.PHASE_2_ROUND_1, label: 'Round 1: Reverse Hackathon', sub: 'Deconstruct & Fix' },
-                            { key: EVENT_PHASES.PHASE_4_ROUND_2, label: 'Round 2: Dual Tracks', sub: '16 Qualifiers + Redemption' },
-                            { key: EVENT_PHASES.PHASE_5_ROUND_3, label: 'Round 3: Grand Final', sub: '10 Finalists on Stage' },
+                            { key: EVENT_PHASES.PHASE_2_ROUND_1, label: 'Round 1: Problem Discovery', sub: 'AI Pitch (40 Teams)' },
+                            { key: EVENT_PHASES.PHASE_4_ROUND_2, label: 'Round 2: Product Innovation', sub: 'App Reimagination (16 Teams)' },
+                            { key: EVENT_PHASES.PHASE_5_ROUND_3, label: 'Round 3: Smart City Design', sub: 'Final Showdown (10 Teams)' },
                         ].map(p => {
                             const isActive = eventState.phase === p.key;
                             return (

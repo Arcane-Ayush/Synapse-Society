@@ -279,6 +279,7 @@ export function AttendeePortal() {
                             <ReverseHackathonModule
                                 user={user}
                                 prompt={eventState.round1Prompt}
+                                assignedTeam={assignedTeam}
                                 onSubmitted={() => setSCoins(prev => prev + 100)}
                             />
                         </motion.div>

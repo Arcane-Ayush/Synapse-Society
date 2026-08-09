@@ -28,22 +28,22 @@ export const DEFAULT_EVENT_STATE = {
     breakTimerRunning: false,
     soundMuted: false,
     round1Prompt: {
-        title: 'Round 1 · Reverse Hackathon',
-        rewardSCoins: 500,
-        description: 'Deconstruct the provided algorithm, isolate the latent logical defect, and submit your patched repository link.',
-        rules: 'Max Reward: +500 S-Coins (50 XP) · Top 16 Squads Advance to Round 2'
+        title: 'Round 1 · Problem Discovery',
+        rewardSCoins: 300,
+        description: 'Identify a real-world problem within your assigned domain, justify why it matters, and pitch how AI fits as the solution.',
+        rules: '10 Mins Prep · 60s Live Stage Pitch · Top 16 Teams Advance'
     },
     round2Prompt: {
-        title: 'Round 2 · Architecture Proposal',
+        title: 'Round 2 · Product Innovation',
         rewardSCoins: 500,
-        description: 'Top 16 squads: Draft scalable cloud deployment architecture. Eliminated squads: Play Redemption Quiz to reclaim points.',
-        rules: 'Max Reward: +500 S-Coins (50 XP) · Top Finalists Advance to Round 3'
+        description: 'Identify a major user pain point in your assigned application and propose an innovative AI feature or UI/UX redesign.',
+        rules: '15 Mins Prep · 1-Page Concept Sheet · Top 8 Teams Advance'
     },
     round3Prompt: {
-        title: 'Round 3 · Grand Final Showdown',
+        title: 'Round 3 · Smart City Design',
         rewardSCoins: 1000,
-        description: 'Live Stage Deliberation: Defend your system architecture & live prototype directly before the jury on stage!',
-        rules: 'Presented Live on Stage · Grand Champion Crowned'
+        description: 'Design a sustainable, efficient, and AI-powered smart city layout within ₹6,000 Cr budget and 25 sq km constraints.',
+        rules: '20 Mins Prep · Top 3 Justifications · Data Lines Connectivity'
     },
     adEnabled: true,
     activeAdIndex: 0,
@@ -114,6 +114,44 @@ export async function fetchActiveEventTeamsFromDb() {
 /**
  * Fetch quiz questions live from PostgreSQL table `event_quiz_questions`.
  */
+const DEFAULT_QUIZ_QUESTIONS = [
+    {
+        id: 1,
+        question: "Which neural network architecture is best suited for sequential data processing and natural language modeling?",
+        options: ["Convolutional Neural Network (CNN)", "Transformer / Recurrent Neural Network (RNN)", "Generative Adversarial Network (GAN)", "Decision Tree Classifier"],
+        correct_index: 1,
+        reward_s_coins: 100
+    },
+    {
+        id: 2,
+        question: "In cloud systems architecture, what is the primary role of an API Gateway?",
+        options: ["Database backup", "Routing, authentication, rate limiting, and request transformation", "File storage rendering", "CSS styling delivery"],
+        correct_index: 1,
+        reward_s_coins: 100
+    },
+    {
+        id: 3,
+        question: "What does the CAP Theorem state regarding distributed database systems?",
+        options: ["A system can provide Consistency, Availability, and Partition Tolerance simultaneously", "A system can provide at most two out of Consistency, Availability, and Partition Tolerance", "Partition Tolerance is optional in WANs", "Consistency is only required during reads"],
+        correct_index: 1,
+        reward_s_coins: 100
+    },
+    {
+        id: 4,
+        question: "Which algorithm concept is fundamental to real-time state synchronization across peer nodes?",
+        options: ["Raft / Paxos Consensus", "Bubble Sort", "Dijkstra Shortest Path", "Binary Search Tree"],
+        correct_index: 0,
+        reward_s_coins: 100
+    },
+    {
+        id: 5,
+        question: "In modern AI product design, what does 'Zero-Shot Learning' refer to?",
+        options: ["Model requiring 0 lines of code", "Model making accurate predictions on concepts not seen during explicit training", "Model training with 0 dataset samples", "Model operating without GPU memory"],
+        correct_index: 1,
+        reward_s_coins: 100
+    }
+];
+
 export async function fetchQuizQuestionsFromDb() {
     try {
         const { data, error } = await supabase
@@ -124,7 +162,7 @@ export async function fetchQuizQuestionsFromDb() {
     } catch (e) {
         console.error('Error fetching quiz questions from DB:', e);
     }
-    return [];
+    return DEFAULT_QUIZ_QUESTIONS;
 }
 
 /**

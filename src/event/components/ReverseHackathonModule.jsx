@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Code, Send, CheckCircle2, Clock, Zap, Coins, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Send, CheckCircle2, Clock, Zap, Coins, ExternalLink, ShieldCheck, Lightbulb } from 'lucide-react';
 import { addUserSCoins } from '../lib/eventState';
 
-export function ReverseHackathonModule({ user, prompt, onSubmitted }) {
+export function ReverseHackathonModule({ user, prompt, assignedTeam, onSubmitted }) {
     const [repoUrl, setRepoUrl] = useState('');
     const [notes, setNotes] = useState('');
     const [submitted, setSubmitted] = useState(false);
@@ -15,7 +15,6 @@ export function ReverseHackathonModule({ user, prompt, onSubmitted }) {
 
         setLoading(true);
         setTimeout(() => {
-            // Give initial completion S-Coins
             addUserSCoins(user?.id, 100);
             setSubmitted(true);
             setLoading(false);
@@ -24,7 +23,7 @@ export function ReverseHackathonModule({ user, prompt, onSubmitted }) {
     };
 
     return (
-        <div className="w-full max-w-xl mx-auto">
+        <div className="w-full max-w-xl mx-auto font-mono select-none">
             <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -38,24 +37,25 @@ export function ReverseHackathonModule({ user, prompt, onSubmitted }) {
                 {/* Header with Reward */}
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
                     <div className="flex items-center gap-2">
-                        <Code size={18} className="text-cyan-400" />
-                        <h3 className="text-lg font-black text-white" style={{ fontFamily: 'Space Grotesk' }}>
-                            {prompt?.title || 'Round 1 · Reverse Hackathon'}
+                        <Lightbulb size={18} className="text-cyan-400" />
+                        <h3 className="text-base sm:text-lg font-black text-white" style={{ fontFamily: 'Space Grotesk' }}>
+                            {prompt?.title || 'Round 1 · Problem Discovery'}
                         </h3>
                     </div>
                     <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-xs font-mono font-bold text-yellow-300">
                         <Coins size={12} className="text-yellow-400" />
-                        +{prompt?.rewardSCoins || 500} S (= {Math.floor((prompt?.rewardSCoins || 500) / 10)} XP)
+                        +{prompt?.rewardSCoins || 300} S
                     </div>
                 </div>
 
-                {/* Concise Challenge Card */}
-                <div className="p-4 rounded-2xl bg-black/40 border border-white/10 mb-6">
-                    <p className="text-xs text-zinc-300 leading-relaxed font-mono">
-                        {prompt?.description || 'Deconstruct the provided algorithm, isolate the latent logical defect, and submit your patched repository link.'}
+                {/* Challenge Card */}
+                <div className="p-4 rounded-2xl bg-black/40 border border-white/10 mb-6 space-y-2">
+                    <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+                        {prompt?.description || 'Identify a real-world problem within your assigned domain, justify why it matters, and pitch how AI fits as the solution.'}
                     </p>
-                    <div className="mt-2 text-[10px] font-mono text-cyan-300">
-                        ⚡ Top 16 squads advance to Round 2. 10 S-Coins = 1 XP.
+                    <div className="text-[11px] font-mono text-cyan-300 font-bold flex items-center justify-between">
+                        <span>🎯 Assigned Domain: <strong className="text-yellow-300">{assignedTeam?.motto || 'Assigned by Ground Crew'}</strong></span>
+                        <span>60s Live Pitch</span>
                     </div>
                 </div>
 
@@ -68,10 +68,10 @@ export function ReverseHackathonModule({ user, prompt, onSubmitted }) {
                     >
                         <ShieldCheck size={36} className="text-emerald-400 mx-auto mb-2" />
                         <h4 className="text-sm font-bold text-emerald-200 uppercase font-mono tracking-wider">
-                            Submission Received • Under Lead Review
+                            Solution Submitted • Live Jury Evaluation
                         </h4>
                         <p className="text-[11px] font-mono text-zinc-400 mt-1">
-                            Ground crew & judges are reviewing your commit. Standby for qualifier rankings!
+                            Your presentation link has been synced with the jury deliberation panel. Standby for live pitch announcement!
                         </p>
                         <div className="mt-4 text-xs font-mono text-cyan-300 truncate bg-black/40 p-2 rounded-xl border border-white/5">
                             {repoUrl}
@@ -81,12 +81,12 @@ export function ReverseHackathonModule({ user, prompt, onSubmitted }) {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-[10px] font-mono text-purple-300/70 uppercase tracking-wider mb-1.5">
-                                Patched Repository / Live Demo URL *
+                                Presentation Deck / Pitch Document URL *
                             </label>
                             <input
                                 type="url"
                                 required
-                                placeholder="https://github.com/team/reverse-nexus"
+                                placeholder="https://docs.google.com/presentation/d/..."
                                 value={repoUrl}
                                 onChange={e => setRepoUrl(e.target.value)}
                                 className="w-full px-4 py-3 rounded-xl bg-black/50 border border-purple-400/30 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors"
@@ -95,11 +95,11 @@ export function ReverseHackathonModule({ user, prompt, onSubmitted }) {
 
                         <div>
                             <label className="block text-[10px] font-mono text-purple-300/70 uppercase tracking-wider mb-1.5">
-                                Architecture Summary & Fix Notes (Optional)
+                                Problem Statement & AI Solution Summary (Optional)
                             </label>
                             <textarea
                                 rows={3}
-                                placeholder="Briefly describe the vulnerability and how your algorithm optimized memory/time..."
+                                placeholder="Briefly describe the real-world problem and how your AI model solves it..."
                                 value={notes}
                                 onChange={e => setNotes(e.target.value)}
                                 className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-purple-400/30 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors"
@@ -117,7 +117,7 @@ export function ReverseHackathonModule({ user, prompt, onSubmitted }) {
                             }}
                         >
                             <Send size={14} />
-                            {loading ? 'Submitting Code...' : 'Submit Reverse Solution'}
+                            {loading ? 'Submitting Solution...' : 'Submit Round 1 Solution'}
                         </button>
                     </form>
                 )}

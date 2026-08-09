@@ -339,7 +339,7 @@ export function About() {
               </div>
 
               <div className="pt-3 border-t border-purple-500/20 font-mono text-[10px] text-pink-300 font-bold flex justify-between">
-                <span>SYN-CARD LVL 2 NOVICE</span>
+                <span>SYNAPSE MEMBER</span>
                 <span>TIER 4 MEMBER</span>
               </div>
             </motion.div>
@@ -379,7 +379,7 @@ export function About() {
               </div>
 
               <div className="pt-3 border-t border-purple-500/20 font-mono text-[10px] text-cyan-300 font-bold flex justify-between">
-                <span>SYN-CARD LVL 3 AWAKENED</span>
+                <span>SYNAPSE MEMBER</span>
                 <span>TIER 4 MEMBER</span>
               </div>
             </motion.div>
@@ -419,7 +419,7 @@ export function About() {
               </div>
 
               <div className="pt-3 border-t border-purple-500/20 font-mono text-[10px] text-purple-300 font-bold flex justify-between">
-                <span>SYN-CARD LVL 2 NOVICE</span>
+                <span>SYNAPSE MEMBER</span>
                 <span>TIER 4 MEMBER</span>
               </div>
             </motion.div>
