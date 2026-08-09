@@ -210,19 +210,61 @@ export function AttendeePortal() {
                         </motion.div>
                     )}
 
-                    {/* Phase 1: Team Allocation */}
+                    {/* Phase 1: Team Allocation (Assigned by Volunteers/Admins via Agent ID) */}
                     {eventState.phase === EVENT_PHASES.PHASE_1_TEAMS && (
                         <motion.div
                             key="p1"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
+                            className="w-full max-w-xl mx-auto"
                         >
-                            <TeamAllocationModule
-                                user={user}
-                                assignedTeam={assignedTeam}
-                                onTeamSelected={handleTeamAssigned}
-                            />
+                            {assignedTeam ? (
+                                <div
+                                    className="p-6 sm:p-8 rounded-3xl backdrop-blur-2xl text-center space-y-4 relative overflow-hidden"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${assignedTeam.color}15 0%, rgba(10, 8, 20, 0.95) 100%)`,
+                                        border: `1.5px solid ${assignedTeam.color}66`,
+                                        boxShadow: `0 0 40px ${assignedTeam.color}25`
+                                    }}
+                                >
+                                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto text-4xl shadow-xl" style={{ background: `${assignedTeam.color}25`, border: `1px solid ${assignedTeam.color}50` }}>
+                                        {assignedTeam.badge}
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-mono font-bold uppercase tracking-widest" style={{ color: assignedTeam.color }}>
+                                            SQUAD DEPLOYED • {assignedTeam.code}
+                                        </div>
+                                        <h3 className="text-xl sm:text-2xl font-black text-white mt-1" style={{ fontFamily: 'Space Grotesk' }}>
+                                            {assignedTeam.name}
+                                        </h3>
+                                        <p className="text-xs font-mono text-zinc-400 mt-1 italic">
+                                            "{assignedTeam.motto || 'Synchronized for neural mastery.'}"
+                                        </p>
+                                    </div>
+                                    <div className="p-3 rounded-2xl bg-black/50 border border-white/10 text-xs font-mono text-emerald-300 flex items-center justify-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                        <span>Status: Verified & Ready for Round 1 Launch</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="p-6 sm:p-8 rounded-3xl bg-black/60 border border-purple-500/30 backdrop-blur-2xl text-center space-y-4">
+                                    <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-400/30 flex items-center justify-center mx-auto text-purple-400">
+                                        <Users size={28} className="animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-black text-white" style={{ fontFamily: 'Space Grotesk' }}>
+                                            Squad Allocation in Progress
+                                        </h3>
+                                        <p className="text-xs font-mono text-zinc-300 mt-2 leading-relaxed max-w-md mx-auto">
+                                            Please show your <strong className="text-purple-300">AGENT ID</strong> (displayed in the top HUD) to an Event Official or Volunteer to be officially registered into your squad.
+                                        </p>
+                                    </div>
+                                    <div className="p-3 rounded-2xl bg-purple-950/40 border border-purple-500/20 text-xs font-mono text-purple-200">
+                                        ⏳ Real-time synchronization active — your squad badge will unlock automatically.
+                                    </div>
+                                </div>
+                            )}
                         </motion.div>
                     )}
 

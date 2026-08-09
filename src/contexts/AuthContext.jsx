@@ -149,6 +149,7 @@ export function AuthProvider({ children }) {
         isAuthenticated: !!user,
         isAdmin: profile?.club_role === 'administrator',
         isLead: profile?.club_role === 'lead' || profile?.club_role === 'administrator',
+        isVolunteer: ['volunteer', 'volunteers'].includes((profile?.club_role || '').toLowerCase()) || ['volunteer', 'volunteers'].includes((profile?.role || '').toLowerCase()) || profile?.club_role === 'lead' || profile?.club_role === 'administrator' || profile?.is_volunteer === true || ['volunteer', 'volunteers'].includes((user?.user_metadata?.role || '').toLowerCase()),
         signOut: handleSignOut,
         refreshProfile: () => loadProfile(user),
         refreshCards: () => loadCards(user),

@@ -14,6 +14,7 @@ import { Inauguration } from './pages/Inauguration';
 import { AttendeePortal } from './event/AttendeePortal';
 import { EventAdmin } from './event/EventAdmin';
 import { StagePresentation } from './event/StagePresentation';
+import { VolunteerPortal } from './event/VolunteerPortal';
 import { PageTransition } from './components/PageTransition';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -37,6 +38,11 @@ function AnimatedRoutes() {
         <Route path="/ucn/app/event/launch/state/components/exists/202608100001/users" element={<PageTransition><AttendeePortal /></PageTransition>} />
         <Route path="/ucn/app/event/launch/state/components/exists/202608100001/userslpha" element={<PageTransition><AttendeePortal /></PageTransition>} />
         <Route path="/users" element={<PageTransition><AttendeePortal /></PageTransition>} />
+
+        {/* Neural Nexus Ground Crew & Volunteer Portal */}
+        <Route path="/volunteer" element={<PageTransition><VolunteerPortal /></PageTransition>} />
+        <Route path="/event_volunteer" element={<PageTransition><VolunteerPortal /></PageTransition>} />
+        <Route path="/volunteers" element={<PageTransition><VolunteerPortal /></PageTransition>} />
 
         {/* Neural Nexus Live Event Admin Mission Control */}
         <Route path="/ucn/app/event/launch/state/components/exists/202608100001/event_admin" element={<PageTransition><EventAdmin /></PageTransition>} />

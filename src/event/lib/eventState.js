@@ -20,6 +20,11 @@ export const DEFAULT_EVENT_STATE = {
     roundTimerEnd: null,
     roundTimerDurationSec: 45 * 60,
     roundTimerRunning: false,
+    roundTimerVisible: true,
+    sponsorTimerTitle: 'Red Bull Break',
+    sponsorTimerDurationSec: 15 * 60,
+    sponsorTimerRunning: false,
+    sponsorTimerVisible: false,
     breakTimerRunning: false,
     soundMuted: false,
     round1Prompt: {
@@ -41,8 +46,14 @@ export const DEFAULT_EVENT_STATE = {
         rules: 'Presented Live on Stage · Grand Champion Crowned'
     },
     adEnabled: true,
+    activeAdIndex: 0,
     adMediaUrl: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-microchip-computer-animation-4364-large.mp4',
     adTitle: 'Official Event Partners & Technology Guilds',
+    sponsorAds: [
+        { id: 1, title: 'Slot 1 · Red Bull Wings', url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-microchip-computer-animation-4364-large.mp4', active: true },
+        { id: 2, title: 'Slot 2 · GitHub Campus', url: 'https://assets.mixkit.co/videos/preview/mixkit-set-of-plateaus-seen-from-the-sky-in-a-sunset-26070-large.mp4', active: false },
+        { id: 3, title: 'Slot 3 · Synapse Tech Showcase', url: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-robotic-arm-working-in-a-laboratory-41484-large.mp4', active: false }
+    ],
     quizDurationSec: 30,
     redemptionLeaderboardVisible: false
 };
@@ -252,6 +263,101 @@ export async function assignMemberToTeamByAgentId(teamId, agentNo, memberName = 
             type: 'broadcast',
             event: 'team_member_assigned',
             payload: { teamId, member: newMember, members: updatedMembers }
+        });
+
+        return { data, error };
+    } catch (e) {
+        return { data: null, error: e };
+    }
+}
+
+/**
+ * Register multiple members to a team using space or comma separated AGENT IDs (e.g. "42 81 243 51").
+ */
+export async function assignMultipleMembersToTeam(teamId, agentInput) {
+    try {
+        if (!teamId || !agentInput) return { data: null, count: 0, error: 'Missing team or agent IDs' };
+
+        const tokens = String(agentInput)
+            .split(/[\s,]+/)
+            .map(t => t.trim().replace(/^AGENT-/i, ''))
+            .filter(Boolean);
+
+        if (tokens.length === 0) return { data: null, count: 0, error: 'No valid agent IDs' };
+
+        const { data: team } = await supabase
+            .from('event_teams')
+            .select('members')
+            .eq('id', teamId)
+            .maybeSingle();
+
+        const currentMembers = Array.isArray(team?.members) ? team.members : [];
+        const newMembers = [];
+
+        for (const tok of tokens) {
+            const cleanNo = String(tok).padStart(3, '0');
+            if (!currentMembers.some(m => m.agentNo === cleanNo) && !newMembers.some(m => m.agentNo === cleanNo)) {
+                newMembers.push({
+                    agentNo: cleanNo,
+                    name: `Agent #${cleanNo}`,
+                    assignedAt: new Date().toISOString()
+                });
+            }
+        }
+
+        const updatedMembers = [...currentMembers, ...newMembers];
+
+        const { data, error } = await supabase
+            .from('event_teams')
+            .update({
+                members: updatedMembers,
+                is_active: true,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', teamId)
+            .select();
+
+        const channel = supabase.channel(BROADCAST_CHANNEL_NAME);
+        await channel.send({
+            type: 'broadcast',
+            event: 'team_member_assigned',
+            payload: { teamId, added: newMembers, members: updatedMembers }
+        });
+
+        return { data, count: newMembers.length, added: newMembers, error };
+    } catch (e) {
+        return { data: null, count: 0, error: e };
+    }
+}
+
+/**
+ * Create/Register a new event team in the database.
+ */
+export async function createEventTeamInDb({ code, name, badge = '⚡', color = '#00F0FF', motto = '' }) {
+    try {
+        const { data, error } = await supabase
+            .from('event_teams')
+            .insert({
+                code: (code || '').toUpperCase().trim(),
+                name: (name || '').trim(),
+                badge: badge || '⚡',
+                color: color || '#00F0FF',
+                motto: motto || 'Synchronized for neural gauntlet.',
+                s_coins: 0,
+                quiz_score: 0,
+                is_active: true,
+                is_qualified: true,
+                is_eliminated: false,
+                members: []
+            })
+            .select()
+            .single();
+
+        const channel = supabase.channel(BROADCAST_CHANNEL_NAME);
+        await channel.send({
+            type: 'broadcast',
+            event: 'team_active_changed',
+            payload: { team: data }
         });
 
         return { data, error };

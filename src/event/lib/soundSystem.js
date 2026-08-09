@@ -78,6 +78,42 @@ export function playEventSound(type = 'buzzer') {
 
             osc.start(now);
             osc.stop(now + 0.07);
+        } else if (type === 'reactor') {
+            // Pacific Rim / Iron Man Arc-Reactor charging & mechanical rotation turbine sound
+            const osc = ctx.createOscillator();
+            const lfo = ctx.createOscillator();
+            const lfoGain = ctx.createGain();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(55, now);
+            osc.frequency.exponentialRampToValueAtTime(380, now + 1.6);
+
+            // Sub-harmonic mechanical pulse modulation (rotation effect)
+            lfo.type = 'sine';
+            lfo.frequency.setValueAtTime(4, now);
+            lfo.frequency.linearRampToValueAtTime(28, now + 1.6);
+            lfoGain.gain.setValueAtTime(30, now);
+            lfoGain.gain.linearRampToValueAtTime(80, now + 1.6);
+            lfo.connect(osc.frequency);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(200, now);
+            filter.frequency.exponentialRampToValueAtTime(1400, now + 1.6);
+
+            gain.gain.setValueAtTime(0.01, now);
+            gain.gain.linearRampToValueAtTime(0.35, now + 0.3);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+
+            lfo.start(now);
+            osc.start(now);
+            lfo.stop(now + 1.8);
+            osc.stop(now + 1.8);
         } else if (type === 'tick') {
             // Countdown tick
             const osc = ctx.createOscillator();

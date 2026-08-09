@@ -217,7 +217,7 @@ export function StageLeaderboard({ currentPhase = 'phase_2_round_1' }) {
                     </div>
 
                     {/* Ranks 4+ List */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[460px] overflow-y-auto pr-1 custom-scrollbar">
                         {activeRanked.slice(3).map((t, idx) => (
                             <div
                                 key={t.id}
