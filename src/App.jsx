@@ -15,6 +15,7 @@ import { AttendeePortal } from './event/AttendeePortal';
 import { EventAdmin } from './event/EventAdmin';
 import { StagePresentation } from './event/StagePresentation';
 import { VolunteerPortal } from './event/VolunteerPortal';
+import { EventAudio } from './event/EventAudio';
 import { PageTransition } from './components/PageTransition';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -47,6 +48,9 @@ function AnimatedRoutes() {
         {/* Neural Nexus Live Event Admin Mission Control */}
         <Route path="/ucn/app/event/launch/state/components/exists/202608100001/event_admin" element={<PageTransition><EventAdmin /></PageTransition>} />
         <Route path="/event-admin" element={<PageTransition><EventAdmin /></PageTransition>} />
+
+        {/* Neural Nexus Audio Mixer */}
+        <Route path="/event-audio" element={<PageTransition><EventAudio /></PageTransition>} />
 
         {/* Neural Nexus Main Widescreen Stage & Presentation Screen */}
         <Route path="/stage" element={<PageTransition><StagePresentation /></PageTransition>} />

@@ -1,25 +1,50 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, CheckCircle2, Clock, Zap, Coins, ExternalLink, ShieldCheck, Lightbulb } from 'lucide-react';
+import { Send, Coins, ShieldCheck, Lightbulb, FileText } from 'lucide-react';
 import { addUserSCoins } from '../lib/eventState';
+import { supabase } from '../../lib/supabase';
 
 export function ReverseHackathonModule({ user, prompt, assignedTeam, onSubmitted }) {
-    const [repoUrl, setRepoUrl] = useState('');
-    const [notes, setNotes] = useState('');
+    const [pitchScript, setPitchScript] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    const handleSubmit = (e) => {
+    const domain = (assignedTeam?.motto || '')
+        .replace('Domain: ', '')
+        .replace('App: ', '')
+        .trim() || 'Assigned by Ground Crew';
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!repoUrl.trim()) return;
-
+        if (!pitchScript.trim()) {
+            setError('Pitch script cannot be empty.');
+            return;
+        }
+        setError(null);
         setLoading(true);
-        setTimeout(() => {
-            addUserSCoins(user?.id, 100);
+
+        try {
+            // Store submission in event_submissions table
+            if (assignedTeam?.id && user?.id) {
+                await supabase.from('event_submissions').upsert({
+                    team_id: assignedTeam.id,
+                    user_id: user.id,
+                    round: 1,
+                    notes: pitchScript.trim(),
+                    s_coins_awarded: prompt?.rewardSCoins || 300,
+                    submitted_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'team_id,round' });
+            }
+            addUserSCoins(user?.id, prompt?.rewardSCoins || 300);
             setSubmitted(true);
+            if (onSubmitted) onSubmitted({ pitchScript });
+        } catch (err) {
+            setError('Submission failed. Try again.');
+        } finally {
             setLoading(false);
-            if (onSubmitted) onSubmitted({ repoUrl, notes });
-        }, 800);
+        }
     };
 
     return (
@@ -34,7 +59,7 @@ export function ReverseHackathonModule({ user, prompt, assignedTeam, onSubmitted
                     boxShadow: '0 0 50px rgba(var(--synapse-violet-rgb), 0.25)'
                 }}
             >
-                {/* Header with Reward */}
+                {/* Header */}
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
                     <div className="flex items-center gap-2">
                         <Lightbulb size={18} className="text-cyan-400" />
@@ -49,17 +74,17 @@ export function ReverseHackathonModule({ user, prompt, assignedTeam, onSubmitted
                 </div>
 
                 {/* Challenge Card */}
-                <div className="p-4 rounded-2xl bg-black/40 border border-white/10 mb-6 space-y-2">
+                <div className="p-3.5 rounded-2xl bg-black/40 border border-white/10 mb-5 space-y-1.5">
                     <p className="text-xs text-zinc-300 leading-relaxed font-sans">
-                        {prompt?.description || 'Identify a real-world problem within your assigned domain, justify why it matters, and pitch how AI fits as the solution.'}
+                        {prompt?.description || 'Identify one real-world problem within your assigned domain. Explain why it matters, and explain why AI is the right solution.'}
                     </p>
                     <div className="text-[11px] font-mono text-cyan-300 font-bold flex items-center justify-between">
-                        <span>🎯 Assigned Domain: <strong className="text-yellow-300">{assignedTeam?.motto || 'Assigned by Ground Crew'}</strong></span>
-                        <span>60s Live Pitch</span>
+                        <span>🎯 Domain: <strong className="text-yellow-300">{domain}</strong></span>
+                        <span>10 Min Prep · 60s Pitch</span>
                     </div>
                 </div>
 
-                {/* Submission Form or Under Review */}
+                {/* Submitted State */}
                 {submitted ? (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
@@ -68,47 +93,40 @@ export function ReverseHackathonModule({ user, prompt, assignedTeam, onSubmitted
                     >
                         <ShieldCheck size={36} className="text-emerald-400 mx-auto mb-2" />
                         <h4 className="text-sm font-bold text-emerald-200 uppercase font-mono tracking-wider">
-                            Solution Submitted • Live Jury Evaluation
+                            Script Locked In · Standby for Live Pitch
                         </h4>
                         <p className="text-[11px] font-mono text-zinc-400 mt-1">
-                            Your presentation link has been synced with the jury deliberation panel. Standby for live pitch announcement!
+                            Your pitch script has been saved. Prepare for your 60-second stage presentation.
                         </p>
-                        <div className="mt-4 text-xs font-mono text-cyan-300 truncate bg-black/40 p-2 rounded-xl border border-white/5">
-                            {repoUrl}
-                        </div>
                     </motion.div>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-[10px] font-mono text-purple-300/70 uppercase tracking-wider mb-1.5">
-                                Presentation Deck / Pitch Document URL *
-                            </label>
-                            <input
-                                type="url"
-                                required
-                                placeholder="https://docs.google.com/presentation/d/..."
-                                value={repoUrl}
-                                onChange={e => setRepoUrl(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl bg-black/50 border border-purple-400/30 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] font-mono text-purple-300/70 uppercase tracking-wider mb-1.5">
-                                Text output (Optional)
+                            <label className="block text-[10px] font-mono text-purple-300/70 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                                <FileText size={11} /> Pitch Script *
                             </label>
                             <textarea
-                                rows={2}
-                                placeholder="Summary / notes..."
-                                value={notes}
-                                onChange={e => setNotes(e.target.value)}
-                                className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-purple-400/30 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors"
+                                rows={7}
+                                required
+                                placeholder="Write your full pitch script here — problem statement, why it matters, how AI solves it..."
+                                value={pitchScript}
+                                onChange={e => { setPitchScript(e.target.value); setError(null); }}
+                                className="w-full px-4 py-3 rounded-xl bg-black/50 border border-purple-400/30 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors resize-none leading-relaxed"
                             />
+                            <div className="text-[10px] text-zinc-500 font-mono mt-1 text-right">
+                                {pitchScript.length} chars
+                            </div>
                         </div>
+
+                        {error && (
+                            <div className="p-2.5 rounded-xl bg-red-500/15 border border-red-500/40 text-red-300 text-xs font-mono">
+                                {error}
+                            </div>
+                        )}
 
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || !pitchScript.trim()}
                             className="w-full py-3.5 rounded-2xl font-mono text-xs font-black tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
                             style={{
                                 background: 'linear-gradient(135deg, #00F0FF 0%, #7C3AED 100%)',
@@ -117,7 +135,7 @@ export function ReverseHackathonModule({ user, prompt, assignedTeam, onSubmitted
                             }}
                         >
                             <Send size={14} />
-                            {loading ? 'Submitting Solution...' : 'Submit Round 1 Solution'}
+                            {loading ? 'Saving...' : 'Submit Round 1 Script'}
                         </button>
                     </form>
                 )}

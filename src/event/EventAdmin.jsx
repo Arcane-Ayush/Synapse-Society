@@ -662,6 +662,13 @@ export function EventAdmin() {
                     >
                         <Users size={12} /> Volunteer Panel
                     </a>
+                    <a
+                        href="/event-audio"
+                        className="px-3 py-1.5 rounded-lg bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-300 font-bold flex items-center gap-1 cursor-pointer"
+                        title="Audio Mixer"
+                    >
+                        🎵 Audio
+                    </a>
                 </div>
             </div>
 
