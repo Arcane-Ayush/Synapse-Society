@@ -72,10 +72,21 @@ export function sCoinsToXp(sCoins = 0) {
  */
 export function generateAgentNumber(user, profile) {
     if (!user && !profile) return '001';
-    const dateStr = profile?.date_joined || user?.created_at || '2026-08-01';
-    const seed = Math.abs(dateStr.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0));
-    const num = ((seed % 88) + 1);
-    return num.toString().padStart(3, '0');
+    if (profile?.agent_number) return String(profile.agent_number).padStart(3, '0');
+    if (user?.user_metadata?.agent_number) return String(user.user_metadata.agent_number).padStart(3, '0');
+
+    const dateStr = user?.created_at || profile?.created_at || profile?.date_joined;
+    if (dateStr) {
+        const time = new Date(dateStr).getTime();
+        if (!isNaN(time)) {
+            // Deterministic timestamp sequence: first user gets #001, second #002...
+            const startEpoch = new Date('2026-08-01T00:00:00Z').getTime();
+            const diffSec = Math.max(0, Math.floor((time - startEpoch) / 1000));
+            const seq = (diffSec % 900) + 1;
+            return seq.toString().padStart(3, '0');
+        }
+    }
+    return '001';
 }
 
 /**
@@ -556,10 +567,9 @@ export async function setAssignedEventTeam(userId, teamData) {
     try {
         await supabase.from('event_attendees').upsert({
             user_id: userId,
-            agent_number: teamData?.code || '001',
             team_id: teamData?.id || null,
             updated_at: new Date().toISOString()
-        });
+        }, { onConflict: 'user_id' });
 
         const channel = supabase.channel(BROADCAST_CHANNEL_NAME);
         await channel.send({
@@ -568,6 +578,35 @@ export async function setAssignedEventTeam(userId, teamData) {
             payload: { userId, team: teamData }
         });
     } catch (e) {}
+}
+
+/**
+ * Reset all 40 event teams to 0 S-Coins and clean status in Supabase DB.
+ */
+export async function resetAllTeamsInDb() {
+    try {
+        const { data, error } = await supabase
+            .from('event_teams')
+            .update({
+                s_coins: 0,
+                quiz_score: 0,
+                is_qualified: false,
+                is_eliminated: false,
+                is_active: false,
+                members: [],
+                updated_at: new Date().toISOString()
+            })
+            .gte('id', 0)
+            .select();
+
+        if (!error) {
+            broadcastEventStateUpdate({ type: 'teams_reset_all' });
+        }
+        return { data, error };
+    } catch (e) {
+        console.error('Error resetting all teams in DB:', e);
+        return { error: e };
+    }
 }
 
 /**

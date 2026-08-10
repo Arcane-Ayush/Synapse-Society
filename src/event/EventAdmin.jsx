@@ -20,7 +20,8 @@ import {
     assignMultipleMembersToTeam,
     createEventTeamInDb,
     toggleTeamActiveStatus,
-    updateTeamAssignedApp
+    updateTeamAssignedApp,
+    resetAllTeamsInDb
 } from './lib/eventState';
 import { playEventSound, broadcastPlaySound } from './lib/soundSystem';
 import { getTeamNumberBadge } from './lib/eventTeamsData';
@@ -628,6 +629,20 @@ export function EventAdmin() {
                         <span>ROUND 3: </span>
                         <strong>{round3Finalists.length}/10</strong>
                     </div>
+                    <button
+                        onClick={async () => {
+                            if (window.confirm('Reset all 40 teams to 0 S-Coins and clean state in database?')) {
+                                await resetAllTeamsInDb();
+                                loadTeams();
+                                setAwardMessage('All 40 teams reset to 0 S-Coins in Supabase DB.');
+                                setTimeout(() => setAwardMessage(null), 2500);
+                            }
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 font-bold flex items-center gap-1 cursor-pointer"
+                        title="Reset all team points to 0"
+                    >
+                        <RotateCcw size={12} /> Reset Points (0 S)
+                    </button>
                     <a
                         href="/volunteer"
                         className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-bold flex items-center gap-1 cursor-pointer"

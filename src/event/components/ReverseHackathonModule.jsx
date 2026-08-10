@@ -95,11 +95,11 @@ export function ReverseHackathonModule({ user, prompt, assignedTeam, onSubmitted
 
                         <div>
                             <label className="block text-[10px] font-mono text-purple-300/70 uppercase tracking-wider mb-1.5">
-                                Problem Statement & AI Solution Summary (Optional)
+                                Text output (Optional)
                             </label>
                             <textarea
-                                rows={3}
-                                placeholder="Briefly describe the real-world problem and how your AI model solves it..."
+                                rows={2}
+                                placeholder="Summary / notes..."
                                 value={notes}
                                 onChange={e => setNotes(e.target.value)}
                                 className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-purple-400/30 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 transition-colors"
