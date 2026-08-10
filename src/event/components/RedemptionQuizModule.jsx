@@ -1,15 +1,103 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, CheckCircle2, XCircle, Coins, Zap, Trophy, ArrowRight, Loader2 } from 'lucide-react';
+import { HelpCircle, CheckCircle2, Coins, Zap, Trophy, ArrowRight, Loader2, Lock, Clock } from 'lucide-react';
 import { addUserSCoins } from '../lib/eventState';
 
-export function RedemptionQuizModule({ user, questions = [], onFinished }) {
+export function RedemptionQuizModule({ user, questions = [], eventState, onFinished }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [selectedOption, setSelectedOption] = useState(null);
-    const [isAnswered, setIsAnswered] = useState(false);
     const [score, setScore] = useState(0);
     const [earnedCoins, setEarnedCoins] = useState(0);
     const [quizComplete, setQuizComplete] = useState(false);
+
+    const currentQ = questions[currentIndex] || questions[0];
+    const questionTimerSec = currentQ?.timer_sec || currentQ?.timerSec || 5;
+    const [timeLeft, setTimeLeft] = useState(questionTimerSec);
+
+    // Reset per-question timer when question index changes
+    useEffect(() => {
+        if (!quizComplete && currentQ) {
+            setTimeLeft(currentQ?.timer_sec || currentQ?.timerSec || 5);
+        }
+    }, [currentIndex, quizComplete]);
+
+    // Per-question countdown tick
+    useEffect(() => {
+        if (quizComplete || !eventState?.quizLiveStarted || !currentQ) return;
+
+        const interval = setInterval(() => {
+            setTimeLeft(prev => {
+                if (prev <= 1) {
+                    // Time up for this question - auto advance to next question
+                    handleAdvanceNext(null);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [currentIndex, quizComplete, eventState?.quizLiveStarted, selectedOption]);
+
+    const handleAdvanceNext = (chosenIdx) => {
+        const correctIdx = currentQ?.correct_index ?? currentQ?.correctIndex ?? 0;
+        const rewardAmt = currentQ?.reward_s_coins ?? currentQ?.rewardSCoins ?? 100;
+
+        let newScore = score;
+        let newCoins = earnedCoins;
+
+        if (chosenIdx !== null && chosenIdx === correctIdx) {
+            newScore = score + 1;
+            newCoins = earnedCoins + rewardAmt;
+            setScore(newScore);
+            setEarnedCoins(newCoins);
+            if (user?.id) addUserSCoins(user.id, rewardAmt);
+        }
+
+        if (currentIndex + 1 < questions.length) {
+            setCurrentIndex(prev => prev + 1);
+            setSelectedOption(null);
+        } else {
+            setQuizComplete(true);
+            if (onFinished) onFinished({ score: newScore, earnedCoins: newCoins });
+        }
+    };
+
+    const handleSelectOption = (idx) => {
+        if (selectedOption !== null) return;
+        setSelectedOption(idx);
+        setTimeout(() => {
+            handleAdvanceNext(idx);
+        }, 350);
+    };
+
+    // 1. Locked Screen if Admin hasn't started quiz live yet
+    if (!eventState?.quizLiveStarted && !quizComplete) {
+        return (
+            <div className="w-full max-w-xl mx-auto font-mono select-none">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-8 rounded-3xl backdrop-blur-2xl bg-black/60 border border-pink-500/30 text-center space-y-4 shadow-[0_0_40px_rgba(236,72,153,0.15)]"
+                >
+                    <div className="w-14 h-14 rounded-2xl bg-pink-500/10 border border-pink-500/30 flex items-center justify-center mx-auto text-pink-400">
+                        <Lock size={28} className="animate-pulse" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-black text-white uppercase tracking-wider" style={{ fontFamily: 'Space Grotesk' }}>
+                            Redemption Quiz Locked
+                        </h3>
+                        <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto leading-relaxed">
+                            Ground Crew will trigger the live redemption quiz simultaneously on stage. Standby!
+                        </p>
+                    </div>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-pink-500/15 border border-pink-500/30 text-xs font-bold text-pink-300">
+                        <Clock size={14} className="animate-spin" /> Live Stage Sync Active
+                    </div>
+                </motion.div>
+            </div>
+        );
+    }
 
     if (!questions || questions.length === 0) {
         return (
@@ -18,43 +106,12 @@ export function RedemptionQuizModule({ user, questions = [], onFinished }) {
                 <h4 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
                     Loading Redemption Questions...
                 </h4>
-                <p className="text-xs font-mono text-zinc-400 mt-1">
-                    Connecting to live PostgreSQL question bank.
-                </p>
             </div>
         );
     }
 
-    const currentQ = questions[currentIndex] || questions[0];
-    const correctIdx = currentQ?.correct_index ?? currentQ?.correctIndex ?? 0;
-    const rewardAmt = currentQ?.reward_s_coins ?? currentQ?.rewardSCoins ?? 100;
-
-    const handleSelect = (index) => {
-        if (isAnswered) return;
-        setSelectedOption(index);
-        setIsAnswered(true);
-
-        const isCorrect = index === correctIdx;
-        if (isCorrect) {
-            setScore(prev => prev + 1);
-            setEarnedCoins(prev => prev + rewardAmt);
-            if (user?.id) addUserSCoins(user.id, rewardAmt);
-        }
-    };
-
-    const handleNext = () => {
-        if (currentIndex + 1 < questions.length) {
-            setCurrentIndex(prev => prev + 1);
-            setSelectedOption(null);
-            setIsAnswered(false);
-        } else {
-            setQuizComplete(true);
-            if (onFinished) onFinished({ score, earnedCoins });
-        }
-    };
-
     return (
-        <div className="w-full max-w-xl mx-auto">
+        <div className="w-full max-w-xl mx-auto font-mono select-none">
             <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -69,13 +126,13 @@ export function RedemptionQuizModule({ user, questions = [], onFinished }) {
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
                     <div className="flex items-center gap-2">
                         <Zap size={18} className="text-pink-400" />
-                        <h3 className="text-lg font-black text-white" style={{ fontFamily: 'Space Grotesk' }}>
-                            Round of Redemption • Cyber Quiz
+                        <h3 className="text-base sm:text-lg font-black text-white" style={{ fontFamily: 'Space Grotesk' }}>
+                            Redemption Quiz
                         </h3>
                     </div>
                     <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-xs font-mono font-bold text-yellow-300">
                         <Coins size={12} className="text-yellow-400" />
-                        +{earnedCoins} S-Coins Earned
+                        +{earnedCoins} S
                     </div>
                 </div>
 
@@ -90,25 +147,27 @@ export function RedemptionQuizModule({ user, questions = [], onFinished }) {
                             Redemption Complete!
                         </h4>
                         <p className="text-xs font-mono text-zinc-300 mb-6">
-                            You scored {score}/{questions.length} and reclaimed <strong className="text-yellow-400">+{earnedCoins} S-Coins</strong> back into your Agent ID ledger!
+                            You completed the quiz and reclaimed <strong className="text-yellow-400">+{earnedCoins} S-Coins</strong>!
                         </p>
                         <div className="inline-block px-4 py-2 rounded-xl bg-pink-500/20 border border-pink-400/40 text-xs font-mono font-bold text-pink-200">
-                            Status: Redeemed for Finale Points
+                            Status: Score Submitted to Stage Leaderboard
                         </div>
                     </motion.div>
                 ) : (
                     <div>
-                        {/* Progress Bar */}
-                        <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 mb-2">
+                        {/* Progress Bar & Question Timer */}
+                        <div className="flex items-center justify-between text-[11px] font-mono text-zinc-300 mb-2 font-bold">
                             <span>QUESTION {currentIndex + 1} OF {questions.length}</span>
-                            <span>SCORE: {score}</span>
+                            <span className="flex items-center gap-1 text-pink-400 font-black">
+                                <Clock size={13} /> {timeLeft}s
+                            </span>
                         </div>
                         <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden mb-6">
                             <motion.div
-                                className="h-full bg-gradient-to-r from-pink-500 to-yellow-400"
-                                initial={{ width: 0 }}
-                                animate={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
-                                transition={{ duration: 0.3 }}
+                                className="h-full bg-gradient-to-r from-pink-500 to-cyan-400"
+                                initial={{ width: '100%' }}
+                                animate={{ width: `${(timeLeft / questionTimerSec) * 100}%` }}
+                                transition={{ duration: 1, ease: 'linear' }}
                             />
                         </div>
 
@@ -119,53 +178,36 @@ export function RedemptionQuizModule({ user, questions = [], onFinished }) {
                             </h4>
                         </div>
 
-                        {/* Options */}
-                        <div className="space-y-2.5 mb-6">
+                        {/* Options - Silent selection (No answer reveal) */}
+                        <div className="space-y-2.5 mb-2">
                             {currentQ?.options?.map((option, idx) => {
                                 const isChosen = selectedOption === idx;
-                                const isCorrect = idx === correctIdx;
                                 let border = '1px solid rgba(255, 255, 255, 0.1)';
                                 let bg = 'rgba(255, 255, 255, 0.03)';
                                 let text = 'text-zinc-200';
 
-                                if (isAnswered) {
-                                    if (isCorrect) {
-                                        border = '1px solid #10B981';
-                                        bg = 'rgba(16, 185, 129, 0.2)';
-                                        text = 'text-emerald-300 font-bold';
-                                    } else if (isChosen) {
-                                        border = '1px solid #EF4444';
-                                        bg = 'rgba(239, 68, 68, 0.2)';
-                                        text = 'text-rose-300 font-bold';
-                                    }
+                                if (isChosen) {
+                                    border = '1px solid #00F0FF';
+                                    bg = 'rgba(0, 240, 255, 0.2)';
+                                    text = 'text-cyan-300 font-bold';
                                 }
 
                                 return (
                                     <button
                                         key={idx}
-                                        disabled={isAnswered}
-                                        onClick={() => handleSelect(idx)}
+                                        disabled={selectedOption !== null}
+                                        onClick={() => handleSelectOption(idx)}
                                         className="w-full p-3.5 rounded-2xl flex items-center justify-between text-left text-xs font-mono transition-all cursor-pointer select-none"
                                         style={{ background: bg, border }}
                                     >
                                         <span className={text}>{option}</span>
-                                        {isAnswered && isCorrect && <CheckCircle2 size={16} className="text-emerald-400 flex-shrink-0" />}
-                                        {isAnswered && isChosen && !isCorrect && <XCircle size={16} className="text-rose-400 flex-shrink-0" />}
+                                        {isChosen && (
+                                            <CheckCircle2 size={16} className="text-cyan-400 flex-shrink-0" />
+                                        )}
                                     </button>
                                 );
                             })}
                         </div>
-
-                        {isAnswered && (
-                            <motion.button
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                onClick={handleNext}
-                                className="w-full py-3 rounded-2xl font-mono text-xs font-black tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition-all duration-200 bg-gradient-to-r from-pink-500 to-purple-600 text-white"
-                            >
-                                Next Question <ArrowRight size={14} />
-                            </motion.button>
-                        )}
                     </div>
                 )}
             </motion.div>

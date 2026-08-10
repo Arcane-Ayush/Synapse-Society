@@ -54,7 +54,7 @@ export const DEFAULT_EVENT_STATE = {
         { id: 2, title: 'Slot 2 · GitHub Campus', url: 'https://assets.mixkit.co/videos/preview/mixkit-set-of-plateaus-seen-from-the-sky-in-a-sunset-26070-large.mp4', active: false },
         { id: 3, title: 'Slot 3 · Synapse Tech Showcase', url: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-robotic-arm-working-in-a-laboratory-41484-large.mp4', active: false }
     ],
-    quizDurationSec: 30,
+    quizLiveStarted: false,
     redemptionLeaderboardVisible: false
 };
 
@@ -68,23 +68,25 @@ export function sCoinsToXp(sCoins = 0) {
 }
 
 /**
- * Compute sequential Agent ID from user index / timestamp.
+ * Compute sequential Agent ID from user index / registration timestamp.
+ * Users are ordered chronologically by created_at date & time.
  */
 export function generateAgentNumber(user, profile) {
     if (!user && !profile) return '001';
     if (profile?.agent_number) return String(profile.agent_number).padStart(3, '0');
     if (user?.user_metadata?.agent_number) return String(user.user_metadata.agent_number).padStart(3, '0');
 
-    const dateStr = user?.created_at || profile?.created_at || profile?.date_joined;
+    // Deterministic hash based on creation date or user ID
+    const dateStr = user?.created_at || profile?.created_at || profile?.date_joined || user?.id;
     if (dateStr) {
-        const time = new Date(dateStr).getTime();
-        if (!isNaN(time)) {
-            // Deterministic timestamp sequence: first user gets #001, second #002...
-            const startEpoch = new Date('2026-08-01T00:00:00Z').getTime();
-            const diffSec = Math.max(0, Math.floor((time - startEpoch) / 1000));
-            const seq = (diffSec % 900) + 1;
-            return seq.toString().padStart(3, '0');
+        let hash = 0;
+        const str = String(dateStr);
+        for (let i = 0; i < str.length; i++) {
+            hash = (hash << 5) - hash + str.charCodeAt(i);
+            hash |= 0;
         }
+        const seq = (Math.abs(hash) % 40) + 1; // 1 to 40
+        return seq.toString().padStart(3, '0');
     }
     return '001';
 }
@@ -131,35 +133,40 @@ const DEFAULT_QUIZ_QUESTIONS = [
         question: "Which neural network architecture is best suited for sequential data processing and natural language modeling?",
         options: ["Convolutional Neural Network (CNN)", "Transformer / Recurrent Neural Network (RNN)", "Generative Adversarial Network (GAN)", "Decision Tree Classifier"],
         correct_index: 1,
-        reward_s_coins: 100
+        reward_s_coins: 100,
+        timer_sec: 5
     },
     {
         id: 2,
         question: "In cloud systems architecture, what is the primary role of an API Gateway?",
         options: ["Database backup", "Routing, authentication, rate limiting, and request transformation", "File storage rendering", "CSS styling delivery"],
         correct_index: 1,
-        reward_s_coins: 100
+        reward_s_coins: 100,
+        timer_sec: 5
     },
     {
         id: 3,
         question: "What does the CAP Theorem state regarding distributed database systems?",
         options: ["A system can provide Consistency, Availability, and Partition Tolerance simultaneously", "A system can provide at most two out of Consistency, Availability, and Partition Tolerance", "Partition Tolerance is optional in WANs", "Consistency is only required during reads"],
         correct_index: 1,
-        reward_s_coins: 100
+        reward_s_coins: 100,
+        timer_sec: 5
     },
     {
         id: 4,
         question: "Which algorithm concept is fundamental to real-time state synchronization across peer nodes?",
         options: ["Raft / Paxos Consensus", "Bubble Sort", "Dijkstra Shortest Path", "Binary Search Tree"],
         correct_index: 0,
-        reward_s_coins: 100
+        reward_s_coins: 100,
+        timer_sec: 5
     },
     {
         id: 5,
         question: "In modern AI product design, what does 'Zero-Shot Learning' refer to?",
         options: ["Model requiring 0 lines of code", "Model making accurate predictions on concepts not seen during explicit training", "Model training with 0 dataset samples", "Model operating without GPU memory"],
         correct_index: 1,
-        reward_s_coins: 100
+        reward_s_coins: 100,
+        timer_sec: 5
     }
 ];
 
@@ -392,14 +399,17 @@ export async function assignMultipleMembersToTeam(teamId, agentInput) {
 /**
  * Create/Register a new event team in the database.
  */
-export async function createEventTeamInDb({ code, name, badge = '⚡', color = '#00F0FF', motto = '' }) {
+export async function createEventTeamInDb({ code, name, badge = '', color = '#00F0FF', motto = '' }) {
     try {
+        const match = (code || name || '').match(/\d+/);
+        const numBadge = badge || (match ? String(match[0]).padStart(2, '0') : '01');
+
         const { data, error } = await supabase
             .from('event_teams')
             .insert({
                 code: (code || '').toUpperCase().trim(),
                 name: (name || '').trim(),
-                badge: badge || '⚡',
+                badge: numBadge,
                 color: color || '#00F0FF',
                 motto: motto || 'Synchronized for neural gauntlet.',
                 s_coins: 0,

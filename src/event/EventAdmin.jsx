@@ -496,13 +496,24 @@ export function EventAdmin() {
         setEventState(updatedState);
         await broadcastEventState(updatedState);
 
+        const team = teams.find(t => t.id === teamId);
+        const nextElimState = !team?.is_eliminated;
+
         await supabase
             .from('event_teams')
-            .update({ is_eliminated: true, is_qualified: false, updated_at: new Date().toISOString() })
+            .update({ is_eliminated: nextElimState, is_qualified: false, updated_at: new Date().toISOString() })
             .eq('id', teamId);
 
-        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, is_eliminated: true, is_qualified: false } : t));
-        setAwardMessage(`Team disqualified.`);
+        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, is_eliminated: nextElimState, is_qualified: false } : t));
+
+        const channel = supabase.channel('synapse_neural_nexus_2026');
+        await channel.send({
+            type: 'broadcast',
+            event: 'team_status_changed',
+            payload: { teamId, isEliminated: nextElimState }
+        });
+
+        setAwardMessage(`Team ${nextElimState ? 'eliminated' : 'restored'}.`);
         setTimeout(() => setAwardMessage(null), 2000);
     };
 
@@ -1043,17 +1054,24 @@ export function EventAdmin() {
                         <div className="p-2.5 rounded-lg bg-black/40 border border-white/10 flex items-center justify-between">
                             <div>
                                 <div className="text-xs font-bold text-pink-300 flex items-center gap-1">
-                                    <Flame size={12} className="text-pink-400" /> Redemption Standings
+                                    <Flame size={12} className="text-pink-400" /> Redemption Quiz Live Launch
                                 </div>
-                                <div className="text-[10px] text-zinc-400">Toggle Stage Quiz scores</div>
+                                <div className="text-[10px] text-zinc-400">Unlock quiz simultaneously for all</div>
                             </div>
                             <button
-                                onClick={handleToggleRedemptionLeaderboard}
-                                className={`px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer ${
-                                    eventState.redemptionLeaderboardVisible ? 'bg-pink-500/30 text-pink-300 border border-pink-500/50' : 'bg-zinc-800 text-zinc-400'
+                                onClick={async () => {
+                                    const next = !eventState.quizLiveStarted;
+                                    const updated = { ...eventState, quizLiveStarted: next };
+                                    setEventState(updated);
+                                    await broadcastEventState(updated);
+                                    setAwardMessage(`Live Quiz ${next ? 'LAUNCHED & UNLOCKED' : 'LOCKED'}`);
+                                    setTimeout(() => setAwardMessage(null), 2000);
+                                }}
+                                className={`px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer transition-all ${
+                                    eventState.quizLiveStarted ? 'bg-pink-500 text-white shadow-[0_0_12px_#EC4899]' : 'bg-pink-500/20 text-pink-300 border border-pink-500/40'
                                 }`}
                             >
-                                {eventState.redemptionLeaderboardVisible ? 'VISIBLE' : 'HIDDEN'}
+                                {eventState.quizLiveStarted ? 'LIVE (UNLOCKED)' : 'LAUNCH QUIZ'}
                             </button>
                         </div>
 

@@ -48,10 +48,16 @@ export function StageLeaderboard({ currentPhase = 'phase_2_round_1' }) {
     const standingCount = displayPool.filter(t => !t.is_eliminated).length;
     const eliminatedCount = displayPool.filter(t => t.is_eliminated).length;
 
-    // Main Qualifier Track (Qualified squads sorted by S-Coins)
-    const mainRanked = displayPool
+    // Main Qualifier Track (Standing squads sorted by S-Coins first, eliminated squads greyed out at bottom)
+    const standingSquads = displayPool
         .filter(t => !t.is_eliminated)
         .sort((a, b) => (b.s_coins || 0) - (a.s_coins || 0));
+
+    const eliminatedSquads = displayPool
+        .filter(t => t.is_eliminated)
+        .sort((a, b) => (b.s_coins || 0) - (a.s_coins || 0));
+
+    const mainRanked = [...standingSquads, ...eliminatedSquads];
 
     // Round of Redemption Track (Eliminated squads sorted by quiz_score / S-Coins)
     const redemptionRanked = displayPool
@@ -219,30 +225,42 @@ export function StageLeaderboard({ currentPhase = 'phase_2_round_1' }) {
 
                     {/* Ranks 4+ List */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[460px] overflow-y-auto pr-1 custom-scrollbar">
-                        {activeRanked.slice(3).map((t, idx) => (
-                            <div
-                                key={t.id}
-                                className="p-3 rounded-2xl flex items-center justify-between gap-3 bg-black/40 border border-white/10 hover:border-white/20 transition-all"
-                            >
-                                <div className="flex items-center gap-3 min-w-0">
-                                    <span className="w-5 font-mono text-xs font-bold text-zinc-500 text-center">
-                                        #{idx + 4}
-                                    </span>
-                                    <span className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-xs font-mono font-bold">#{getTeamNumberBadge(t)}</span>
-                                    <div className="min-w-0">
-                                        <div className="text-xs font-bold text-white truncate" style={{ fontFamily: 'Space Grotesk' }}>
-                                            {t.name}
-                                        </div>
-                                        <div className="text-[9px] font-mono text-zinc-400">
-                                            {t.code}
+                        {activeRanked.slice(3).map((t, idx) => {
+                            const isElim = Boolean(t.is_eliminated);
+                            return (
+                                <div
+                                    key={t.id}
+                                    className={`p-3 rounded-2xl flex items-center justify-between gap-3 transition-all ${
+                                        isElim
+                                            ? 'bg-red-950/20 border border-red-500/30 opacity-50 grayscale'
+                                            : 'bg-black/40 border border-white/10 hover:border-white/20'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <span className="w-5 font-mono text-xs font-bold text-zinc-500 text-center">
+                                            #{idx + 4}
+                                        </span>
+                                        <span className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-xs font-mono font-bold">#{getTeamNumberBadge(t)}</span>
+                                        <div className="min-w-0">
+                                            <div className="text-xs font-bold text-white truncate flex items-center gap-1.5" style={{ fontFamily: 'Space Grotesk' }}>
+                                                <span>{t.name}</span>
+                                                {isElim && (
+                                                    <span className="px-1.5 py-0.2 rounded bg-red-500/30 text-red-300 text-[9px] font-mono font-bold uppercase tracking-wider">
+                                                        ELIMINATED
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="text-[9px] font-mono text-zinc-400">
+                                                {t.code}
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="text-xs font-mono font-bold text-yellow-300 flex-shrink-0">
+                                        {viewTrack === 'redemption' ? `${t.quiz_score || 0} pts` : `${t.s_coins || 0} S`}
+                                    </div>
                                 </div>
-                                <div className="text-xs font-mono font-bold text-yellow-300 flex-shrink-0">
-                                    {viewTrack === 'redemption' ? `${t.quiz_score || 0} pts` : `${t.s_coins || 0} S`}
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             ) : (
