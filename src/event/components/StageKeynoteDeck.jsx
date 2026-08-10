@@ -206,7 +206,7 @@ export function StageKeynoteDeck({ currentPhase, onSelectPhase }) {
                                 {[
                                     { phase: '01', title: 'Check-In & Squad Allocation', desc: 'Scan QR at /users, claim unique Agent ID pass, align with table squad.', tag: 'Phase 0 & 1' },
                                     { phase: '02', title: 'Round 1: Reverse Hackathon', desc: 'Analyze obfuscated production codebase, identify vulnerability, re-architect and submit patch.', tag: '45 Minutes' },
-                                    { phase: '03', title: 'Intermission & Red Bull Break', desc: 'Judge deliberation on Round 1 commits, live score publication, energy refreshment.', tag: '15 Minutes' },
+                                    { phase: '03', title: 'Intermission & Mini Break', desc: 'Judge deliberation on Round 1 pitches, live score publication, short refreshment break.', tag: '15 Minutes' },
                                     { phase: '04', title: 'Round 2 & Redemption Track', desc: 'Parallel execution: Top squads draft deployment proposals while eliminated squads play Redemption Quiz.', tag: '30 Minutes' },
                                     { phase: '05', title: 'Grand Finale & Podium Honors', desc: 'Final live rankings, award presentation to champion squads, permanent profile XP conversion.', tag: 'Final Stage' },
                                 ].map((item, idx) => (

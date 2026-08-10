@@ -21,7 +21,7 @@ export const DEFAULT_EVENT_STATE = {
     roundTimerDurationSec: 45 * 60,
     roundTimerRunning: false,
     roundTimerVisible: true,
-    sponsorTimerTitle: 'Red Bull Break',
+    sponsorTimerTitle: 'MINI_BREAK',
     sponsorTimerDurationSec: 15 * 60,
     sponsorTimerRunning: false,
     sponsorTimerVisible: false,
@@ -30,14 +30,14 @@ export const DEFAULT_EVENT_STATE = {
     round1Prompt: {
         title: 'Round 1 · Problem Discovery',
         rewardSCoins: 300,
-        description: 'Identify a real-world problem within your assigned domain, justify why it matters, and pitch how AI fits as the solution.',
+        description: 'Identify one real-world problem within your assigned domain. Explain why it matters, and explain why AI is the right solution.',
         rules: '10 Mins Prep · 60s Live Stage Pitch · Top 16 Teams Advance'
     },
     round2Prompt: {
         title: 'Round 2 · Product Innovation',
         rewardSCoins: 500,
-        description: 'Identify a major user pain point in your assigned application and propose an innovative AI feature or UI/UX redesign.',
-        rules: '15 Mins Prep · 1-Page Concept Sheet · Top 8 Teams Advance'
+        description: 'Identify a major user pain point in your assigned app and propose an innovative AI feature or UI/UX improvement. Create a 1-page concept: Target User Problem, New Feature/Improvement, Feature Name, and a Wireframe sketch.',
+        rules: '15 Mins Prep · 1-Page PDF Concept · Top 8 Teams Advance'
     },
     round3Prompt: {
         title: 'Round 3 · Smart City Design',
@@ -50,7 +50,7 @@ export const DEFAULT_EVENT_STATE = {
     adMediaUrl: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-microchip-computer-animation-4364-large.mp4',
     adTitle: 'Official Event Partners & Technology Guilds',
     sponsorAds: [
-        { id: 1, title: 'Slot 1 · Red Bull Wings', url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-microchip-computer-animation-4364-large.mp4', active: true },
+        { id: 1, title: 'Slot 1 · Synapse Showcase', url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-microchip-computer-animation-4364-large.mp4', active: true },
         { id: 2, title: 'Slot 2 · GitHub Campus', url: 'https://assets.mixkit.co/videos/preview/mixkit-set-of-plateaus-seen-from-the-sky-in-a-sunset-26070-large.mp4', active: false },
         { id: 3, title: 'Slot 3 · Synapse Tech Showcase', url: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-robotic-arm-working-in-a-laboratory-41484-large.mp4', active: false }
     ],

@@ -24,11 +24,19 @@ import { Slide14Round3FinalShowdown } from './slides/Slide14Round3FinalShowdown'
 import { Slide15GrandFinale } from './slides/Slide15GrandFinale';
 
 export function PresentationDeck({ onSwitchToSession }) {
-    const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+    const [currentSlideIndex, setCurrentSlideIndex] = useState(() => {
+        const saved = sessionStorage.getItem('synapse_slide_index');
+        return saved !== null ? parseInt(saved, 10) : 0;
+    });
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
     const isWheelingRef = useRef(false);
     const wheelTimerRef = useRef(null);
+
+    // Persist slide index whenever it changes
+    useEffect(() => {
+        sessionStorage.setItem('synapse_slide_index', String(currentSlideIndex));
+    }, [currentSlideIndex]);
 
     const slides = [
         { id: 0, title: 'Welcome to Synapse', component: Slide01Welcome },

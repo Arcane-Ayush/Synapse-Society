@@ -98,11 +98,11 @@ export function QualifierProposalModule({ user, prompt, assignedTeam, onSubmitte
                 {/* Challenge Details & Assigned App */}
                 <div className="p-3.5 rounded-2xl bg-black/40 border border-white/10 mb-5 space-y-1.5">
                     <p className="text-xs text-zinc-300 leading-relaxed font-sans">
-                        Redesign your assigned app using AI to solve user pain points while incorporating Red Bull branding.
+                        Identify a major user pain point in your assigned app and propose an innovative AI feature or UI/UX improvement. Create a 1-page concept: Target User Problem, New Feature/Improvement, Feature Name, and a Wireframe sketch.
                     </p>
                     <div className="text-[11px] font-mono text-cyan-300 font-bold flex items-center justify-between">
                         <span>📱 Assigned App: <strong className="text-purple-300">{assignedApp}</strong></span>
-                        <span>Max 4 MB PDF • 15 Mins Prep</span>
+                        <span>Max 4 MB PDF · 15 Mins</span>
                     </div>
                 </div>
 

@@ -89,7 +89,7 @@ export function StageSessionView({ eventState, isAdmin = false }) {
 
     // Active Sponsor Ad from eventState
     const adsList = eventState?.sponsorAds || [
-        { id: 1, title: 'Red Bull Energy', url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-microchip-computer-animation-4364-large.mp4', active: true },
+        { id: 1, title: 'Synapse Showcase', url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-microchip-computer-animation-4364-large.mp4', active: true },
         { id: 2, title: 'GitHub Campus Guild', url: 'https://assets.mixkit.co/videos/preview/mixkit-set-of-plateaus-seen-from-the-sky-in-a-sunset-26070-large.mp4', active: false },
         { id: 3, title: 'Synapse Society Showcase', url: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-robotic-arm-working-in-a-laboratory-41484-large.mp4', active: false }
     ];

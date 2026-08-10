@@ -38,7 +38,7 @@ export function Slide06Leadership() {
   // Tier 4 Members
   const tier4Members = [
     { id: 't4-0', dept: 'MEDIA DEPARTMENT', icon: Video, color: 'text-pink-400', border: 'border-pink-500/50', bg: 'bg-pink-950/20', name: 'Ayush Pandey', role: 'Content Strategist & Media Creator', image: '/leadership/ayush-pandey-media.png' },
-    { id: 't4-1', dept: 'TECH DEPARTMENT', icon: Cpu, color: 'text-cyan-400', border: 'border-cyan-500/50', bg: 'bg-cyan-950/20', name: 'Krish Mishra', role: 'Core Software Developer', image: '/leadership/krish-mishra.jpg' },
+    { id: 't4-1', dept: 'TECH DEPARTMENT', icon: Cpu, color: 'text-cyan-400', border: 'border-cyan-500/50', bg: 'bg-cyan-950/20', name: 'Krish Mishra', role: 'Core Software Developer', image: '/leadership/krish-mishra.jpeg' },
     { id: 't4-2', dept: 'MEDIA DEPARTMENT', icon: Video, color: 'text-purple-400', border: 'border-purple-500/50', bg: 'bg-purple-950/20', name: 'Ishaan Sharma', role: 'Video Creator & Editor', image: '/leadership/ishaan-sharma-media.jpg' },
   ];
 
@@ -202,9 +202,8 @@ export function Slide06Leadership() {
                   className="w-full md:w-[340px]"
                 >
                   <div
-                    className={`rounded-2xl p-5 border-2 border-indigo-500/40 shadow-xl flex flex-col justify-between text-left group hover:border-indigo-400 transition-all h-full ${
-                      isUnlocked ? 'bg-zinc-950/85' : 'bg-black/90 border-dashed border-indigo-500/30'
-                    }`}
+                    className={`rounded-2xl p-5 border-2 border-indigo-500/40 shadow-xl flex flex-col justify-between text-left group hover:border-indigo-400 transition-all h-full ${isUnlocked ? 'bg-zinc-950/85' : 'bg-black/90 border-dashed border-indigo-500/30'
+                      }`}
                     style={{ backdropFilter: 'blur(16px)' }}
                   >
                     {!isUnlocked ? (
@@ -261,9 +260,8 @@ export function Slide06Leadership() {
                   className="w-full md:w-[340px]"
                 >
                   <div
-                    className={`rounded-2xl p-5 border-2 border-emerald-500/40 shadow-xl flex flex-col justify-between text-left group hover:border-emerald-400 transition-all h-full ${
-                      isUnlocked ? 'bg-zinc-950/85' : 'bg-black/90 border-dashed border-emerald-500/30'
-                    }`}
+                    className={`rounded-2xl p-5 border-2 border-emerald-500/40 shadow-xl flex flex-col justify-between text-left group hover:border-emerald-400 transition-all h-full ${isUnlocked ? 'bg-zinc-950/85' : 'bg-black/90 border-dashed border-emerald-500/30'
+                      }`}
                     style={{ backdropFilter: 'blur(16px)' }}
                   >
                     {!isUnlocked ? (

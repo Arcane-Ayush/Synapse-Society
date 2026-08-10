@@ -42,8 +42,8 @@ export function EventAdmin() {
     const [roundRunning, setRoundRunning] = useState(false);
     const [roundVisible, setRoundVisible] = useState(true);
 
-    // 2. Red Bull / Sponsor Break Timer States
-    const [customSponsorTitle, setCustomSponsorTitle] = useState('Red Bull Break');
+    // 2. Mini Break Timer States
+    const [customSponsorTitle, setCustomSponsorTitle] = useState('MINI_BREAK');
     const [customSponsorMinutes, setCustomSponsorMinutes] = useState(15);
     const [sponsorSeconds, setSponsorSeconds] = useState(15 * 60);
     const [sponsorRunning, setSponsorRunning] = useState(false);
@@ -57,7 +57,7 @@ export function EventAdmin() {
 
     // 4. 3-Slot Sponsor Ads Overlay State
     const [adSlots, setAdSlots] = useState([
-        { id: 1, title: 'Slot 1 · Red Bull Wings', url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-microchip-computer-animation-4364-large.mp4', active: true },
+        { id: 1, title: 'Slot 1 · Synapse Showcase', url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-microchip-computer-animation-4364-large.mp4', active: true },
         { id: 2, title: 'Slot 2 · GitHub Campus', url: 'https://assets.mixkit.co/videos/preview/mixkit-set-of-plateaus-seen-from-the-sky-in-a-sunset-26070-large.mp4', active: false },
         { id: 3, title: 'Slot 3 · Synapse Tech Showcase', url: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-robotic-arm-working-in-a-laboratory-41484-large.mp4', active: false }
     ]);
@@ -112,9 +112,10 @@ export function EventAdmin() {
         return () => unsubscribe();
     }, []);
 
-    // Round countdown tick
+    // Round countdown tick + periodic sync broadcast every 5s
     useEffect(() => {
         let interval = null;
+        let syncTick = 0;
         if (roundRunning) {
             interval = setInterval(() => {
                 setRoundSeconds(prev => {
@@ -124,16 +125,23 @@ export function EventAdmin() {
                         broadcastTimerUpdate({ roundTimerRunning: false, roundTimerDurationSec: 0 });
                         return 0;
                     }
-                    return prev - 1;
+                    const next = prev - 1;
+                    // Sync to all screens every 5 seconds so late-joiners/view-switchers stay in sync
+                    syncTick++;
+                    if (syncTick % 5 === 0) {
+                        broadcastTimerUpdate({ roundTimerRunning: true, roundTimerDurationSec: next });
+                    }
+                    return next;
                 });
             }, 1000);
         }
         return () => clearInterval(interval);
     }, [roundRunning]);
 
-    // Red Bull / Sponsor timer tick
+    // Mini Break timer tick + periodic sync broadcast every 5s
     useEffect(() => {
         let interval = null;
+        let syncTick = 0;
         if (sponsorRunning) {
             interval = setInterval(() => {
                 setSponsorSeconds(prev => {
@@ -143,7 +151,12 @@ export function EventAdmin() {
                         broadcastTimerUpdate({ sponsorTimerRunning: false, sponsorTimerDurationSec: 0 });
                         return 0;
                     }
-                    return prev - 1;
+                    const next = prev - 1;
+                    syncTick++;
+                    if (syncTick % 5 === 0) {
+                        broadcastTimerUpdate({ sponsorTimerRunning: true, sponsorTimerDurationSec: next });
+                    }
+                    return next;
                 });
             }, 1000);
         }
@@ -279,7 +292,7 @@ export function EventAdmin() {
         };
         setEventState(updated);
         await broadcastEventState(updated);
-        setAwardMessage(`Red Bull/Monster timer on stage: ${next ? 'VISIBLE' : 'HIDDEN'}`);
+        setAwardMessage(`Mini Break timer on stage: ${next ? 'VISIBLE' : 'HIDDEN'}`);
         setTimeout(() => setAwardMessage(null), 2000);
     };
 
@@ -863,7 +876,7 @@ export function EventAdmin() {
                                     type="text"
                                     value={customSponsorTitle}
                                     onChange={e => setCustomSponsorTitle(e.target.value)}
-                                    placeholder="Label (e.g. Red Bull Break)"
+                                    placeholder="Label (e.g. MINI_BREAK)"
                                     className="text-[10px] text-red-300 font-bold uppercase bg-transparent outline-none border-b border-red-500/30 pb-0.5 mb-1 w-36"
                                 />
                                 <div className="text-2xl sm:text-3xl font-black text-yellow-300 tracking-widest">{formatTimer(sponsorSeconds)}</div>

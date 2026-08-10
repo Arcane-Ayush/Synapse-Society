@@ -363,7 +363,7 @@ export function About() {
 
                 <div className="relative w-full h-56 rounded-xl overflow-hidden mb-4 border border-cyan-500/40 bg-purple-950 shadow-lg">
                   <img
-                    src="/leadership/krish-mishra.jpg"
+                    src="/leadership/krish-mishra.jpeg"
                     alt="Krish Mishra - Tech Department"
                     className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                   />
