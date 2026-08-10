@@ -63,7 +63,6 @@ export function RedemptionQuizModule({ user, assignedTeam, questions = [], event
             updatedCoins = earnedCoins + rewardAmt;
             setScore(updatedScore);
             setEarnedCoins(updatedCoins);
-            if (user?.id) addUserSCoins(user.id, rewardAmt);
         }
 
         if (currentIndex + 1 < questionsList.length) {
@@ -144,9 +143,9 @@ export function RedemptionQuizModule({ user, assignedTeam, questions = [], event
                             Redemption Quiz
                         </h3>
                     </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-xs font-mono font-bold text-yellow-300">
-                        <Coins size={12} className="text-yellow-400" />
-                        +{earnedCoins} S
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-pink-500/10 border border-pink-500/30 text-xs font-mono font-bold text-pink-300">
+                        <Coins size={12} className="text-pink-400" />
+                        21 Questions • Max 600 S
                     </div>
                 </div>
 
@@ -154,17 +153,17 @@ export function RedemptionQuizModule({ user, assignedTeam, questions = [], event
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="py-8 text-center"
+                        className="py-8 text-center space-y-3"
                     >
-                        <Trophy size={48} className="text-yellow-400 mx-auto mb-3 animate-bounce" />
-                        <h4 className="text-2xl font-black text-white mb-1" style={{ fontFamily: 'Space Grotesk' }}>
-                            Redemption Complete!
+                        <Trophy size={48} className="text-yellow-400 mx-auto mb-2 animate-bounce" />
+                        <h4 className="text-2xl font-black text-white" style={{ fontFamily: 'Space Grotesk' }}>
+                            Quiz Submitted!
                         </h4>
-                        <p className="text-xs font-mono text-zinc-300 mb-6">
-                            You completed the quiz and reclaimed <strong className="text-yellow-400">+{earnedCoins} S-Coins</strong>!
+                        <p className="text-xs font-mono text-zinc-300 max-w-md mx-auto leading-relaxed">
+                            You completed all 21 questions. Your score of <strong className="text-yellow-400">{score}/{questionsList.length}</strong> has been recorded into the team ledger.
                         </p>
                         <div className="inline-block px-4 py-2 rounded-xl bg-pink-500/20 border border-pink-400/40 text-xs font-mono font-bold text-pink-200">
-                            Status: Score Submitted to Stage Leaderboard
+                            Team Average & XP Allocation Pending (10 S = 1 XP)
                         </div>
                     </motion.div>
                 ) : (
