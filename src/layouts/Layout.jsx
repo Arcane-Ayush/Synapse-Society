@@ -10,7 +10,6 @@ export function Layout({ children }) {
         path.includes('/inauguration') ||
         path.includes('/hod') ||
         path.includes('/dean') ||
-        path.includes('/provc') ||
         path.includes('/president') ||
         path.includes('/audience') ||
         path.includes('/ucn/') ||

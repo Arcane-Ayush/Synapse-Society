@@ -31,81 +31,38 @@ Welcome to **SYN 01 - NEURAL NEXUS**, a fast-paced, multi-round Ideathon challen
 * **Task (10 minutes):** 
   * Identify one real-world problem.
   * Explain why it matters.
-  * Explain how AI fits in as a solution.
+  * Explain why AI is the right solution.
 * **Presentation:** 60 seconds per team.
-* **Scoring Rubric:** Problem relevance (10), Originality (5), Feasibility (10), Creativity (5). ---- not for us to care but we have to show in the Presentation ( it will be judged by judges )
+* **Scoring Rubric:** Problem relevance (10), Originality (5), Feasibility (10), Creativity (5).
 * **Advancement:** Top 16 teams (2 from each domain).
 
-### Round 2 - Product Innovation
-Welcome to the Product Innovation Round!
-Each team will be assigned one popular application. Your challenge is to identify a major user pain point within the app and propose an innovative new feature or a significant UI/UX improvement that solves it.
-
-Task (15 minutes):
-Your team must create a one-page concept that includes the following:
-
-Target User Problem: Clearly identify a specific frustration, missing tool, or limitation that current users face on the platform.
-
-New Feature / Improvement: Propose a creative, practical solution (e.g., a new functionality, a redesigned user interface, or a new way for users to interact).
-
-Feature Name: Give your new upgrade or feature a catchy name.
-
-Concept Description & Wireframe: Briefly explain how the feature works to improve the user experience and draw a rough sketch/wireframe of where this new feature would live on the app's screen.
-
-Assigned Apps:
-Instagram • Snapchat • Spotify • Netflix • LinkedIn • Zomato • Pinterest • Nykaa
-
-Format:
-
-Time: 15 Minutes
-
-Submission: One-page document (Problem + Concept Description + Visual Layout sketch)
-
-Advancement: Top 8 Teams will advance to the Final Round.
+### Round 2: AI Product Reimagination
+* **Objective:** Redesign a popular app using AI to solve a user problem while incorporating Red Bull's brand identity.
+* **Task (15 minutes):** Create a one-page concept encompassing:
+  * **AI Feature:** A proposed innovative solution.
+  * **Redesigned Logo:** Infusing Red Bull's branding/theme.
+  * **Product Name:** A new name for the upgraded product.
+  * **Concept Description:** How the AI feature improves user experience.
+* **Assigned Apps:** Instagram, Snapchat, Spotify, Netflix, LinkedIn, Zomato, Pinterest, Nykaa.
+* **Advancement:** Top 8 teams advance to the Final Round.
 
 ### Redemption Round
 * **Objective:** Give eliminated teams a second chance.
 * **Format:** Quiz conduction.
 * **Advancement:** 2 teams secure a wildcard entry to Round 3.
 
-# Round 3: Smart City Design Challenge (Final Round)
-
-**Objective:** Design a sustainable, efficient, and technologically integrated smart city using a limited budget and fixed geographical constraints.
-
-**Time Allocation:** 20 Minutes (Prep & Submission)
-
-### 1. City Brief Constraints
-* **Population:** 100,000
-* **Budget:** ₹6000 Cr
-* **Area:** 25 sq km
-* **Geography & Risks:** Moderate Climate, Medium Earthquake Risk, High Flood Risk (River).
-
-### 2. Recalibrated Facility Costs
-*Total cost for one of each = ₹5,400 Cr. Teams have ₹600 Cr buffer for strategic duplicates.*
-* **Metro Station & Route:** ₹1,000 Cr
-* **Data Centre:** ₹800 Cr
-* **AI Control Centre:** ₹800 Cr
-* **Port:** ₹600 Cr
-* **Hospital:** ₹500 Cr
-* **Solar Plant:** ₹450 Cr
-* **Industrial Zone:** ₹400 Cr
-* **Residential Area:** ₹300 Cr
-* **School:** ₹200 Cr
-* **Police Station:** ₹100 Cr
-* **Green Zone / Park:** ₹100 Cr
-* **Farms / Fields:** ₹50 Cr
-
-### 3. Core Tasks (Optimized for Speed)
-* **Strategic Map Placement:** Place all facilities on the A4 map logically (e.g., buffer zones between Industrial and Residential, keeping Data/AI centers safe from flood zones).
-* **The "Top 3" Justification Rule:** To save time, teams only need to write down the logic/justification for their **3 most critical placements**. The rest will be judged visually.
-* **The Connectivity Requirement:** Draw "Data Lines" connecting the AI Control Centre to 3 other facilities, showing how it manages the city's network (e.g., connecting AI to Traffic & Hospital for smart routing).
-
-### 4. The Deciding Twist: "The Crisis Card"
-* **Execution:** At the 10-minute mark, the organizer announces over the mic: *"Emergency Alert: A sudden flash flood has breached the riverbanks!"*
-* **Task:** Teams must immediately use a red pen to draw emergency protocols (e.g., rerouting traffic, deploying emergency services from the AI/Police center, protecting the Data Centre).
-* **Purpose:** Tests agility, real-time problem solving, and how well their initial city layout handles a disaster.
-
-### 5. Judging Criteria
-1. **Logical Zoning:** Visual assessment of facility placement (pollution mitigation, safety, accessibility).
-2. **Resource Management:** Staying within the ₹6,000 Cr budget.
-3. **Tech Strategy:** The logic behind their "Top 3" facility placements and Data Line connections.
-4. **Crisis Adaptability:** How effectively their layout and red-pen updates handled the 10-minute Crisis Card twist.
+### Round 3: Smart City Design
+* **Objective:** Design a sustainable, efficient, and AI-powered smart city.
+* **City Brief:** 
+  * **Population:** 100,000
+  * **Budget:** ₹6000 Cr
+  * **Area:** 25 sq km
+  * **Climate:** Moderate (Medium Earthquake Risk, High Flood Risk)
+* **Task:** Using an A4 city layout, place various facilities and justify their placements.
+* **Facilities to Place:** Hospital (₹600 Cr), School (₹250 Cr), Metro Route & Station (₹300 Cr), Police Station (₹200 Cr), AI Control Centre (₹500 Cr), Residential Area (₹400 Cr), Industrial Zone (₹450 Cr), Green Zones/Park (₹150 Cr), Data Centre (₹700 Cr), Solar Plant (₹350 Cr), Port (₹550 Cr), Farms & Fields (₹100 Cr).
+* **Requirements:**
+  * Use all given facilities.
+  * Provide good connectivity and sustainable energy.
+  * Protect environment & green zones.
+  * Ensure safety & emergency access.
+  * Justify every placement (e.g., Why is the Data Centre near the Solar Plant?).
