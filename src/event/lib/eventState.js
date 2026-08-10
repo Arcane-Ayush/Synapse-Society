@@ -130,43 +130,191 @@ export async function fetchActiveEventTeamsFromDb() {
 const DEFAULT_QUIZ_QUESTIONS = [
     {
         id: 1,
-        question: "Which neural network architecture is best suited for sequential data processing and natural language modeling?",
-        options: ["Convolutional Neural Network (CNN)", "Transformer / Recurrent Neural Network (RNN)", "Generative Adversarial Network (GAN)", "Decision Tree Classifier"],
-        correct_index: 1,
-        reward_s_coins: 100,
-        timer_sec: 5
+        question: "Which of the following memories is volatile?",
+        options: ["ROM", "SSD", "RAM", "HDD"],
+        correct_index: 2, // C
+        reward_s_coins: 30,
+        timer_sec: 10
     },
     {
         id: 2,
-        question: "In cloud systems architecture, what is the primary role of an API Gateway?",
-        options: ["Database backup", "Routing, authentication, rate limiting, and request transformation", "File storage rendering", "CSS styling delivery"],
-        correct_index: 1,
-        reward_s_coins: 100,
-        timer_sec: 5
+        question: "Which component performs arithmetic and logical operations?",
+        options: ["Control Unit", "ALU", "Register", "Cache"],
+        correct_index: 1, // B
+        reward_s_coins: 30,
+        timer_sec: 10
     },
     {
         id: 3,
-        question: "What does the CAP Theorem state regarding distributed database systems?",
-        options: ["A system can provide Consistency, Availability, and Partition Tolerance simultaneously", "A system can provide at most two out of Consistency, Availability, and Partition Tolerance", "Partition Tolerance is optional in WANs", "Consistency is only required during reads"],
-        correct_index: 1,
-        reward_s_coins: 100,
-        timer_sec: 5
+        question: "Which of these is not a programming language?",
+        options: ["Python", "Java", "HTML", "C"],
+        correct_index: 2, // C
+        reward_s_coins: 30,
+        timer_sec: 10
     },
     {
         id: 4,
-        question: "Which algorithm concept is fundamental to real-time state synchronization across peer nodes?",
-        options: ["Raft / Paxos Consensus", "Bubble Sort", "Dijkstra Shortest Path", "Binary Search Tree"],
-        correct_index: 0,
-        reward_s_coins: 100,
-        timer_sec: 5
+        question: "Which statement best describes a compiler?",
+        options: ["Executes code line by line", "Converts the whole program into machine code before execution", "Stores source code", "Edits source files"],
+        correct_index: 1, // B
+        reward_s_coins: 30,
+        timer_sec: 10
     },
     {
         id: 5,
-        question: "In modern AI product design, what does 'Zero-Shot Learning' refer to?",
-        options: ["Model requiring 0 lines of code", "Model making accurate predictions on concepts not seen during explicit training", "Model training with 0 dataset samples", "Model operating without GPU memory"],
-        correct_index: 1,
-        reward_s_coins: 100,
-        timer_sec: 5
+        question: "What is the full form of \"URL\"?",
+        options: ["Uniform Resource Locator", "Universal Resource Link", "Unique Reference Locator", "United Resource Locator"],
+        correct_index: 0, // A
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 6,
+        question: "Convert 101101₂ to decimal.",
+        options: ["43", "45", "47", "53"],
+        correct_index: 1, // B
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 7,
+        question: "Convert 59₁₀ to binary.",
+        options: ["111011", "111001", "101111", "110111"],
+        correct_index: 3, // D
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 8,
+        question: "Which of the following is not a valid variable name?",
+        options: ["_count", "totalMarks", "2value", "value2"],
+        correct_index: 2, // C
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 9,
+        question: "If one byte equals 8 bits, how many bytes are there in 2 KB?",
+        options: ["1024", "2000", "2048", "4096"],
+        correct_index: 2, // C
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 10,
+        question: "Which keyword prevents modification of a variable?",
+        options: ["volatile", "const", "static", "signed"],
+        correct_index: 1, // B
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 11,
+        question: "Which memory is closest to the CPU?",
+        options: ["RAM", "Cache", "SSD", "HDD"],
+        correct_index: 1, // B
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 12,
+        question: "Which of the following is not a valid C keyword?",
+        options: ["return", "switch", "function", "break"],
+        correct_index: 2, // C
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 13,
+        question: "Which loop is guaranteed to execute its body at least once, even if the condition is false?",
+        options: ["for loop", "while loop", "do-while loop", "for-each loop"],
+        correct_index: 2, // C
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 14,
+        question: "Which logic gate produces an output of 1 only when both inputs are 1?",
+        options: ["OR", "AND", "NOT", "XOR"],
+        correct_index: 1, // B
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 15,
+        question: "What is virtual memory primarily used for?",
+        options: ["Faster CPU", "Extend available memory using disk", "Increase RAM speed", "Store BIOS"],
+        correct_index: 1, // B
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 16,
+        question: "Which cache level is generally the fastest?",
+        options: ["L1", "L2", "L3", "RAM"],
+        correct_index: 0, // A
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 17,
+        question: "What is the primary purpose of cache memory?",
+        options: ["Store the operating system", "Increase permanent storage", "Reduce CPU memory access time", "Replace RAM"],
+        correct_index: 2, // C
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 18,
+        question: "Which statement about a compiler and an interpreter is correct?",
+        options: [
+            "Both execute code line by line.",
+            "A compiler translates the entire program before execution, while an interpreter translates one statement at a time.",
+            "An interpreter is always faster than a compiler.",
+            "A compiler requires no source code."
+        ],
+        correct_index: 1, // B
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 19,
+        question: "What is the main purpose of version control tools like Git?",
+        options: [
+            "To design website layouts",
+            "To track and manage changes to code/files over time",
+            "To compress image files",
+            "To scan for viruses"
+        ],
+        correct_index: 1, // B
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 20,
+        question: "What best describes an \"API\" (Application Programming Interface)?",
+        options: [
+            "A physical computer component",
+            "A set of rules that lets different software applications communicate with each other",
+            "A type of programming language",
+            "A tool for editing images"
+        ],
+        correct_index: 1, // B
+        reward_s_coins: 30,
+        timer_sec: 10
+    },
+    {
+        id: 21,
+        question: "What is the primary function of DNS (Domain Name System) on the internet?",
+        options: [
+            "Encrypts network traffic",
+            "Translates domain names into IP addresses",
+            "Assigns MAC addresses to devices",
+            "Compresses data for faster transfer"
+        ],
+        correct_index: 1, // B
+        reward_s_coins: 30,
+        timer_sec: 10
     }
 ];
 
@@ -176,7 +324,14 @@ export async function fetchQuizQuestionsFromDb() {
             .from('event_quiz_questions')
             .select('*')
             .order('id', { ascending: true });
-        if (data && data.length > 0) return data;
+
+        if (data && data.length >= 21) {
+            return data.map(q => ({
+                ...q,
+                timer_sec: Number(q.timer_sec) || 10,
+                options: Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : [])
+            }));
+        }
     } catch (e) {
         console.error('Error fetching quiz questions from DB:', e);
     }
@@ -526,24 +681,58 @@ export async function awardTeamSCoins(teamId, amount) {
 }
 
 /**
- * Update quiz score for a team during Round of Redemption.
+ * Update quiz score for a team during Round of Redemption by calculating team member average.
  */
-export async function updateTeamQuizScore(teamId, scoreDelta, coinsDelta = 100) {
+export async function recordMemberQuizSubmission(teamId, userId, memberScore, memberCoins) {
+    if (!teamId) return;
     try {
-        const { data: currentTeam } = await supabase
-            .from('event_teams')
-            .select('quiz_score, s_coins')
-            .eq('id', teamId)
-            .maybeSingle();
+        if (userId) {
+            const { data: existing } = await supabase
+                .from('event_submissions')
+                .select('id')
+                .eq('team_id', teamId)
+                .eq('user_id', userId)
+                .eq('round', 2)
+                .maybeSingle();
 
-        const newScore = (currentTeam?.quiz_score || 0) + Number(scoreDelta);
-        const newCoins = (currentTeam?.s_coins || 0) + Number(coinsDelta);
+            if (existing?.id) {
+                await supabase.from('event_submissions').update({
+                    s_coins_awarded: memberCoins,
+                    notes: `Quiz score: ${memberScore}`,
+                    updated_at: new Date().toISOString()
+                }).eq('id', existing.id);
+            } else {
+                await supabase.from('event_submissions').insert({
+                    team_id: teamId,
+                    user_id: userId,
+                    round: 2,
+                    s_coins_awarded: memberCoins,
+                    notes: `Quiz score: ${memberScore}`,
+                    submitted_at: new Date().toISOString()
+                });
+            }
+        }
+
+        const { data: teamSubmissions } = await supabase
+            .from('event_submissions')
+            .select('s_coins_awarded')
+            .eq('team_id', teamId)
+            .eq('round', 2);
+
+        let avgCoins = Math.min(600, memberCoins);
+        let avgScore = memberScore;
+
+        if (teamSubmissions && teamSubmissions.length > 0) {
+            const totalCoins = teamSubmissions.reduce((acc, cur) => acc + (cur.s_coins_awarded || 0), 0);
+            avgCoins = Math.min(600, Math.round(totalCoins / teamSubmissions.length));
+            avgScore = Math.round(avgCoins / 30);
+        }
 
         const { data, error } = await supabase
             .from('event_teams')
             .update({
-                quiz_score: newScore,
-                s_coins: newCoins,
+                quiz_score: avgScore,
+                s_coins: avgCoins,
                 updated_at: new Date().toISOString()
             })
             .eq('id', teamId)
@@ -553,12 +742,12 @@ export async function updateTeamQuizScore(teamId, scoreDelta, coinsDelta = 100) 
         await channel.send({
             type: 'broadcast',
             event: 'team_quiz_updated',
-            payload: { teamId, quiz_score: newScore, s_coins: newCoins }
+            payload: { teamId, quiz_score: avgScore, s_coins: avgCoins }
         });
 
         return { data, error };
     } catch (e) {
-        return { data: null, error: e };
+        console.error('Error recording member quiz submission:', e);
     }
 }
 

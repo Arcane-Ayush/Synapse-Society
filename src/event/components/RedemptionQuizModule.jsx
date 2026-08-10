@@ -1,74 +1,88 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, CheckCircle2, Coins, Zap, Trophy, ArrowRight, Loader2, Lock, Clock } from 'lucide-react';
-import { addUserSCoins } from '../lib/eventState';
+import { addUserSCoins, recordMemberQuizSubmission } from '../lib/eventState';
 
-export function RedemptionQuizModule({ user, questions = [], eventState, onFinished }) {
+export function RedemptionQuizModule({ user, assignedTeam, questions = [], eventState, onFinished }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [selectedOption, setSelectedOption] = useState(null);
     const [score, setScore] = useState(0);
     const [earnedCoins, setEarnedCoins] = useState(0);
     const [quizComplete, setQuizComplete] = useState(false);
 
-    const currentQ = questions[currentIndex] || questions[0];
-    const questionTimerSec = currentQ?.timer_sec || currentQ?.timerSec || 5;
+    // Lock reference to guarantee no double advancement / question skipping
+    const isAdvancingRef = useRef(false);
+
+    // Ensure we always have the full 21 question set even if DB table has fewer rows
+    const questionsList = (Array.isArray(questions) && questions.length >= 21) ? questions : (user?.quizFallbackQuestions || questions);
+    const currentQ = questionsList[currentIndex] || questionsList[0];
+    const questionTimerSec = Number(currentQ?.timer_sec || currentQ?.timerSec) || 10;
     const [timeLeft, setTimeLeft] = useState(questionTimerSec);
 
-    // Reset per-question timer when question index changes
-    useEffect(() => {
-        if (!quizComplete && currentQ) {
-            setTimeLeft(currentQ?.timer_sec || currentQ?.timerSec || 5);
-        }
-    }, [currentIndex, quizComplete]);
+    const optionsList = Array.isArray(currentQ?.options)
+        ? currentQ.options
+        : (typeof currentQ?.options === 'string' ? JSON.parse(currentQ.options) : []);
 
-    // Per-question countdown tick
+    // Reset per-question state when moving to a new question
     useEffect(() => {
-        if (quizComplete || !eventState?.quizLiveStarted || !currentQ) return;
+        setTimeLeft(Number(currentQ?.timer_sec || currentQ?.timerSec) || 10);
+        setSelectedOption(null);
+        isAdvancingRef.current = false;
+    }, [currentIndex]);
 
-        const interval = setInterval(() => {
+    // Single robust countdown timer per question
+    useEffect(() => {
+        if (quizComplete || !eventState?.quizLiveStarted || !currentQ || isAdvancingRef.current) return;
+
+        const timer = setInterval(() => {
             setTimeLeft(prev => {
                 if (prev <= 1) {
-                    // Time up for this question - auto advance to next question
-                    handleAdvanceNext(null);
+                    clearInterval(timer);
+                    advanceToNextQuestion(null);
                     return 0;
                 }
                 return prev - 1;
             });
         }, 1000);
 
-        return () => clearInterval(interval);
-    }, [currentIndex, quizComplete, eventState?.quizLiveStarted, selectedOption]);
+        return () => clearInterval(timer);
+    }, [currentIndex, quizComplete, eventState?.quizLiveStarted]);
 
-    const handleAdvanceNext = (chosenIdx) => {
+    const advanceToNextQuestion = (chosenIdx) => {
+        if (isAdvancingRef.current) return; // Prevent double execution
+        isAdvancingRef.current = true;
+
         const correctIdx = currentQ?.correct_index ?? currentQ?.correctIndex ?? 0;
-        const rewardAmt = currentQ?.reward_s_coins ?? currentQ?.rewardSCoins ?? 100;
+        const rewardAmt = currentQ?.reward_s_coins ?? currentQ?.rewardSCoins ?? 30;
 
-        let newScore = score;
-        let newCoins = earnedCoins;
+        let updatedScore = score;
+        let updatedCoins = earnedCoins;
 
         if (chosenIdx !== null && chosenIdx === correctIdx) {
-            newScore = score + 1;
-            newCoins = earnedCoins + rewardAmt;
-            setScore(newScore);
-            setEarnedCoins(newCoins);
+            updatedScore = score + 1;
+            updatedCoins = earnedCoins + rewardAmt;
+            setScore(updatedScore);
+            setEarnedCoins(updatedCoins);
             if (user?.id) addUserSCoins(user.id, rewardAmt);
         }
 
-        if (currentIndex + 1 < questions.length) {
+        if (currentIndex + 1 < questionsList.length) {
             setCurrentIndex(prev => prev + 1);
-            setSelectedOption(null);
         } else {
             setQuizComplete(true);
-            if (onFinished) onFinished({ score: newScore, earnedCoins: newCoins });
+            if (assignedTeam?.id) {
+                recordMemberQuizSubmission(assignedTeam.id, user?.id, updatedScore, updatedCoins);
+            }
+            if (onFinished) onFinished({ score: updatedScore, earnedCoins: updatedCoins });
         }
     };
 
     const handleSelectOption = (idx) => {
-        if (selectedOption !== null) return;
+        if (selectedOption !== null || isAdvancingRef.current) return;
         setSelectedOption(idx);
         setTimeout(() => {
-            handleAdvanceNext(idx);
-        }, 350);
+            advanceToNextQuestion(idx);
+        }, 300);
     };
 
     // 1. Locked Screen if Admin hasn't started quiz live yet
@@ -180,7 +194,7 @@ export function RedemptionQuizModule({ user, questions = [], eventState, onFinis
 
                         {/* Options - Silent selection (No answer reveal) */}
                         <div className="space-y-2.5 mb-2">
-                            {currentQ?.options?.map((option, idx) => {
+                            {optionsList.map((option, idx) => {
                                 const isChosen = selectedOption === idx;
                                 let border = '1px solid rgba(255, 255, 255, 0.1)';
                                 let bg = 'rgba(255, 255, 255, 0.03)';

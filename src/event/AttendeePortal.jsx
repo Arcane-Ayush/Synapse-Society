@@ -390,6 +390,7 @@ export function AttendeePortal() {
                                 ) : (
                                     <RedemptionQuizModule
                                         user={user}
+                                        assignedTeam={assignedTeam}
                                         questions={quizQuestions}
                                         eventState={eventState}
                                         onFinished={({ earnedCoins }) => setSCoins(prev => prev + earnedCoins)}

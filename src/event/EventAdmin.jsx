@@ -518,24 +518,38 @@ export function EventAdmin() {
     };
 
     const handleQualifyToTrackA = async (teamId) => {
+        const team = teams.find(t => t.id === teamId);
+        const isCurrentlyTrackA = team?.is_qualified && !team?.is_eliminated;
+
+        const updates = isCurrentlyTrackA
+            ? { is_qualified: false, is_eliminated: false, updated_at: new Date().toISOString() }
+            : { is_qualified: true, is_eliminated: false, updated_at: new Date().toISOString() };
+
         await supabase
             .from('event_teams')
-            .update({ is_qualified: true, is_eliminated: false, updated_at: new Date().toISOString() })
+            .update(updates)
             .eq('id', teamId);
 
-        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, is_qualified: true, is_eliminated: false } : t));
-        setAwardMessage(`Team assigned to Track A (Qualifiers).`);
+        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, ...updates } : t));
+        setAwardMessage(isCurrentlyTrackA ? `Team returned to Round 1 Pool.` : `Team assigned to Track A (Qualifiers).`);
         setTimeout(() => setAwardMessage(null), 2000);
     };
 
     const handleRouteToTrackB = async (teamId) => {
+        const team = teams.find(t => t.id === teamId);
+        const isCurrentlyTrackB = team?.is_eliminated;
+
+        const updates = isCurrentlyTrackB
+            ? { is_qualified: false, is_eliminated: false, updated_at: new Date().toISOString() }
+            : { is_eliminated: true, is_qualified: false, updated_at: new Date().toISOString() };
+
         await supabase
             .from('event_teams')
-            .update({ is_eliminated: true, is_qualified: false, updated_at: new Date().toISOString() })
+            .update(updates)
             .eq('id', teamId);
 
-        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, is_eliminated: true, is_qualified: false } : t));
-        setAwardMessage(`Team routed to Track B (Redemption).`);
+        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, ...updates } : t));
+        setAwardMessage(isCurrentlyTrackB ? `Team returned to Round 1 Pool.` : `Team routed to Track B (Redemption).`);
         setTimeout(() => setAwardMessage(null), 2000);
     };
 
