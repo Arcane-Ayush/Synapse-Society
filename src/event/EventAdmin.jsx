@@ -575,7 +575,7 @@ export function EventAdmin() {
     const round3Finalists = activeTeams.filter(t => round3TeamIds.includes(t.id));
     const round2TrackA = activeTeams.filter(t => t.is_qualified && !t.is_eliminated && !round3TeamIds.includes(t.id));
     const round2TrackB = activeTeams.filter(t => t.is_eliminated && !round3TeamIds.includes(t.id));
-    const round1Pool = activeTeams.length > 0 ? activeTeams : teams;
+    const round1Pool = teams;
 
     // Threshold Preview Counts
     const r1AboveCutoff = round1Pool.filter(t => (t.s_coins || 0) >= (Number(r1CutoffThreshold) || 200)).length;
@@ -1192,7 +1192,7 @@ export function EventAdmin() {
                 <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-cyan-500/30 space-y-2.5">
                     <div className="flex items-center justify-between pb-1.5 border-b border-white/10">
                         <div className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
-                            <Award size={13} /> ROUND 1: REVERSE HACKATHON EVALUATION ({round1Pool.length} Teams)
+                            <Award size={13} /> ROUND 1: PROBLEM DISCOVERY EVALUATION ({round1Pool.length} Teams)
                         </div>
                         <button
                             onClick={() => setEditingPromptRound(editingPromptRound === 'r1' ? null : 'r1')}

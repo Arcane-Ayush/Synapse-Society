@@ -64,7 +64,7 @@ export function ReverseHackathonModule({ user, prompt, assignedTeam, onSubmitted
                     <div className="flex items-center gap-2">
                         <Lightbulb size={18} className="text-cyan-400" />
                         <h3 className="text-base sm:text-lg font-black text-white" style={{ fontFamily: 'Space Grotesk' }}>
-                            {prompt?.title || 'Round 1 · Problem Discovery'}
+                            Round 1 · Problem Discovery
                         </h3>
                     </div>
                     <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-xs font-mono font-bold text-yellow-300">
@@ -76,7 +76,7 @@ export function ReverseHackathonModule({ user, prompt, assignedTeam, onSubmitted
                 {/* Challenge Card */}
                 <div className="p-3.5 rounded-2xl bg-black/40 border border-white/10 mb-5 space-y-1.5">
                     <p className="text-xs text-zinc-300 leading-relaxed font-sans">
-                        {prompt?.description || 'Identify one real-world problem within your assigned domain. Explain why it matters, and explain why AI is the right solution.'}
+                        Identify one real-world problem within your assigned domain. Explain why it matters, and explain why AI is the right solution.
                     </p>
                     <div className="text-[11px] font-mono text-cyan-300 font-bold flex items-center justify-between">
                         <span>🎯 Domain: <strong className="text-yellow-300">{domain}</strong></span>

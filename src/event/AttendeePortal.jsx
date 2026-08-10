@@ -49,7 +49,7 @@ export function AttendeePortal() {
     // Load team and S-Coins for this user
     useEffect(() => {
         if (user?.id) {
-            getAssignedEventTeam(user.id).then(team => {
+            getAssignedEventTeam(user.id, user, profile).then(team => {
                 if (team) {
                     setAssignedTeam(team);
                     setIsEliminated(Boolean(team.is_eliminated));
@@ -57,7 +57,7 @@ export function AttendeePortal() {
             });
             getUserSCoins(user.id).then(coins => setSCoins(coins));
         }
-    }, [user?.id]);
+    }, [user?.id, profile]);
 
     // Realtime listener for team assignments and points
     useEffect(() => {
@@ -76,12 +76,28 @@ export function AttendeePortal() {
                     setSCoins(prev => prev + (payload.delta || 0));
                 }
             })
+            .on('broadcast', { event: 'team_member_assigned' }, () => {
+                if (user?.id) {
+                    getAssignedEventTeam(user.id, user, profile).then(team => {
+                        if (team) {
+                            setAssignedTeam(team);
+                            setIsEliminated(Boolean(team.is_eliminated));
+                        }
+                    });
+                }
+            })
+            .on('broadcast', { event: 'attendee_team_assigned' }, ({ payload }) => {
+                if (user?.id && payload?.userId === user.id && payload?.team) {
+                    setAssignedTeam(payload.team);
+                    setIsEliminated(Boolean(payload.team.is_eliminated));
+                }
+            })
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [assignedTeam]);
+    }, [user?.id, profile, assignedTeam]);
 
     const handleTeamAssigned = (team) => {
         setAssignedTeam(team);

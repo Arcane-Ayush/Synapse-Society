@@ -187,13 +187,23 @@ export async function fetchLiveEventStateFromDb() {
             .eq('id', 'nexus_2026')
             .maybeSingle();
         if (data) {
+            let r1P = data.round_1_prompt || DEFAULT_EVENT_STATE.round1Prompt;
+            if (!r1P.title || r1P.title.includes('Reverse Hackathon') || r1P.description?.includes('obfuscated')) {
+                r1P = DEFAULT_EVENT_STATE.round1Prompt;
+            }
+
+            let r2P = data.round_2_prompt || DEFAULT_EVENT_STATE.round2Prompt;
+            if (!r2P.description || r2P.description.includes('Red Bull')) {
+                r2P = DEFAULT_EVENT_STATE.round2Prompt;
+            }
+
             return {
                 ...DEFAULT_EVENT_STATE,
                 phase: data.phase || EVENT_PHASES.PHASE_0_CHECKIN,
                 phaseTitle: data.phase_title || 'Agent Check-In & Identity Pass',
                 breakTitle: data.break_title || DEFAULT_EVENT_STATE.breakTitle,
-                round1Prompt: data.round_1_prompt || DEFAULT_EVENT_STATE.round1Prompt,
-                round2Prompt: data.round_2_prompt || DEFAULT_EVENT_STATE.round2Prompt,
+                round1Prompt: r1P,
+                round2Prompt: r2P,
                 round3Prompt: data.round_3_prompt || DEFAULT_EVENT_STATE.round3Prompt,
                 adEnabled: data.ad_enabled !== false,
                 adMediaUrl: data.ad_media_url || DEFAULT_EVENT_STATE.adMediaUrl,
@@ -545,18 +555,60 @@ export async function updateTeamQuizScore(teamId, scoreDelta, coinsDelta = 100) 
 /**
  * Get assigned team for a user during the event from database.
  */
-export async function getAssignedEventTeam(userId) {
+export async function getAssignedEventTeam(userId, user = null, profile = null) {
     if (!userId) return null;
     try {
+        // 1. Query direct assignment from event_attendees
         const { data } = await supabase
             .from('event_attendees')
             .select('team_id, event_teams(*)')
             .eq('user_id', userId)
             .maybeSingle();
-        return data?.event_teams || null;
+
+        if (data?.event_teams) {
+            return data.event_teams;
+        }
+
+        // 2. Fallback: Search event_teams.members JSON array for user's Agent ID
+        const agentNo = generateAgentNumber(user, profile);
+        if (agentNo) {
+            const cleanNo = String(agentNo).padStart(3, '0');
+            const { data: allTeams } = await supabase
+                .from('event_teams')
+                .select('*');
+
+            if (allTeams && allTeams.length > 0) {
+                const matchedTeam = allTeams.find(t => {
+                    if (!t.members) return false;
+                    let membersArr = t.members;
+                    if (typeof membersArr === 'string') {
+                        try { membersArr = JSON.parse(membersArr); } catch(e) {}
+                    }
+                    if (Array.isArray(membersArr)) {
+                        return membersArr.some(m => {
+                            let obj = m;
+                            if (typeof m === 'string') {
+                                try { obj = JSON.parse(m); } catch(e) { obj = m; }
+                            }
+                            const num = typeof obj === 'object' ? (obj?.agentNo || obj?.agent_number) : obj;
+                            return String(num).padStart(3, '0') === cleanNo || String(num) === String(Number(cleanNo));
+                        });
+                    }
+                    const str = JSON.stringify(t.members);
+                    return str.includes(`"${cleanNo}"`) || str.includes(`"${Number(cleanNo)}"`);
+                });
+
+                if (matchedTeam) {
+                    // Auto-sync link in event_attendees database table
+                    await setAssignedEventTeam(userId, matchedTeam);
+                    return matchedTeam;
+                }
+            }
+        }
     } catch (e) {
-        return null;
+        console.error('Error in getAssignedEventTeam:', e);
     }
+    return null;
 }
 
 /**
@@ -645,19 +697,27 @@ export async function addUserSCoins(userId, amount) {
 /**
  * Assign Round 2 App to a team in database.
  */
-export async function updateTeamAssignedApp(teamId, appName) {
+export async function updateTeamAssignedApp(teamId, val) {
     try {
+        let mottoStr = '';
+        if (val) {
+            if (val.startsWith('Domain: ') || val.startsWith('App: ')) {
+                mottoStr = val;
+            } else {
+                mottoStr = `App: ${val}`;
+            }
+        }
         const { data, error } = await supabase
             .from('event_teams')
             .update({
-                motto: appName ? `App: ${appName}` : '',
+                motto: mottoStr,
                 updated_at: new Date().toISOString()
             })
             .eq('id', teamId)
             .select();
 
         if (!error) {
-            broadcastEventStateUpdate({ type: 'team_app_assigned', teamId, appName });
+            broadcastEventStateUpdate({ type: 'team_app_assigned', teamId, appName: mottoStr });
         }
         return { data, error };
     } catch (err) {
