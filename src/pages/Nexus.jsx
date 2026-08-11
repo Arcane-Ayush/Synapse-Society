@@ -1348,7 +1348,8 @@ function QRVaultTab({ onOpenLogin }) {
         label: '',
         rewardXp: 150,
         rewardCardId: '',
-        isReusable: false
+        isReusable: false,
+        maxRedemptions: ''
     });
     const [createdQr, setCreatedQr] = useState(null);
     const [qrImageUrl, setQrImageUrl] = useState(null); // locally-generated QR image
@@ -1503,6 +1504,7 @@ function QRVaultTab({ onOpenLogin }) {
         setAdminMessage(null);
 
         try {
+            const parsedMax = parseInt(newQr.maxRedemptions);
             const { data, error } = await supabase
                 .from('qr_codes')
                 .insert({
@@ -1511,6 +1513,7 @@ function QRVaultTab({ onOpenLogin }) {
                     reward_xp: parseInt(newQr.rewardXp) || 0,
                     reward_card_id: newQr.rewardCardId || null,
                     is_reusable: newQr.isReusable,
+                    max_redemptions: !isNaN(parsedMax) && parsedMax > 0 ? parsedMax : null,
                     is_active: true,
                     created_by: user?.id
                 })
@@ -1772,6 +1775,21 @@ function QRVaultTab({ onOpenLogin }) {
                             </select>
                         </div>
 
+                        <div>
+                            <label className="text-[10px] font-mono tracking-widest uppercase mb-1 block" style={{ color: 'rgba(var(--text-secondary-rgb), 0.6)' }}>
+                                Max People Limit (Optional)
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={newQr.maxRedemptions}
+                                onChange={e => setNewQr({ ...newQr, maxRedemptions: e.target.value })}
+                                placeholder="e.g. 50 (Leave empty for unlimited)"
+                                className="w-full px-4 py-2.5 rounded-xl text-sm font-mono outline-none"
+                                style={{ background: 'rgba(var(--bg-glass-rgb), 0.8)', border: '1px solid rgba(var(--synapse-violet-rgb), 0.2)', color: 'var(--text-primary)' }}
+                            />
+                        </div>
+
                         <div className="md:col-span-2 flex items-center gap-3">
                             <label className="flex items-center gap-2 cursor-pointer text-xs" style={{ color: 'rgba(var(--text-secondary-rgb), 0.8)' }}>
                                 <input
@@ -1780,7 +1798,7 @@ function QRVaultTab({ onOpenLogin }) {
                                     onChange={e => setNewQr({ ...newQr, isReusable: e.target.checked })}
                                     className="accent-purple-500 w-4 h-4"
                                 />
-                                Allow Multi-scans (Repeatable for everyone)
+                                Allow Multi-scans (Repeatable for everyone up to limit)
                             </label>
                         </div>
 
@@ -1832,7 +1850,10 @@ function QRVaultTab({ onOpenLogin }) {
                                 )}
                             </div>
                             <p className="font-mono text-sm font-bold text-pink-400">{createdQr.code}</p>
-                            <p className="text-xs text-purple-300/70 mt-1">{createdQr.label} — +{createdQr.reward_xp} XP</p>
+                            <p className="text-xs text-purple-300/70 mt-1">
+                                {createdQr.label} — +{createdQr.reward_xp} XP
+                                {createdQr.max_redemptions ? ` • Max ${createdQr.max_redemptions} People Limit` : ' • Unlimited People'}
+                            </p>
                         </motion.div>
                     )}
                 </div>

@@ -1098,9 +1098,8 @@ export function EventAdmin() {
                                     { name: 'Reactor', path: '/inauguration' },
                                     { name: 'Dean Key', path: '/inauguration/dean' },
                                     { name: 'HOD Key', path: '/inauguration/hod' },
-                                    { name: 'Pro-VC Key', path: '/inauguration/provc' },
                                     { name: 'President', path: '/inauguration/president' },
-                                    { name: 'Audience', path: '/audience' },
+                                    { name: 'Audience', path: '/inauguration/audience' },
                                 ].map(l => (
                                     <a
                                         key={l.path}
